@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Bahá’í Writings</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      font-family: Georgia, serif;
+      background-color: #f9f5f1;
+      color: #333;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      text-align: center;
+    }
+    .quote-container {
+      max-width: 700px;
+      padding: 2rem;
+      background: white;
+      border-radius: 1rem;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    .quote {
+      font-size: 1.5rem;
+      line-height: 1.6;
+    }
+    .date {
+      margin-top: 1rem;
+      font-size: 0.9rem;
+      color: #777;
+    }
+  </style>
+</head>
+<body>
+  <div class="quote-container">
+    <div class="quote" id="quote">
+      <!-- Placeholder for the Bahá’í quote -->
+      “This is a placeholder for the daily Bahá’í Writing.”
+    </div>
+    <div class="date" id="date"></div>
+  </div>
+
+  <script>
+    // Set today's date
+    const today = new Date().toDateString();
+    document.getElementById('date').innerText = today;
+
+    // Later: Add JS here to rotate quotes daily
+  </script>
+</body>
+</html>
