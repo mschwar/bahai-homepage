@@ -8,86 +8,22 @@
 </head>
 <body>
     <main>
+        <!-- Badíʿ Date will be displayed here -->
         <p id="badiDate" class="date">Loading Badíʿ Date...</p>
+
+        <!-- Daily Baha'i Writing will be displayed here -->
         <div id="quote-display-area">
             <p>Loading Baha'i Writing...</p>
         </div>
     </main>
 
-    <!-- External Badíʿ date script - use defer to ensure it's loaded -->
+    <!-- External Badíʿ date script (defines the BadiDateToday function) -->
     <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
 
-    <!-- Inline script to CALL BadiDateToday and handle its onReady callback -->
-    <script defer>
-      // This script will run after BadiDateToday.v1.js has loaded and defined the BadiDateToday function
+    <!-- Our script to initialize/call BadiDateToday -->
+    <script src="js/badi-init.js" defer></script>
 
-      function displayBadiDateInfo(dateInfo) {
-        // dateInfo is the object passed by BadiDateToday's onReady callback
-        console.log("BadiDateToday onReady callback executed. Date Info:", dateInfo);
-        const badiDateElement = document.getElementById("badiDate");
-
-        if (badiDateElement && dateInfo) {
-            // Construct the date string using properties from dateInfo
-            // Example format from their docs: "{bDay} {bMonthMeaning} ({bMonthNameAr}) {bYear} {bEraAbbrev}"
-            // You can customize this using any properties available in dateInfo
-            // To see all available properties, you can inspect 'dateInfo' in the console log above.
-            // Common properties: dateInfo.bDay, dateInfo.bMonthMeaning, dateInfo.bMonthNameAr,
-            //                   dateInfo.bYear, dateInfo.bEraAbbrev
-            
-            let formattedBadiDate = "";
-            if (dateInfo.bDay && dateInfo.bMonthMeaning && dateInfo.bYear && dateInfo.bEraAbbrev) {
-                // Using a simple template string. Their .filledWith() is also available if you want to use it
-                // but you'd need to ensure String.prototype.filledWith is defined before this point
-                // or call it on a string literal.
-                // For simplicity, let's construct it directly:
-                formattedBadiDate = `${dateInfo.bDay} ${dateInfo.bMonthMeaning} (${dateInfo.bMonthNameAr}) ${dateInfo.bYear} ${dateInfo.bEraAbbrev}`;
-            } else {
-                // Fallback if some properties are missing
-                formattedBadiDate = "Badíʿ date calculated, but format parts missing.";
-                console.warn("Some Badíʿ date properties were missing in dateInfo:", dateInfo);
-            }
-            badiDateElement.textContent = formattedBadiDate;
-
-        } else if (badiDateElement) {
-            badiDateElement.textContent = "Failed to display Badíʿ Date.";
-            console.error("badiDateElement found, but dateInfo was not provided to onReady.", dateInfo);
-        } else {
-            console.error("Element with id 'badiDate' not found.");
-        }
-      }
-
-      // Check if BadiDateToday function is defined (it should be after the external script with defer runs)
-      if (typeof BadiDateToday === 'function') {
-        console.log("BadiDateToday function found. Calling it with settings...");
-        try {
-            BadiDateToday({
-                onReady: displayBadiDateInfo, // Pass our function as the callback
-                language: 'en',               // Optional: specify language
-                // locationMethod: BadiDateLocationChoice.guessUserLocation, // Optional: default is guess
-                elementId: "badiDate"         // The script seems to have a default way to fill an element
-                                              // if no onReady is given, or if jQuery is present.
-                                              // By providing onReady, we take control of the display.
-                                              // Their example uses elementId in their BadiDateToday.init example,
-                                              // but their main usage example is just onReady.
-                                              // Let's rely on onReady.
-            });
-        } catch (error) {
-            console.error("Error calling BadiDateToday function:", error);
-            const badiDateElement = document.getElementById("badiDate");
-            if (badiDateElement) {
-                badiDateElement.textContent = "Error setting up Badíʿ Date.";
-            }
-        }
-      } else {
-        console.error("BadiDateToday function is not defined. The external script might have failed to load or execute properly.");
-        const badiDateElement = document.getElementById("badiDate");
-        if (badiDateElement) {
-            badiDateElement.textContent = "Error: Badíʿ Date script component not available.";
-        }
-      }
-    </script>
-
-    <!-- Your custom script for fetching and displaying quotes - also with DEFER -->
+    <!-- Your custom script for fetching and displaying quotes -->
     <script src="js/script.js" defer></script>
 </body>
 </html>
