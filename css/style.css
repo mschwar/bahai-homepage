@@ -1,60 +1,66 @@
 body {
-     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-     line-height: 1.6;
-     margin: 0;
-     padding: 20px;
-     background-color: #f4f4f4;
-     color: #333;
-     display: flex;
-     flex-direction: column;
-     align-items: center;
-     min-height: 90vh; /* Center content vertically a bit */
-     justify-content: center;
- }
-
- header {
-     text-align: center;
-     margin-bottom: 30px;
- }
-
- header h1 {
-     color: #007bff; /* A calm blue */
-     font-weight: 300;
- }
-
- #quote-container {
-     background-color: #fff;
-     padding: 25px 30px;
-     border-radius: 8px;
-     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-     max-width: 700px;
-     width: 90%;
-     text-align: center;
- }
-
-#quote-container blockquote {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
     margin: 0;
-    padding: 0;
-    border-left: 5px solid #007bff; /* You might consider removing this if text is centered */
-    padding-left: 20px; /* Or adjusting padding if border is removed/changed */
-    font-style: italic;
-    text-align: center; /* Changed to center */
+    padding: 20px;
+    background-color: #f4f4f4;
+    color: #333;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    min-height: 90vh; /* Center content vertically a bit */
+    justify-content: center;
+    text-align: center; /* Ensures inline or inline-block direct children of body are centered */
 }
 
- #quote-container blockquote p {
-     font-size: 1.2em;
-     margin-bottom: 15px;
- }
+/* Styles for the Badíʿ Date element */
+p#badiDate {
+    font-size: 1.1em; /* Slightly larger font for the date */
+    color: #2c3e50;   /* A darker,落ち着いた (ochitsuita - calm/sober) color */
+    margin-bottom: 25px; /* Space between the date and the quote area */
+    font-weight: 500;   /* Medium weight for the date */
+}
 
- #quote-container footer {
-     font-size: 0.95em;
-     color: #555;
-     text-align: right;
-     font-style: normal;
- }
+/* Styles for the main quote display area */
+#quote-display-area {
+    background-color: #fff;
+    padding: 25px 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12); /* Slightly softer shadow */
+    max-width: 700px;
+    width: 90%;
+    /* text-align: center; is inherited from body or can be set if blockquote is inline-block */
+    /* margin-top: 20px; /* This was here, but margin-bottom on badiDate handles spacing now */
+}
 
- #quote-container footer cite {
-     font-style: italic;
- }
+/* Styles for the blockquote itself (containing the quote text and footer) */
+#quote-display-area blockquote {
+    margin: 0;
+    padding: 0;
+    /* Consider if border-left and padding-left are desired with centered text */
+    /* border-left: 5px solid #007bff; */
+    /* padding-left: 20px; */
+    font-style: italic;
+    text-align: center; /* Ensures the <p> and <footer> inside are centered if they are block */
+}
 
+/* Styles for the paragraph containing the quote text */
+#quote-display-area blockquote p {
+    font-size: 1.25em; /* Slightly increased quote text size */
+    margin-bottom: 20px; /* Space between quote text and footer */
+    line-height: 1.7;   /* Improved line spacing for readability */
+}
 
+/* Styles for the footer (author and source) */
+#quote-display-area footer {
+    font-size: 0.9em; /* Slightly smaller for author/source */
+    color: #555;
+    text-align: right; /* Keep author/source right-aligned under centered quote */
+    font-style: normal;
+    padding-top: 10px;
+}
+
+/* Styles for the <cite> element within the footer (source) */
+#quote-display-area footer cite {
+    font-style: italic;
+}
