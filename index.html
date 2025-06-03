@@ -5,43 +5,47 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Baha'i Writing</title>
     <link rel="stylesheet" href="css/style.css">
-    <!-- You could also put the BadiDateToday script here in the head -->
 </head>
 <body>
-    <header>
-        <p id="date">Loading date...</p> <!-- For your Gregorian-based date -->
-    </header>
     <main>
-        <div id="quote-container">
-            <!-- The daily quote will be injected here by js/script.js -->
-            <!-- The Badi date will be injected into badiDate by BadiDateToday.js -->
-            <p id="badiDate" class="date">Loading Badíʿ Date...</p>
+        <!-- Badíʿ Date will be displayed here -->
+        <p id="badiDate" class="date">Loading Badíʿ Date...</p>
+
+        <!-- Daily Baha'i Writing will be displayed here -->
+        <div id="quote-display-area">
+            <p>Loading Baha'i Writing...</p>
         </div>
     </main>
 
-    <!-- Badíʿ date script -->
+    <!-- External Badíʿ date script -->
     <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js"></script>
     <script>
-      // Ensure the DOM is ready before trying to init, or place this after the element
       document.addEventListener('DOMContentLoaded', () => {
         if (typeof BadiDateToday !== 'undefined' && BadiDateToday.init) {
-            BadiDateToday.init({
-                elementId: "badiDate",   // element to fill
-                format: "long",          // e.g., “7 Núr 182 BE”
-                language: "en"
-            });
+            try {
+                BadiDateToday.init({
+                    elementId: "badiDate",   // Fills the <p id="badiDate">
+                    format: "long",          // e.g., “7 Núr 182 BE”
+                    language: "en"
+                });
+            } catch (error) {
+                console.error("Error initializing BadiDateToday:", error);
+                const badiDateElement = document.getElementById("badiDate");
+                if (badiDateElement) {
+                    badiDateElement.textContent = "Failed to load Badíʿ Date.";
+                }
+            }
         } else {
-            console.error("BadiDateToday script not loaded or initialized properly.");
+            console.error("BadiDateToday script not loaded or BadiDateToday.init is not defined.");
             const badiDateElement = document.getElementById("badiDate");
             if (badiDateElement) {
-                badiDateElement.textContent = "Error loading Badíʿ Date.";
+                badiDateElement.textContent = "Error loading Badíʿ Date script.";
             }
         }
       });
     </script>
 
-    <!-- Your main script -->
+    <!-- Your custom script for fetching and displaying quotes -->
     <script src="js/script.js" defer></script>
 </body>
 </html>
-
