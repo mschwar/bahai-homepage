@@ -2,7 +2,8 @@
 
 async function fetchQuotes() {
     try {
-        const response = await fetch('data/quotes.json');
+        // const response = await fetch('data/quotes.json'); // Old line
+        const response = await fetch('data/quotes_hidden_words.json'); // New line
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
