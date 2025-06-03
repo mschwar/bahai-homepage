@@ -1,5 +1,16 @@
 // js/script.js
 
+// Helper function to get ordinal suffix for day of the month
+function getOrdinalSuffix(day) {
+    if (day > 3 && day < 21) return 'th'; // for 4th-20th
+    switch (day % 10) {
+        case 1:  return "st";
+        case 2:  return "nd";
+        case 3:  return "rd";
+        default: return "th";
+    }
+}
+
 async function fetchQuotes() {
     try {
         // This path is relative to index.html
@@ -39,11 +50,28 @@ function displayDailyData(quoteObject) {
     const dateContainer = document.getElementById('date'); // For the date display
 
     // Display the date
-    if (dateContainer) {
-        dateContainer.textContent = new Date().toDateString();
-    } else {
-        console.warn("Element with id 'date' not found.");
-    }
+if (dateContainer) {
+    const now = new Date();
+    const daysOfWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+    const dayName = daysOfWeek[now.getDay()];
+    const dayOfMonth = now.getDate();
+    const dayWithSuffix = dayOfMonth + getOrdinalSuffix(dayOfMonth);
+
+    // Placeholders for Baha'i date components
+    const bahaiMonthPlaceholder = "[bahai_month]";
+    const bahaiYearPlaceholder = "[bahai_year]"; // B.E. for Baháʼí Era, or CE if you mean Gregorian year
+
+    // Construct the desired date string
+    // If you want the Gregorian year for CE: const gregorianYear = now.getFullYear();
+    // Then use `${gregorianYear}CE` below instead of bahaiYearPlaceholder + "CE"
+    // For now, using the placeholder as requested for the year part too.
+    const formattedDate = `${dayName}, ${dayWithSuffix} of ${bahaiMonthPlaceholder}, ${bahaiYearPlaceholder}CE`;
+
+    dateContainer.textContent = formattedDate;
+} else {
+    console.warn("Element with id 'date' not found.");
+}
+    
 
     // Display the quote
     if (quoteContainer) {
