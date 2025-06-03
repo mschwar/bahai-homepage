@@ -15,7 +15,7 @@ function displayBadiDateInfo(dateInfo) {
     if (dateInfo.bDay && dateInfo.bMonthMeaning && dateInfo.bMonthNameAr && dateInfo.bYear && dateInfo.bEraAbbrev) {
       formattedBadiDate = `${dateInfo.bDay} ${dateInfo.bMonthMeaning} (${dateInfo.bMonthNameAr}) ${dateInfo.bYear} ${dateInfo.bEraAbbrev}`;
     } else {
-      // Fallback message if some data is missing, though this shouldn't happen if dateInfo is valid
+      // Fallback message if some data is missing
       formattedBadiDate = "Badíʿ date data incomplete.";
       console.warn("Some expected Badíʿ date properties were missing in dateInfo:", dateInfo);
     }
@@ -35,12 +35,28 @@ function displayBadiDateInfo(dateInfo) {
 if (typeof BadiDateToday === 'function') {
   console.log("BadiDateToday function found (from badi-init.js). Calling it with settings...");
   try {
-    // Call the BadiDateToday function, passing it a configuration object
-    BadiDateToday({
+    // Prepare the configuration object for BadiDateToday
+    let badiDateConfig = {
       onReady: displayBadiDateInfo, // Our function to handle the result
       language: 'en'                // Optional: specify language
-      // locationMethod: BadiDateLocationChoice.guessUserLocation, // This is often the default in their script
-    });
+    };
+
+    // Set locationMethod to ignoreLocation to prevent mixed content errors.
+    // BadiDateLocationChoice is defined globally by BadiDateToday.v1.js.
+    if (typeof BadiDateLocationChoice !== 'undefined' && BadiDateLocationChoice.ignoreLocation) {
+        console.log("Setting locationMethod to BadiDateLocationChoice.ignoreLocation (value: " + BadiDateLocationChoice.ignoreLocation + ")");
+        badiDateConfig.locationMethod = BadiDateLocationChoice.ignoreLocation;
+    } else {
+        // Fallback if BadiDateLocationChoice is somehow not defined globally when this runs
+        // (though it should be if BadiDateToday.v1.js loaded and ran correctly).
+        // The value for ignoreLocation is 1 according to their script comments.
+        console.warn("BadiDateLocationChoice was not found globally. Falling back to raw value 1 for ignoreLocation.");
+        badiDateConfig.locationMethod = 1;
+    }
+
+    // Call the BadiDateToday function with our configuration
+    BadiDateToday(badiDateConfig);
+
   } catch (error) {
     // This would catch errors thrown by the BadiDateToday() function call itself
     console.error("Error calling BadiDateToday function (from badi-init.js):", error);
