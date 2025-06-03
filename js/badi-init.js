@@ -41,17 +41,16 @@ if (typeof BadiDateToday === 'function') {
       language: 'en'                // Optional: specify language
     };
 
-    // Set locationMethod to ignoreLocation to prevent mixed content errors.
+    // Set locationMethod to askForUserLocation.
     // BadiDateLocationChoice is defined globally by BadiDateToday.v1.js.
-    if (typeof BadiDateLocationChoice !== 'undefined' && BadiDateLocationChoice.ignoreLocation) {
-        console.log("Setting locationMethod to BadiDateLocationChoice.ignoreLocation (value: " + BadiDateLocationChoice.ignoreLocation + ")");
-        badiDateConfig.locationMethod = BadiDateLocationChoice.ignoreLocation;
+    // The value for askForUserLocation is 3 according to their script comments.
+    if (typeof BadiDateLocationChoice !== 'undefined' && BadiDateLocationChoice.askForUserLocation) {
+        console.log("Setting locationMethod to BadiDateLocationChoice.askForUserLocation (value: " + BadiDateLocationChoice.askForUserLocation + ")");
+        badiDateConfig.locationMethod = BadiDateLocationChoice.askForUserLocation;
     } else {
-        // Fallback if BadiDateLocationChoice is somehow not defined globally when this runs
-        // (though it should be if BadiDateToday.v1.js loaded and ran correctly).
-        // The value for ignoreLocation is 1 according to their script comments.
-        console.warn("BadiDateLocationChoice was not found globally. Falling back to raw value 1 for ignoreLocation.");
-        badiDateConfig.locationMethod = 1;
+        // Fallback if BadiDateLocationChoice is somehow not defined globally when this runs.
+        console.warn("BadiDateLocationChoice.askForUserLocation was not found globally. Falling back to raw value 3 for askForUserLocation.");
+        badiDateConfig.locationMethod = 3;
     }
 
     // Call the BadiDateToday function with our configuration
