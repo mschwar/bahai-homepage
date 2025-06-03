@@ -1,15 +1,5 @@
 // js/script.js
 
-<!-- Badíʿ date (auto-calculates based on your location & sunset) -->
-<script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js"></script>
-<script>
-  BadiDateToday.init({
-    elementId: "badiDate",   // element to fill
-    format: "long",          // e.g., “7 Núr 182 BE”
-    language: "en"           // change if you want another translation
-  });
-</script>
-
 // Helper function to get ordinal suffix for day of the month
 function getOrdinalSuffix(day) {
     if (day > 3 && day < 21) return 'th'; // for 4th-20th
