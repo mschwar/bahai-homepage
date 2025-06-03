@@ -32,13 +32,14 @@ body {
      text-align: center;
  }
 
- #quote-container blockquote {
-     margin: 0;
-     padding: 0;
-     border-left: 5px solid #007bff;
-     padding-left: 20px;
-     font-style: italic;
- }
+#quote-container blockquote {
+    margin: 0;
+    padding: 0;
+    border-left: 5px solid #007bff; /* You might consider removing this if text is centered */
+    padding-left: 20px; /* Or adjusting padding if border is removed/changed */
+    font-style: italic;
+    text-align: center; /* Changed to center */
+}
 
  #quote-container blockquote p {
      font-size: 1.2em;
@@ -55,3 +56,5 @@ body {
  #quote-container footer cite {
      font-style: italic;
  }
+
+
