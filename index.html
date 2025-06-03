@@ -17,35 +17,42 @@
         </div>
     </main>
 
-    <!-- External Badíʿ date script -->
-    <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js"></script>
-    <script>
-      document.addEventListener('DOMContentLoaded', () => {
-        if (typeof BadiDateToday !== 'undefined' && BadiDateToday.init) {
-            try {
-                BadiDateToday.init({
-                    elementId: "badiDate",   // Fills the <p id="badiDate">
-                    format: "long",          // e.g., “7 Núr 182 BE”
-                    language: "en"
-                });
-            } catch (error) {
-                console.error("Error initializing BadiDateToday:", error);
-                const badiDateElement = document.getElementById("badiDate");
-                if (badiDateElement) {
-                    badiDateElement.textContent = "Failed to load Badíʿ Date.";
-                }
-            }
-        } else {
-            console.error("BadiDateToday script not loaded or BadiDateToday.init is not defined.");
-            const badiDateElement = document.getElementById("badiDate");
-            if (badiDateElement) {
-                badiDateElement.textContent = "Error loading Badíʿ Date script.";
-            }
-        }
-      });
+    <!-- External Badíʿ date script - ADD DEFER -->
+    <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
+
+    <!-- Inline script to initialize BadiDateToday - also with DEFER or ensure it runs after -->
+    <script defer>
+      // Because both this script and the one above have 'defer',
+      // they will execute in the order they appear in the document,
+      // after the HTML is parsed.
+      // So, BadiDateToday.v1.js should have executed and defined BadiDateToday.
+
+      // It's still good practice to check if it's defined.
+      if (typeof BadiDateToday !== 'undefined' && BadiDateToday.init) {
+          try {
+              BadiDateToday.init({
+                  elementId: "badiDate",
+                  format: "long",
+                  language: "en"
+              });
+          } catch (error) {
+              console.error("Error initializing BadiDateToday:", error);
+              const badiDateElement = document.getElementById("badiDate");
+              if (badiDateElement) {
+                  badiDateElement.textContent = "Failed to load Badíʿ Date.";
+              }
+          }
+      } else {
+          // This block might still be hit if the external script fails to load for network reasons
+          console.error("BadiDateToday object is not defined. The external script might have failed to load or execute.");
+          const badiDateElement = document.getElementById("badiDate");
+          if (badiDateElement) {
+              badiDateElement.textContent = "Error loading Badíʿ Date script component.";
+          }
+      }
     </script>
 
-    <!-- Your custom script for fetching and displaying quotes -->
+    <!-- Your custom script for fetching and displaying quotes - also with DEFER -->
     <script src="js/script.js" defer></script>
 </body>
 </html>
