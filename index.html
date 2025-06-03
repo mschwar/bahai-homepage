@@ -1,20 +1,47 @@
- <html lang="en">
- <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Daily Baha'i Writing</title>
-     <link rel="stylesheet" href="css/style.css">
- </head>
- <body>
-     <header>
-             <p id="date">Loading date...</p>
-     </header>
-     <main>
-         <div id="quote-container">
-             <p>Loading Baha'i Writing...</p>
-             <p id="badiDate" class="date"></p>
-         </div>
-     </main>
-     <script src="js/script.js" defer></script>
- </body>
- </html>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Daily Baha'i Writing</title>
+    <link rel="stylesheet" href="css/style.css">
+    <!-- You could also put the BadiDateToday script here in the head -->
+</head>
+<body>
+    <header>
+        <p id="date">Loading date...</p> <!-- For your Gregorian-based date -->
+    </header>
+    <main>
+        <div id="quote-container">
+            <!-- The daily quote will be injected here by js/script.js -->
+            <!-- The Badi date will be injected into badiDate by BadiDateToday.js -->
+            <p id="badiDate" class="date">Loading Badíʿ Date...</p>
+        </div>
+    </main>
+
+    <!-- Badíʿ date script -->
+    <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js"></script>
+    <script>
+      // Ensure the DOM is ready before trying to init, or place this after the element
+      document.addEventListener('DOMContentLoaded', () => {
+        if (typeof BadiDateToday !== 'undefined' && BadiDateToday.init) {
+            BadiDateToday.init({
+                elementId: "badiDate",   // element to fill
+                format: "long",          // e.g., “7 Núr 182 BE”
+                language: "en"
+            });
+        } else {
+            console.error("BadiDateToday script not loaded or initialized properly.");
+            const badiDateElement = document.getElementById("badiDate");
+            if (badiDateElement) {
+                badiDateElement.textContent = "Error loading Badíʿ Date.";
+            }
+        }
+      });
+    </script>
+
+    <!-- Your main script -->
+    <script src="js/script.js" defer></script>
+</body>
+</html>
+
