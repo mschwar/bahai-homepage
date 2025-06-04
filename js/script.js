@@ -1,9 +1,9 @@
 // js/script.js
 
+
 async function fetchQuotes() {
     try {
-        // const response = await fetch('data/quotes.json'); // Old line
-        const response = await fetch('data/quotes_hidden_words.json'); // New line
+        const response = await fetch('data/quotes_hidden_words.json'); // Loading the new file
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -14,6 +14,7 @@ async function fetchQuotes() {
         return [];
     }
 }
+
 
 /**
  * Filters an array of quote objects based on a maximum word count.
