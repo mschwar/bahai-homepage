@@ -3,27 +3,36 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Baha'i Writing</title>
+    <title>Daily Sacred Verse</title> <!-- Changed title slightly -->
+    <!-- Font import for new design -->
+    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600|Source+Serif+Pro:400,600' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <main>
-        <!-- Badíʿ Date will be displayed here -->
-        <p id="badiDate" class="date">Loading Badíʿ Date...</p>
+    <div class="container-main"> <!-- Overall wrapper -->
+        <header class="date-display"> <!-- For de-emphasized dates -->
+            <p id="gregorianDate" class="date-text">Loading Gregorian Date...</p> <!-- Added Gregorian -->
+            <p id="badiDate" class="date-text">Loading Badíʿ Date...</p>
+        </header>
 
-        <!-- Daily Baha'i Writing will be displayed here -->
-        <div id="quote-display-area">
-            <p>Loading Baha'i Writing...</p>
-        </div>
-    </main>
+        <main class="quote-jumbotron"> <!-- Full viewport area for the quote -->
+            <div class="quote-content">
+                <h1 id="quote-text">Loading Sacred Verse...</h1> <!-- Changed loading text -->
+                <h2 id="quote-author-source"></h2> 
+            </div>
+        </main>
 
-    <!-- External Badíʿ date script (defines the BadiDateToday function) -->
+        <!-- Optional: A small footer if you want it (can uncomment later) -->
+        <!-- 
+        <footer>
+            <p>A moment for the soul.</p>
+        </footer> 
+        -->
+    </div> <!-- Close container-main -->
+
+    <!-- Scripts (order matters with defer) -->
     <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
-
-    <!-- Our script to initialize/call BadiDateToday -->
     <script src="js/badi-init.js" defer></script>
-
-    <!-- Your custom script for fetching and displaying quotes -->
     <script src="js/script.js" defer></script>
 </body>
 </html>
