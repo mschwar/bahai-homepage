@@ -3,34 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Daily Sacred Verse</title> <!-- Changed title slightly -->
-    <!-- Font import for new design -->
+    <title>Daily Sacred Verse</title>
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600|Source+Serif+Pro:400,600' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
     <div class="container-main"> <!-- Overall wrapper -->
-        <header class="date-display"> <!-- For de-emphasized dates -->
-            <p id="gregorianDate" class="date-text">Loading Gregorian Date...</p> <!-- Added Gregorian -->
-            <p id="badiDate" class="date-text">Loading Badíʿ Date...</p>
-        </header>
-
+        
         <main class="quote-jumbotron"> <!-- Full viewport area for the quote -->
             <div class="quote-content">
-                <h1 id="quote-text">Loading Sacred Verse...</h1> <!-- Changed loading text -->
+                <h1 id="quote-text">Loading Sacred Verse...</h1>
                 <h2 id="quote-author-source"></h2> 
             </div>
+            <!-- Down arrow to indicate scrollable content -->
+            <a href="#scroll-content-start" class="scroll-down-arrow">
+                <img src="img/downArrow-01.png" alt="Scroll down" /> <!-- You'll need an arrow image -->
+            </a>
         </main>
 
-        <!-- Optional: A small footer if you want it (can uncomment later) -->
-        <!-- 
-        <footer>
-            <p>A moment for the soul.</p>
-        </footer> 
-        -->
+        <div id="scroll-content-start" class="scrollable-content">
+            <div class="panel-buttons">
+                <div class="buttons-container">
+                    <a href="#" id="yesterday-button" class="button">Yesterday</a>
+                    <a href="#" id="today-button" class="button button-active">Today</a> 
+                </div>
+            </div>
+
+            <div class="panel-info">
+                <div class="info-container">
+                    <!-- Badíʿ Date will go here instead of "Sensible Words" title -->
+                    <h1 id="badiDate" class="badi-date-title">Loading Badíʿ Date...</h1>
+                    <!-- Optional: Add a small descriptive paragraph if you like -->
+                    <p class="info-description">A daily verse for reflection.</p> 
+                </div>
+            </div>
+            
+            <!-- You can add more panels here later like your friend's site if desired -->
+
+            <footer>
+                <p>© <span id="current-year"></span> Your Name/Project Name. Inspired by the Ocean of God's words.</p>
+            </footer>
+        </div> <!-- Close scrollable-content -->
+
     </div> <!-- Close container-main -->
 
-    <!-- Scripts (order matters with defer) -->
+    <!-- Scripts -->
     <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
     <script src="js/badi-init.js" defer></script>
     <script src="js/script.js" defer></script>
