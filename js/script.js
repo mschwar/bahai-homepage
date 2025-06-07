@@ -1,6 +1,6 @@
 // js/script.js
 
-async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') { // Default to Hidden Words
+async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') {
     try {
         const response = await fetch(fileName); 
         if (!response.ok) {
@@ -25,61 +25,60 @@ function filterQuotesByLength(quotesArray, maxWords) {
     });
 }
 
-function getQuoteByDay(quotesArray, dayOfYear) { // Modified to take dayOfYear
+function getQuoteByDay(quotesArray, dayOfYear) {
     if (!quotesArray || quotesArray.length === 0) {
         return null;
     }
-    // Ensure dayOfYear is within valid bounds (1 to 366)
     const adjustedDay = Math.max(1, Math.min(dayOfYear, 366));
     const quoteIndex = (adjustedDay - 1) % quotesArray.length;
     return quotesArray[quoteIndex];
 }
 
-function displayQuote(quoteObject) { // Renamed, more generic
+function displayQuote(quoteObject) {
     const quoteTextElement = document.getElementById('quote-text');
-    const quoteAuthorSourceElement = document.getElementById('quote-author-source');
+    const quoteAuthorElement = document.getElementById('quote-author'); // New ID for just author
+    const quoteSourceFullElement = document.getElementById('quote-source-full'); // New ID for full source
 
-    if (quoteTextElement && quoteAuthorSourceElement) {
+    if (quoteTextElement && quoteAuthorElement && quoteSourceFullElement) {
         if (quoteObject && quoteObject.text) {
-            // Animate out
             quoteTextElement.style.opacity = 0;
-            quoteAuthorSourceElement.style.opacity = 0;
+            quoteAuthorElement.style.opacity = 0;
+            quoteSourceFullElement.style.opacity = 0;
 
             setTimeout(() => {
-                quoteTextElement.textContent = quoteObject.text;
+                quoteTextElement.textContent = quoteObject.text; 
                 
                 let authorDisplay = quoteObject.author || 'Unknown';
                 let sourceText = quoteObject.source || 'Unknown Source';
                 let translatorInfo = quoteObject.translator ? ` (trans. ${quoteObject.translator})` : '';
-
+                
                 if (quoteObject.tradition === "Hinduism" && quoteObject.book && quoteObject.book.includes("Bhagavad-Gita")) {
-                    authorDisplay = "Krishna (Bhagavad-Gita)";
-                    if (quoteObject.speaker && 
-                        quoteObject.speaker.toLowerCase() !== 'krishna' && 
-                        quoteObject.speaker.toLowerCase() !== 'narrative') {
-                        // authorDisplay = `${quoteObject.speaker} (in the Bhagavad-Gita)`; 
-                    }
+                    authorDisplay = "Krishna (Bhagavad-Gita)"; // Or "Krishna"
+                    // If you want to include the speaker from Gita in the author line:
+                    // if (quoteObject.speaker && quoteObject.speaker.toLowerCase() !== 'krishna' && quoteObject.speaker.toLowerCase() !== 'narrative') {
+                    //    authorDisplay = `${quoteObject.speaker} (from the Bhagavad-Gita, as told by Krishna)`;
+                    // }
                 } else if (quoteObject.tradition === "Bahá’í") {
                     authorDisplay = quoteObject.author;
-                } else if (quoteObject.tradition === "Buddhism" && quoteObject.book === "The Dhammapada"){
-                    authorDisplay = "Buddha"; // Or keep original 'Various' if preferred
-                }
-                // Add more specific author handling for other traditions as you add them
+                } // Add more specific author handling as needed
 
-                quoteAuthorSourceElement.innerHTML = `— ${authorDisplay}${translatorInfo}, <cite>${sourceText}</cite>`;
+                quoteAuthorElement.textContent = `— ${authorDisplay}`;
+                quoteSourceFullElement.innerHTML = `<cite>${sourceText}</cite>${translatorInfo}`;
                 
-                // Animate in
                 quoteTextElement.style.opacity = 1;
-                quoteAuthorSourceElement.style.opacity = 1;
-            }, 250); // Match animation duration (e.g., Sensible Words used 250ms)
+                quoteAuthorElement.style.opacity = 1;
+                quoteSourceFullElement.style.opacity = 1;
+            }, 150); // Reduced animation time for snappier feel
 
         } else {
             quoteTextElement.textContent = "No suitable sacred verse available.";
-            quoteAuthorSourceElement.innerHTML = "";
+            quoteAuthorElement.textContent = "";
+            quoteSourceFullElement.innerHTML = "";
         }
     } else {
         if (!quoteTextElement) console.error("Element with id 'quote-text' not found!");
-        if (!quoteAuthorSourceElement) console.error("Element with id 'quote-author-source' not found!");
+        if (!quoteAuthorElement) console.error("Element with id 'quote-author' not found!");
+        if (!quoteSourceFullElement) console.error("Element with id 'quote-source-full' not found!");
     }
 }
 
@@ -90,17 +89,13 @@ function getDayOfYear(date = new Date()) {
     return Math.floor(diff / oneDay);
 }
 
-// Global variables for quotes and current display state
 let ALL_QUOTES = [];
 let SHORT_QUOTES = [];
-let CURRENT_DISPLAY_DAY_OFFSET = 0; // 0 for today, -1 for yesterday
-const MAX_QUOTE_WORDS = 100; // Increased default, can be adjusted
+let CURRENT_DISPLAY_DAY_OFFSET = 0; 
+const MAX_QUOTE_WORDS = 75; // Adjusted from 100 back to 75, or your preference
 
 async function initializeQuotes() {
-    // Assuming you'll use a combined file later, or stick to one for now
-    // ALL_QUOTES = await fetchQuotes('data/all_combined_quotes.json');
-    ALL_QUOTES = await fetchQuotes('data/quotes_hidden_words.json'); // Or your current primary file
-
+    ALL_QUOTES = await fetchQuotes('data/quotes_hidden_words.json'); 
     if (ALL_QUOTES.length === 0) {
         displayQuote(null); 
         return false;
@@ -117,13 +112,19 @@ async function initializeQuotes() {
 }
 
 function showQuoteForOffset(offset) {
-    if (SHORT_QUOTES.length === 0) {
+    if (SHORT_QUOTES.length === 0 && ALL_QUOTES.length > 0) {
+        // Fallback if no short quotes, use all quotes (optional)
+        // SHORT_QUOTES = ALL_QUOTES; 
+        // console.log("No short quotes, using all quotes for display.");
+    }
+    if (SHORT_QUOTES.length === 0) { // If still no quotes (e.g. fetch failed or all_quotes also empty)
         displayQuote(null);
         return;
     }
+
     const today = new Date();
     const targetDate = new Date(today);
-    targetDate.setDate(today.getDate() + offset); // offset is 0 for today, -1 for yesterday
+    targetDate.setDate(today.getDate() + offset); 
 
     const dayOfYearToDisplay = getDayOfYear(targetDate);
     const quote = getQuoteByDay(SHORT_QUOTES, dayOfYearToDisplay);
@@ -131,18 +132,29 @@ function showQuoteForOffset(offset) {
 
     CURRENT_DISPLAY_DAY_OFFSET = offset;
     updateButtonStates();
+
+    // Re-initialize Badi Calendar for the target date
+    // Ensure initializeBadiCalendar is globally accessible or imported if in separate modules
+    if (typeof initializeBadiCalendar === "function") {
+        const badiDateTarget = new Date(); // Create a new date object for Badi calculation
+        badiDateTarget.setDate(badiDateTarget.getDate() + offset);
+        initializeBadiCalendar(badiDateTarget); 
+    } else {
+        console.warn("initializeBadiCalendar function not found. Badi date won't update for yesterday/today.");
+    }
 }
 
 function updateButtonStates() {
     const todayButton = document.getElementById('today-button');
     const yesterdayButton = document.getElementById('yesterday-button');
-
-    if (CURRENT_DISPLAY_DAY_OFFSET === 0) {
-        todayButton.classList.add('button-active');
-        yesterdayButton.classList.remove('button-active');
-    } else if (CURRENT_DISPLAY_DAY_OFFSET === -1) {
-        yesterdayButton.classList.add('button-active');
-        todayButton.classList.remove('button-active');
+    if(todayButton && yesterdayButton){
+        if (CURRENT_DISPLAY_DAY_OFFSET === 0) {
+            todayButton.classList.add('button-active');
+            yesterdayButton.classList.remove('button-active');
+        } else if (CURRENT_DISPLAY_DAY_OFFSET === -1) {
+            yesterdayButton.classList.add('button-active');
+            todayButton.classList.remove('button-active');
+        }
     }
 }
 
@@ -159,7 +171,6 @@ function setupEventListeners() {
             }
         });
     }
-
     if (yesterdayButton) {
         yesterdayButton.addEventListener('click', (e) => {
             e.preventDefault();
@@ -168,7 +179,6 @@ function setupEventListeners() {
             }
         });
     }
-
     if (scrollArrow) {
         scrollArrow.addEventListener('click', (e) => {
             e.preventDefault();
@@ -178,25 +188,25 @@ function setupEventListeners() {
             }
         });
     }
-
-    // Populate current year in footer
     const yearSpan = document.getElementById('current-year');
-    if(yearSpan) {
-        yearSpan.textContent = new Date().getFullYear();
+    if(yearSpan) { // Check if the year span exists (it was removed from HTML)
+        // yearSpan.textContent = new Date().getFullYear(); 
+    } else { // If you want to add it back, ensure current-year id is in footer
+        const footer = document.querySelector('footer p');
+        if (footer && !document.getElementById('current-year')) { // Avoid duplicate
+            // Example: footer.innerHTML = `© ${new Date().getFullYear()} ${footer.textContent}`;
+        }
     }
 }
 
-
-// Main execution
 document.addEventListener('DOMContentLoaded', async () => {
-    const gregorianDateElement = document.getElementById('gregorianDate'); // Get Gregorian date element
-    if (gregorianDateElement) { // Remove Gregorian date from main display
-        gregorianDateElement.style.display = 'none'; // Hide it, as it's not part of this design's main view
+    const gregorianDateElement = document.getElementById('gregorianDate');
+    if (gregorianDateElement) { 
+        gregorianDateElement.style.display = 'none'; 
     }
-
     const quotesReady = await initializeQuotes();
     if (quotesReady) {
-        showQuoteForOffset(0); // Display today's quote initially
+        showQuoteForOffset(0); 
     }
     setupEventListeners();
 });
