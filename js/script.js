@@ -1,47 +1,64 @@
 // js/script.js
 
-// --- THEME TOGGLE --- (Keep as is)
-// ...
+// --- START OF ALL FUNCTION DEFINITIONS ---
+async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') {
+    try {
+        const response = await fetch(fileName); 
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${fileName}`);
+        return await response.json();
+    } catch (error) {
+        console.error("Could not fetch quotes:", error);
+        return [];
+    }
+}
 
-// --- QUOTE LOGIC ---
-let ALL_QUOTES = [];
-let SHORT_QUOTES = [];
-// CURRENT_DISPLAY_DAY_OFFSET is no longer needed as main jumbotron is always today
-const MAX_QUOTE_WORDS = 75; 
-let currentQuoteObjectForToday = null;
-let currentQuoteObjectForYesterday = null; // To store yesterday's quote object
+function filterQuotesByLength(quotesArray, maxWords) {
+    if (!Array.isArray(quotesArray)) return [];
+    return quotesArray.filter(quote => {
+        if (quote && typeof quote.text === 'string') {
+            const wordCount = quote.text.split(/\s+/).filter(word => word.length > 0).length;
+            return wordCount <= maxWords;
+        }
+        return false;
+    });
+}
 
-async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') { /* ... same ... */ }
-function filterQuotesByLength(quotesArray, maxWords) { /* ... same ... */ }
-function getQuoteByDay(quotesArray, dayOfYear) { /* ... same ... */ }
+function getQuoteByDay(quotesArray, dayOfYear) {
+    if (!Array.isArray(quotesArray) || quotesArray.length === 0) return null;
+    const adjustedDay = Math.max(1, Math.min(dayOfYear, 366));
+    const quoteIndex = (adjustedDay - 1) % quotesArray.length;
+    return quotesArray[quoteIndex];
+}
 
 function displaySingleQuote(quoteObject, textElId, authorElId, sourceElId) {
     const quoteTextElement = document.getElementById(textElId);
     const quoteAuthorElement = document.getElementById(authorElId);
     const quoteSourceFullElement = document.getElementById(sourceElId);
 
-    // Store the quote object for click-to-copy
     if (textElId === 'quote-text-today') currentQuoteObjectForToday = quoteObject;
     if (textElId === 'quote-text-yesterday') currentQuoteObjectForYesterday = quoteObject;
 
     if (quoteTextElement && quoteAuthorElement && quoteSourceFullElement) {
-        // No opacity animation for now, to simplify and ensure content is set
         if (quoteObject && quoteObject.text) {
-            quoteTextElement.textContent = quoteObject.text; 
-            let authorDisplay = quoteObject.author || 'Unknown';
-            if (quoteObject.tradition === "Bahá’í") authorDisplay = "Bahá’u’lláh";
-            // ... other author logic
-            quoteAuthorElement.textContent = authorDisplay; 
-            
-            let sourceText = quoteObject.source || 'Unknown Source';
-            let translatorInfo = quoteObject.translator ? ` (trans. ${quoteObject.translator})` : '';
-            quoteSourceFullElement.innerHTML = `<cite>${sourceText}</cite>${translatorInfo}`;
-            
-            // Make sure elements are visible if they were faded out previously
-            quoteTextElement.style.opacity = 1;
-            quoteAuthorElement.style.opacity = 1;
-            quoteSourceFullElement.style.opacity = 1;
+            quoteTextElement.style.opacity = 0;
+            quoteAuthorElement.style.opacity = 0;
+            quoteSourceFullElement.style.opacity = 0;
 
+            setTimeout(() => { 
+                quoteTextElement.textContent = quoteObject.text; 
+                let authorDisplay = quoteObject.author || 'Unknown';
+                if (quoteObject.tradition === "Bahá’í") authorDisplay = "Bahá’u’lláh";
+                
+                quoteAuthorElement.textContent = authorDisplay; 
+                
+                let sourceText = quoteObject.source || 'Unknown Source';
+                let translatorInfo = quoteObject.translator ? ` (trans. ${quoteObject.translator})` : '';
+                quoteSourceFullElement.innerHTML = `<cite>${sourceText}</cite>${translatorInfo}`;
+                
+                quoteTextElement.style.opacity = 1;
+                quoteAuthorElement.style.opacity = 1;
+                quoteSourceFullElement.style.opacity = 1;
+            }, 150);
         } else {
             quoteTextElement.textContent = "No suitable sacred verse available.";
             quoteAuthorElement.textContent = "";
@@ -50,17 +67,31 @@ function displaySingleQuote(quoteObject, textElId, authorElId, sourceElId) {
     }
 }
 
-function getDayOfYear(date = new Date()) { /* ... same ... */ }
+function getDayOfYear(date = new Date()) {
+    const start = new Date(date.getFullYear(), 0, 0);
+    const diff = date - start;
+    const oneDay = 1000 * 60 * 60 * 24;
+    return Math.floor(diff / oneDay);
+}
 
-function displayGregorianDate(date = new Date(), elementId = "gregorianDatePanel") { /* ... same ... */ }
+function displayGregorianDate(date = new Date(), elementId = "gregorianDatePanel") {
+    const gregorianDateElement = document.getElementById(elementId);
+    if (gregorianDateElement) {
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, '0');
+        const day = String(date.getDate()).padStart(2, '0');
+        gregorianDateElement.textContent = `${year}-${month}-${day}`;
+    }
+}
 
-async function initializeAndShowToday() {
+async function initializeAndShowPage() { // Renamed from initializeAndShowToday
     ALL_QUOTES = await fetchQuotes('data/quotes_hidden_words.json'); 
     if (!Array.isArray(ALL_QUOTES)) ALL_QUOTES = []; 
     if (ALL_QUOTES.length === 0) { 
         displaySingleQuote(null, 'quote-text-today', 'quote-author-today', 'quote-source-full-today'); 
         return false; 
     }
+    
     SHORT_QUOTES = filterQuotesByLength(ALL_QUOTES, MAX_QUOTE_WORDS);
     if (!Array.isArray(SHORT_QUOTES)) SHORT_QUOTES = []; 
     console.log(`Fetched ${ALL_QUOTES.length} total quotes, filtered to ${SHORT_QUOTES.length} quotes with <= ${MAX_QUOTE_WORDS} words.`);
@@ -69,26 +100,19 @@ async function initializeAndShowToday() {
         return false; 
     }
 
-    const todayDateObj = new Date();
-    const dayOfYearToday = getDayOfYear(todayDateObj);
-    const todaysQuote = getQuoteByDay(SHORT_QUOTES, dayOfYearToday);
-    displaySingleQuote(todaysQuote, 'quote-text-today', 'quote-author-today', 'quote-source-full-today');
-    
-    // Dates for the main info panel (always today's initially)
-    displayGregorianDate(todayDateObj, "gregorianDatePanel");
-    if (typeof initializeBadiCalendar === "function") {
-        initializeBadiCalendar(todayDateObj, "badiDate"); 
-    }
+    showQuoteForDayOffset(0); 
     return true; 
 }
 
-let isYesterdaySectionVisible = false; // Track visibility
+let isYesterdaySectionVisible = false; 
 
 function showYesterdaySection() {
-    if (SHORT_QUOTES.length === 0) { // Ensure quotes are loaded
-        console.warn("Quotes not loaded, cannot show yesterday's quote.");
-        displaySingleQuote(null, 'quote-text-yesterday', 'quote-author-yesterday', 'quote-source-full-yesterday');
-        return;
+    if (SHORT_QUOTES.length === 0) {
+        if (ALL_QUOTES.length > 0) SHORT_QUOTES = filterQuotesByLength(ALL_QUOTES, MAX_QUOTE_WORDS);
+        if (SHORT_QUOTES.length === 0) {
+             displaySingleQuote(null, 'quote-text-yesterday', 'quote-author-yesterday', 'quote-source-full-yesterday');
+             return;
+        }
     }
 
     const today = new Date();
@@ -106,11 +130,10 @@ function showYesterdaySection() {
 
     const yesterdaySection = document.getElementById('yesterday-jumbotron');
     if (yesterdaySection) {
-        yesterdaySection.style.display = 'flex'; // Make it visible
-        // Scroll only if it was just made visible or specifically requested
-        if (!isYesterdaySectionVisible) {
-            setTimeout(() => { // Timeout to allow display update before scroll
-                yesterdaySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        yesterdaySection.style.display = 'flex'; 
+        if (!isYesterdaySectionVisible) { 
+            setTimeout(() => { 
+                 yesterdaySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
             }, 50); 
         }
         isYesterdaySectionVisible = true;
@@ -120,10 +143,43 @@ function showYesterdaySection() {
     document.getElementById('today-button')?.classList.remove('button-active');
 }
 
+function showQuoteForDayOffset(offset) { // This function handles changing the main jumbotron quote
+    if (SHORT_QUOTES.length === 0) { 
+        displaySingleQuote(null, 'quote-text-today', 'quote-author-today', 'quote-source-full-today'); 
+        return; 
+    }
+
+    const todayDateObj = new Date(); 
+    const targetDateObj = new Date(todayDateObj);
+    targetDateObj.setDate(todayDateObj.getDate() + offset); 
+
+    const dayOfYearToDisplay = getDayOfYear(targetDateObj);
+    const quote = getQuoteByDay(SHORT_QUOTES, dayOfYearToDisplay);
+    displaySingleQuote(quote, 'quote-text-today', 'quote-author-today', 'quote-source-full-today'); 
+
+    CURRENT_DISPLAY_DAY_OFFSET = offset; 
+    updateButtonActiveStates();
+
+    displayGregorianDate(targetDateObj, "gregorianDatePanel");
+    if (typeof initializeBadiCalendar === "function") {
+        initializeBadiCalendar(targetDateObj, "badiDate"); 
+    }
+}
+
+
+function updateButtonActiveStates() {
+    const todayButton = document.getElementById('today-button');
+    const yesterdayButton = document.getElementById('yesterday-button');
+    if(todayButton && yesterdayButton){
+        todayButton.classList.toggle('button-active', CURRENT_DISPLAY_DAY_OFFSET === 0);
+        yesterdayButton.classList.toggle('button-active', CURRENT_DISPLAY_DAY_OFFSET === -1);
+    }
+}
+
 function setupEventListeners() {
     const todayButton = document.getElementById('today-button');
     const yesterdayButton = document.getElementById('yesterday-button');
-    const scrollArrowToday = document.getElementById('scroll-down-arrow-today'); // ID from HTML
+    const scrollArrowToday = document.getElementById('scroll-down-arrow-today');
     const quoteTextToday = document.getElementById('quote-text-today');
     const quoteTextYesterday = document.getElementById('quote-text-yesterday');
     const badiDateTitle = document.getElementById('badiDate');
@@ -131,8 +187,14 @@ function setupEventListeners() {
     if (todayButton) {
         todayButton.addEventListener('click', (e) => {
             e.preventDefault();
+            // If yesterday section is visible, clicking "Today" might mean
+            // we want to just scroll to top, and main quote is already today's.
+            // Or if "Yesterday" button changed the main quote, then reload today's quote.
+            if (CURRENT_DISPLAY_DAY_OFFSET !== 0) { // If we were showing yesterday in main jumbotron
+                showQuoteForDayOffset(0); // Re-display today's quote in main jumbotron
+            }
             document.getElementById('main-jumbotron').scrollIntoView({ behavior: 'smooth' });
-            // Update main info panel dates to today's
+            // Ensure main panel dates are for today
             const todayDateObj = new Date();
             displayGregorianDate(todayDateObj, "gregorianDatePanel");
             if (typeof initializeBadiCalendar === "function") {
@@ -140,16 +202,17 @@ function setupEventListeners() {
             }
             todayButton.classList.add('button-active');
             yesterdayButton?.classList.remove('button-active');
-            // Optionally hide yesterday's section if you want "Today" to reset the view
-            // const yesterdaySection = document.getElementById('yesterday-jumbotron');
-            // if (yesterdaySection) yesterdaySection.style.display = 'none';
-            // isYesterdaySectionVisible = false;
+            
+            // Hide yesterday section if "Today" is clicked
+            const yesterdaySection = document.getElementById('yesterday-jumbotron');
+            if (yesterdaySection) yesterdaySection.style.display = 'none';
+            isYesterdaySectionVisible = false;
         });
     }
     if (yesterdayButton) {
         yesterdayButton.addEventListener('click', (e) => {
             e.preventDefault();
-            showYesterdaySection(); 
+            showYesterdaySection(); // This will now show the new section and scroll
         });
     }
     if (scrollArrowToday) {
@@ -159,13 +222,93 @@ function setupEventListeners() {
         });
     }
 
-    function copyQuoteToClipboard(quoteObj) { /* ... same copy logic ... */ }
-    if (quoteTextToday) { /* ... same ... */ }
-    if (quoteTextYesterday) { /* ... same ... */ }
-    if (badiDateTitle) { /* ... same Gregorian toggle logic ... */ }
+    function copyQuoteToClipboard(quoteObj) { 
+        if (quoteObj && quoteObj.text) {
+            let textToCopy = quoteObj.text;
+            if (quoteObj.author) textToCopy += `\n— ${quoteObj.author}`;
+            if (quoteObj.source) textToCopy += `, ${quoteObj.source}`;
+            if (quoteObj.translator) textToCopy += ` (trans. ${quoteObj.translator})`;
+            
+            navigator.clipboard.writeText(textToCopy.trim()).then(() => {
+                alert("Quote copied to clipboard!"); 
+            }).catch(err => {
+                console.error('Failed to copy text: ', err);
+                alert("Could not copy quote.");
+            });
+        }
+    }
+
+    if (quoteTextToday) {
+        quoteTextToday.addEventListener('click', () => copyQuoteToClipboard(currentQuoteObjectForToday));
+    }
+    if (quoteTextYesterday) {
+        quoteTextYesterday.addEventListener('click', () => copyQuoteToClipboard(currentQuoteObjectForYesterday));
+    }
+
+    if (badiDateTitle) {
+        badiDateTitle.addEventListener('click', () => {
+            const gregorianEl = document.getElementById('gregorianDatePanel');
+            if (gregorianEl) {
+                const isCurrentlyHidden = gregorianEl.style.display === 'none' || gregorianEl.style.display === '';
+                if (isCurrentlyHidden) {
+                    gregorianEl.style.display = 'block';
+                    requestAnimationFrame(() => { 
+                        requestAnimationFrame(() => {
+                             gregorianEl.style.opacity = '0.85'; 
+                             gregorianEl.classList.add('visible');
+                        });
+                    });
+                } else {
+                    gregorianEl.style.opacity = '0';
+                    gregorianEl.classList.remove('visible');
+                    gregorianEl.addEventListener('transitionend', function handler() {
+                        if (gregorianEl.style.opacity === '0') { 
+                             gregorianEl.style.display = 'none';
+                        }
+                        gregorianEl.removeEventListener('transitionend', handler);
+                    }, { once: true });
+                }
+            }
+        });
+    }
+}
+// --- END OF FUNCTION DEFINITIONS ---
+
+
+// --- GLOBAL VARIABLE DECLARATIONS (if not already above their first use) ---
+// let ALL_QUOTES = []; // Already above
+// let SHORT_QUOTES = []; // Already above
+// let CURRENT_DISPLAY_DAY_OFFSET = 0; // Already above
+// const MAX_QUOTE_WORDS = 75; // Already above
+// let currentQuoteObjectForToday = null; // Already above
+// let currentQuoteObjectForYesterday = null; // Already above
+// let isYesterdaySectionVisible = false; // Already above
+
+
+// --- IMMEDIATE EXECUTION CODE (Theme Toggle) ---
+const themeToggleButton = document.getElementById('theme-toggle-button');
+const currentTheme = localStorage.getItem('theme');
+
+if (currentTheme) {
+    document.body.classList.add(currentTheme);
+} else {
+    document.body.classList.add('light-mode'); 
 }
 
+if (themeToggleButton) { 
+    themeToggleButton.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        document.body.classList.toggle('light-mode');
+        
+        let theme = document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode';
+        localStorage.setItem('theme', theme);
+    });
+}
+// --- END IMMEDIATE EXECUTION CODE ---
+
+
+// --- MAIN DOMCONTENTLOADED LISTENER ---
 document.addEventListener('DOMContentLoaded', async () => {
-    await initializeAndShowPage(); 
+    await initializeAndShowPage(); // This should now find initializeAndShowPage
     setupEventListeners();
 });
