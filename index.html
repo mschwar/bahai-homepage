@@ -4,54 +4,64 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Sacred Verse</title>
+    <link rel="icon" href="favicon.png" type="image/png"> <!-- ADD FAVICON LINK -->
     <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,600|Source+Serif+Pro:400,600' rel='stylesheet' type='text/css'>
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body>
-    <div class="container-main-wrapper"> <!-- New outermost wrapper for full-width backgrounds -->
-        <div class="container-main"> <!-- For content max-width -->
+<body class="light-mode"> <!-- Default to light mode, JS will check localStorage -->
+    <div class="container-main-wrapper">
+        <div class="container-main">
             
             <main class="quote-jumbotron">
                 <div class="quote-content">
                     <h1 id="quote-text">Loading Sacred Verse...</h1>
-                    <h2 id="quote-author"></h2> <!-- Just author here now -->
+                    <div class="attribution-line"> <!-- Wrapper for author and copy button -->
+                        <h2 id="quote-author"></h2>
+                        <button id="copy-quote-button" title="Copy Quote" aria-label="Copy quote to clipboard">📋</button> <!-- Copy button -->
+                    </div>
                 </div>
-                <a href="#scroll-content-start" class="scroll-down-arrow">
+                <a href="#scroll-content-start" class="scroll-down-arrow" aria-label="Scroll down">
                     <img src="img/downArrow-01.png" alt="Scroll down" /> 
                 </a>
             </main>
-        </div> <!-- Close container-main -->
+        </div> 
 
         <div id="scroll-content-start" class="scrollable-content">
-            <div class="panel-citation"> <!-- NEW PANEL FOR CITATION -->
+            <div class="panel-citation">
                 <div class="citation-container">
-                    <p id="quote-source-full"></p> <!-- Full source/citation here -->
+                    <p id="quote-source-full"></p> 
                 </div>
             </div>
 
-            <!-- Whitespace panel (optional, can be done with margins) -->
             <div class="panel-whitespace"></div> 
 
-            <div class="panel-buttons">
+            <div class="panel-controls"> <!-- Renamed for clarity -->
                 <div class="buttons-container">
                     <a href="#" id="yesterday-button" class="button">Yesterday</a>
                     <a href="#" id="today-button" class="button button-active">Today</a> 
+                </div>
+                <div class="theme-toggle-container">
+                    <button id="theme-toggle-button" aria-label="Toggle light/dark theme">
+                        <span class="icon-sun">☀️</span>
+                        <span class="icon-moon">🌙</span>
+                    </button>
                 </div>
             </div>
 
             <div class="panel-info">
                 <div class="info-container">
+                    <!-- Badíʿ Date will be updated by JS for Today/Yesterday -->
                     <h1 id="badiDate" class="badi-date-title">Loading Badíʿ Date...</h1>
+                    <p id="gregorianDatePanel" class="date-text"></p> <!-- Gregorian date in panel -->
                     <p class="info-description">A daily verse for reflection.</p> 
                 </div>
             </div>
             
             <footer>
-                <!-- Removed copyright line, kept inspiration -->
                 <p>Inspired by the Ocean of God's words.</p>
             </footer>
-        </div> <!-- Close scrollable-content -->
-    </div> <!-- Close container-main-wrapper -->
+        </div> 
+    </div> 
 
     <!-- Scripts -->
     <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
