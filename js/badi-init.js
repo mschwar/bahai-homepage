@@ -1,8 +1,7 @@
 // js/badi-init.js
 
-function displayBadiDateInfo(dateInfo, elementId = "badiDate") { // Added elementId parameter
+function displayBadiDateInfo(dateInfo, elementId = "badiDate") {
   const badiDateElement = document.getElementById(elementId);
-
   if (badiDateElement && dateInfo) {
     let formattedBadiDate = "";
     if (dateInfo.bDay && dateInfo.bMonthMeaning && dateInfo.bMonthNameAr && dateInfo.bYear && dateInfo.bEraAbbrev) {
@@ -14,16 +13,14 @@ function displayBadiDateInfo(dateInfo, elementId = "badiDate") { // Added elemen
     badiDateElement.textContent = formattedBadiDate;
   } else if (badiDateElement) {
     badiDateElement.textContent = "Failed to receive Badíʿ Date details.";
-  } else {
-    // console.error(`Element with id '${elementId}' not found.`);
   }
 }
 
-function initializeBadiCalendar(dateToCalculate = new Date(), targetElementId = "badiDate") { // Added targetElementId
+function initializeBadiCalendar(dateToCalculate = new Date(), targetElementId = "badiDate") {
   if (typeof BadiDateToday === 'function') {
     try {
       let badiDateConfig = {
-        onReady: (di) => displayBadiDateInfo(di, targetElementId), // Pass targetElementId to onReady
+        onReady: (di) => displayBadiDateInfo(di, targetElementId),
         language: 'en',
         currentTime: dateToCalculate 
       };
@@ -41,10 +38,14 @@ function initializeBadiCalendar(dateToCalculate = new Date(), targetElementId = 
       }
     }
   } else {
-    // ... (error for BadiDateToday not defined)
+     console.error("CRITICAL: BadiDateToday function is NOT defined.");
+     const targetElement = document.getElementById(targetElementId);
+      if (targetElement) {
+        targetElement.textContent = "Error: Badíʿ Date script component unavailable.";
+      }
   }
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-    initializeBadiCalendar(new Date(), "badiDate"); // Initialize for today, targeting main Badi date element
+    initializeBadiCalendar(new Date(), "badiDate"); 
 });
