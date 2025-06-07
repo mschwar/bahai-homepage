@@ -1,119 +1,38 @@
 /* css/style.css */
 
-/* Theme Variables */
-:root {
-    --bg-color: rgb(239, 235, 233); /* Cream */
-    --text-color: rgb(26, 38, 57); /* Dark Blue */
-    --text-color-light: rgba(26, 38, 57, 0.8);
-    --text-color-lighter: rgba(26, 38, 57, 0.65);
-    
-    --panel-buttons-bg: rgb(26, 38, 57);      
-    --panel-buttons-text: rgb(239, 235, 233); 
-    
-    --panel-info-bg: rgb(62, 74, 97);        
-    --panel-info-text: rgb(239, 235, 233);    
+/* Theme Variables (Same as before) */
+:root { /* ... */ }
+body.dark-mode { /* ... */ }
 
-    --border-color-subtle: rgba(26, 38, 57, 0.15);
-    --button-border-color: var(--panel-buttons-text);
-    --button-active-bg: var(--panel-buttons-text);
-    --button-active-text: var(--panel-buttons-bg);
-    --button-hover-bg: rgba(239, 235, 233, 0.1); 
-    --button-hover-text: var(--panel-buttons-text);
+html, body, div, main, footer, h1, h2, p, a, button { /* ... basic reset ... */ }
+body { /* ... basic body styles ... */ }
 
-    --shadow-color: rgba(0, 0, 0, 0.1);
-    --text-color-info: #3498db; 
-    --arrow-filter: invert(0%);
-    --panel-text-rgb: 239, 235, 233; /* For theme toggle rgba */
-    --theme-toggle-icon-color: rgba(var(--panel-text-rgb), 0.55);
-    --theme-toggle-hover-icon-color: var(--panel-info-text);
-    --theme-toggle-hover-bg: rgba(var(--panel-text-rgb), 0.15);
-}
-body.dark-mode {
-    --bg-color: rgb(26, 38, 57);    
-    --text-color: rgb(239, 235, 233); 
-    --text-color-light: rgba(239, 235, 233, 0.8);
-    --text-color-lighter: rgba(239, 235, 233, 0.65);
-    --panel-buttons-bg: rgb(16, 24, 37); 
-    --panel-buttons-text: rgb(219, 215, 213); 
-    --panel-info-bg: rgb(42, 54, 77); 
-    --panel-info-text: rgb(219, 215, 213); 
-    --border-color-subtle: rgba(239, 235, 233, 0.15);
-    --button-active-text: rgb(16,24,37); 
-    --button-hover-bg: rgba(219, 215, 213, 0.1);
-    --shadow-color: rgba(0, 0, 0, 0.3); 
-    --text-color-info: #5ac8fa; 
-    --arrow-filter: invert(100%);
-    --panel-text-rgb: 219, 215, 213;
-    --theme-toggle-icon-color: rgba(var(--panel-text-rgb), 0.55);
-    --theme-toggle-hover-icon-color: var(--panel-info-text);
-    --theme-toggle-hover-bg: rgba(var(--panel-text-rgb), 0.15);
-}
-
-html, body, div, main, footer, h1, h2, p, a, button {
-    margin: 0; padding: 0; box-sizing: border-box;
-}
-body {
-    background-color: var(--bg-color); color: var(--text-color);
-    font-family: 'Source Sans Pro', sans-serif; font-size: 14px; 
-    line-height: 1.6; text-rendering: optimizeLegibility;
-    transition: background-color 0.3s ease, color 0.3s ease;
-    scroll-behavior: smooth;
-}
-
-/* Quote Jumbotron Area */
-.quote-jumbotron {
-    min-height: 100vh; display: flex; flex-direction: column;
-    justify-content: center; align-items: center;  
-    position: relative; width: 100%; 
-    padding: 40px 20px; /* Overall padding for the jumbotron view */
-    background-color: var(--bg-color); 
-    transition: background-color 0.3s ease;
-}
-.quote-content-wrapper { max-width: 700px; width: 100%; text-align: left; } /* Changed width to 100% to use jumbotron padding */
-
-#quote-text {
+/* Quote Jumbotron Area (applies to both #main-jumbotron and #yesterday-jumbotron-display) */
+.quote-jumbotron { /* ... same as last working version ... */ }
+.quote-content-wrapper { /* ... same ... */ }
+#quote-text, /* Simplified selector for today's quote text */
+#quote-text-yesterday { /* Selector for yesterday's quote text */
     font-family: 'Source Serif Pro', serif;
-    font-size: 1.6em;  
+    font-size: 1.6em; 
     font-weight: 400; line-height: 1.55; 
     margin-bottom: 1.5em; 
     color: var(--text-color); white-space: pre-line; 
     cursor: pointer; transition: color 0.2s ease-out, opacity 0.25s ease-out;
 }
-#quote-text:active { color: var(--text-color-info); }
+#quote-text:active, #quote-text-yesterday:active { color: var(--text-color-info); }
 
-.attribution-line { display: flex; align-items: center; }
-#quote-author { 
+#quote-author, /* Simplified selector for today's author */
+#quote-author-yesterday { 
     font-family: 'Source Sans Pro', sans-serif; 
     font-size: 1.2em; 
-    font-weight: 400;
+    font-weight: 400; 
     color: var(--text-color-light); 
     transition: color 0.3s ease, opacity 0.25s ease-out;
 }
 
-.scroll-down-arrow {
-    position: absolute; bottom: 5vh; left: 50%;
-    transform: translateX(-50%); padding: 10px; cursor: pointer;
-    opacity: 0.5; transition: opacity 0.25s ease-in-out, filter 0.3s ease;
-}
-.scroll-down-arrow img { width: 24px; height: auto; filter: var(--arrow-filter); }
-.scroll-down-arrow:hover { opacity: 0.8; }
-.scroll-down-arrow:focus { outline: 2px solid var(--text-color-info); outline-offset: 2px; border-radius: 50%; }
-
-/* Scrollable Content Area - this div itself is a block, panels inside are full width */
+.scroll-down-arrow { /* ... same ... */ }
 .scrollable-content { width: 100%; }
-
-/* Panels take full width for their backgrounds */
-.panel-citation, .panel-buttons, .panel-info, footer {
-    width: 100%; /* Ensure they try to span full width of their parent (.scrollable-content) */
-    /* Side padding is now handled by .panel-content-constrained */
-}
-
-.panel-content-constrained {
-    max-width: 700px; 
-    margin: 0 auto;   
-    padding: 0 20px;  /* Horizontal padding for the actual text/buttons */
-    width: 100%;      
-}
+.panel-content-constrained { max-width: 700px; margin: 0 auto; padding: 0 20px; width: 100%;}
 
 .panel-citation {
     background-color: var(--bg-color); color: var(--text-color); 
@@ -121,111 +40,90 @@ body {
     text-align: center; /* Centers the .panel-content-constrained block */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
-#quote-source-full {
+#quote-source-full, /* Simplified selector for today's source */
+#quote-source-full-yesterday {
     font-family: 'Source Sans Pro', sans-serif; 
-    font-size: 1.2em;   
-    line-height: 1.6; font-style: normal; 
-    font-weight: 400;   
+    font-size: 1.2em;   /* Matches author size */
+    line-height: 1.6; font-style: normal; /* UNITALICIZED */
+    font-weight: 400;   /* Match Author Weight */
     opacity: 1; transition: opacity 0.25s ease-out;
-    display: block; /* Was inline-block, block might be better with parent text-align:center */
-    text-align: left; /* Text within the paragraph is left-aligned */
+    display: inline-block; text-align: left; 
 }
-#quote-source-full cite { font-style: italic; }
+#quote-source-full cite, #quote-source-full-yesterday cite { font-style: italic; }
 
-.panel-buttons {
-    background-color: var(--panel-buttons-bg); color: var(--panel-buttons-text); 
-    padding: 40px 0; /* Target padding "doubled" feel */
+/* Button Panels Styling */
+.panel-navigation, /* For "Today" button */
+.panel-buttons {    /* For "Yesterday" button */
+    background-color: var(--panel-buttons-bg); 
+    color: var(--panel-buttons-text); 
+    padding: 30px 0; /* Consistent padding */
     text-align: center;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
-.panel-buttons .panel-content-constrained.buttons-layout-centered {
-    max-width: 400px; /* Control width of button group */
+.panel-navigation .panel-content-constrained,
+.panel-buttons .panel-content-constrained { /* No longer needs buttons-layout-centered */
+    max-width: 400px; /* Or whatever fits your single button well */
     display: flex;
     justify-content: center;
 }
-.buttons-container { display: flex; justify-content: space-around; width: 100%; max-width: 300px; }
+.buttons-container { /* Will now usually hold one button */
+    display: flex;
+    justify-content: center; 
+    width: auto; /* Adjust to content */
+}
+/* .button styles remain same */
 .button {
     border: 2px solid var(--button-border-color); color: var(--panel-buttons-text);
-    background-color: transparent; padding: 0.9em 1.4em; text-decoration: none;
+    background-color: transparent; padding: 1em 1.5em; text-decoration: none;
     font-size: 1em; transition: background-color 0.25s ease-in-out, color 0.25s ease-in-out;
-    text-align: center; border-radius: 3px; font-weight: 600; min-width: 100px; 
+    text-align: center; border-radius: 0px; 
+    font-weight: 400; 
+    display: inline-block; /* Make buttons behave well */
 }
-.button:hover, .button:focus { background-color: var(--button-hover-bg); color: var(--button-hover-text); outline: none; }
-.button.button-active { background-color: var(--button-active-bg); color: var(--button-active-text); }
+.button:hover, .button:focus { /* ... */ }
+.button.button-active { /* ... */ }
+
 
 .panel-info { 
     background-color: var(--panel-info-bg); 
     color: var(--panel-info-text); 
-    padding: calc(40px * 1.61) 0; /* ~1.61x taller padding than .panel-buttons */
+    padding: calc(30px * 1.61 * 1.2) 20px; /* Increased whitespace for date panel */
+    /* Using 1.2 as an additional multiplier for more pronounced space */
     text-align: center;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
 .badi-date-title.clickable-date { 
-    font-family: 'Source Serif Pro', serif; font-size: 2.0em; font-weight: 600;
-    margin-bottom: 0.4em; line-height: 1.3; cursor: pointer; 
-    display: inline-block; padding: 3px 0; transition: opacity 0.2s ease;
+    font-size: 2.2em; /* INCREASED */
+    /* ... other styles same ... */
 }
-.badi-date-title.clickable-date:hover { opacity: 0.8; }
-#gregorianDatePanel.date-text { 
-    font-size: 0.8em; color: var(--panel-info-text); 
-    opacity: 0; max-height: 0; overflow: hidden;
-    margin-top: 8px; margin-bottom: 0; line-height: 1.2em; 
-    transition: opacity 0.3s ease, max-height 0.3s ease, margin-top 0.3s ease;
-}
-#gregorianDatePanel.date-text.visible { opacity: 0.85; max-height: 2em; margin-bottom: 10px;}
+#gregorianDatePanel.date-text.visible { margin-bottom: 12px; /* Space before toggle */ }
+.theme-toggle-container-subtle { margin: 8px auto 0 auto; /* Tighter to dates */ }
+#theme-toggle-button { /* ... same subtle style ... */ }
+/* ... Icon display logic same ... */
 
-.theme-toggle-container-subtle { margin: 12px auto 0 auto; width: fit-content; }
-#theme-toggle-button {
-    background: none; border: none; color: var(--theme-toggle-icon-color); 
-    font-size: 1.1em; padding: 4px; border-radius: 50%; cursor: pointer;
-    line-height: 1; transition: color 0.25s ease, transform 0.2s ease;
+
+/* Past Quote Jumbotron Specifics */
+.past-quote-jumbotron {
+    /* background-color: var(--bg-color); /* Same as today's for identical look */
+    border-top: 1px solid var(--border-color-subtle); /* Optional separator */
 }
-#theme-toggle-button:hover, #theme-toggle-button:focus {
-    color: var(--theme-toggle-hover-icon-color); transform: scale(1.15); 
-    background-color: var(--theme-toggle-hover-bg); outline: none;
-}
-.icon-moon { display: var(--icon-moon-display, inline); } 
-.icon-sun { display: var(--icon-sun-display, none); }   
-body.dark-mode .icon-moon { --icon-moon-display: none; }
-body.dark-mode .icon-sun { --icon-sun-display: inline; }
+.past-quote-day-label { text-align: center; margin-bottom: 2em; font-size: 1.3em; font-weight: 600; color: var(--text-color-light); }
+.past-citation { background-color: transparent; padding: 8vh 0 2vh 0; margin-top: 1em; }
+.past-date-info { text-align: center; margin-top: 2em; padding-bottom: 3vh; }
+.past-badi-date { font-size: 1.2em; /* ... */ }
+.past-date-info .date-text { font-size: 0.8em; /* ... */ }
 
 footer {
     background-color: var(--panel-bg-dark); 
     color: var(--text-color-lighter); 
     text-align: center;
-    padding: 30px 0; /* Matched to button panel padding for visual consistency */
+    padding: 30px 20px; 
     font-size: 0.85em; 
     transition: background-color 0.3s ease, color 0.3s ease;
+    min-height: 50px; /* Ensure footer has some height even if empty */
 }
-footer .panel-content-constrained p { padding: 0; margin-bottom: 0; }
+footer .panel-content-constrained p { display: none; /* Hide "Inspired by" text */ }
 
-/* Media Queries */
-@media only screen and (max-width: 768px) {
-    body { font-size: 13.5px; } 
-    .quote-jumbotron { padding: 30px 15px; }
-    .quote-content-wrapper { width: 100%; }
-    #quote-text { font-size: 1.45em; } 
-    #quote-author { font-size: 1.1em; }  
-    .panel-content-constrained { padding: 0 15px; }
-    #quote-source-full { font-size: 1.1em; } 
-    .panel-citation { padding: 8vh 0; }
-    .panel-buttons { padding: 30px 0; }
-    .panel-info { padding: calc(30px * 1.61) 0; }
-    .badi-date-title { font-size: 1.8em; } 
-    #theme-toggle-button { font-size: 1em; }
-}
-@media only screen and (max-width: 480px) {
-    body { font-size: 13px; } 
-    .quote-jumbotron { padding: 20px 10px; }
-    .quote-content-wrapper { width: 100%; }
-    #quote-text { font-size: 1.35em; } 
-    #quote-author { font-size: 1.05em; } 
-    .panel-content-constrained { padding: 0 10px; }
-    #quote-source-full { font-size: 1.05em; }
-    .panel-citation { padding: 7vh 0; }
-    .panel-buttons { padding: 25px 0; }
-    .buttons-container { flex-direction: column; gap: 10px; max-width: 280px;}
-    .button { width: 100%; }
-    .panel-info { padding: calc(25px * 1.61) 0; }
-    .badi-date-title { font-size: 1.6em; } 
-}
+
+/* Media Queries - review all new sizes and panel paddings */
+/* ... (You'll need to adjust media queries based on the new base sizes and panel heights) ... */

@@ -12,12 +12,12 @@
     <div class="container-main-wrapper"> 
         <main class="quote-jumbotron" id="main-jumbotron"> 
             <div class="quote-content-wrapper"> 
-                <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse...</h1> <!-- Simplified ID -->
+                <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse...</h1>
                 <div class="attribution-line"> 
-                    <h2 id="quote-author"></h2> <!-- Simplified ID -->
+                    <h2 id="quote-author"></h2> 
                 </div>
             </div>
-            <a href="#scroll-content-start" id="scroll-down-arrow" class="scroll-down-arrow" aria-label="Scroll down"> <!-- Simplified ID -->
+            <a href="#scroll-content-start" id="scroll-down-arrow" class="scroll-down-arrow" aria-label="Scroll down"> 
                 <img src="img/downArrow-01.png" alt="Scroll down" /> 
             </a>
         </main>
@@ -25,15 +25,15 @@
         <div id="scroll-content-start" class="scrollable-content">
             <div class="panel-citation"> 
                 <div class="panel-content-constrained"> 
-                    <p id="quote-source-full"></p> <!-- Simplified ID -->
+                    <p id="quote-source-full"></p> 
                 </div>
             </div>
 
-            <div class="panel-buttons"> 
+            <!-- TODAY Button Panel (was panel-buttons) -->
+            <div class="panel-navigation" id="today-panel-nav"> 
                 <div class="panel-content-constrained buttons-layout-centered">
                     <div class="buttons-container">
-                        <a href="#" id="yesterday-button" class="button">Yesterday</a> 
-                        <a href="#" id="today-button" class="button button-active">Today</a> 
+                        <a href="#main-jumbotron" id="today-button" class="button button-active">Today</a> 
                     </div>
                 </div>
             </div>
@@ -50,11 +50,40 @@
                     </div>
                 </div>
             </div>
+
+            <!-- YESTERDAY Button Panel -->
+            <div class="panel-buttons" id="yesterday-panel-nav"> 
+                <div class="panel-content-constrained buttons-layout-centered">
+                    <div class="buttons-container">
+                        <a href="#yesterday-jumbotron-display" id="yesterday-button" class="button">Yesterday</a> 
+                    </div>
+                </div>
+            </div>
+            
+            <!-- YESTERDAY'S QUOTE SECTION (Initially Hidden) -->
+            <div id="yesterday-jumbotron-display" class="quote-jumbotron past-quote-jumbotron" style="display: none;">
+                 <div class="panel-content-constrained"> 
+                    <h2 class="past-quote-day-label">Yesterday</h2>
+                    <div class="quote-content-wrapper">
+                        <h1 id="quote-text-yesterday" title="Click to copy quote"></h1>
+                        <div class="attribution-line">
+                            <h2 id="quote-author-yesterday"></h2>
+                        </div>
+                    </div>
+                    <div class="panel-citation past-citation"> 
+                         <div class="panel-content-constrained">
+                            <p id="quote-source-full-yesterday"></p>
+                         </div>
+                    </div>
+                    <div class="past-date-info">
+                        <p id="badiDateYesterday" class="date-text past-badi-date"></p>
+                        <p id="gregorianDateYesterday" class="date-text"></p>
+                    </div>
+                </div>
+            </div>
             
             <footer>
-                <div class="panel-content-constrained">
-                    <p>Inspired by the Ocean of God's words.</p>
-                </div>
+                <!-- Footer content removed as per request -->
             </footer>
         </div> 
     </div> 
