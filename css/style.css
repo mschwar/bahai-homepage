@@ -1,77 +1,140 @@
 /* css/style.css */
 
-/* ... (Keep Theme Variables and html, body, .container-main-wrapper from previous version) ... */
+/* Theme Variables */
+:root {
+    --bg-color: rgb(239, 235, 233); /* Cream */
+    --text-color: rgb(26, 38, 57); /* Dark Blue */
+    --text-color-light: rgba(26, 38, 57, 0.8); /* Slightly less emphasis */
+    --text-color-lighter: rgba(26, 38, 57, 0.65); /* Even less emphasis */
+    
+    --panel-bg-dark: rgb(26, 38, 57);
+    --panel-text-light: rgb(239, 235, 233);
+    --panel-bg-medium: rgb(62, 74, 97); 
+    
+    --border-color-subtle: rgba(26, 38, 57, 0.15);
+    --button-border-color: var(--panel-text-light);
+    --button-active-bg: var(--panel-text-light);
+    --button-active-text: var(--panel-bg-dark);
+    --button-hover-bg: rgba(239, 235, 233, 0.1); /* Subtle hover for non-active */
+    --button-hover-text: var(--panel-text-light);
 
-.container-main { /* For jumbotron content */
-    width: 100%;
-    max-width: 800px; /* Max width for the jumbotron text content */
-    margin: 0 auto; 
-    padding: 0 20px; /* Horizontal padding for jumbotron content */
-    display: flex;
-    flex-direction: column;
+    --shadow-color: rgba(0, 0, 0, 0.1);
+    --text-color-info: #3498db; 
+    --arrow-filter: invert(0%);
+    --panel-text-rgb: 239, 235, 233;
+    --theme-toggle-icon-color: rgba(var(--panel-text-rgb), 0.55);
+    --theme-toggle-hover-icon-color: var(--panel-text-light);
+    --theme-toggle-hover-bg: rgba(var(--panel-text-rgb), 0.15);
 }
 
-/* Quote Jumbotron Area (Applies to both Today and Yesterday) */
+body.dark-mode {
+    --bg-color: rgb(26, 38, 57);    
+    --text-color: rgb(239, 235, 233); 
+    --text-color-light: rgba(239, 235, 233, 0.8);
+    --text-color-lighter: rgba(239, 235, 233, 0.65);
+
+    --panel-bg-dark: rgb(16, 24, 37); 
+    --panel-text-light: rgb(219, 215, 213); /* Slightly adjusted for dark mode readability */
+    --panel-bg-medium: rgb(42, 54, 77); 
+    
+    --border-color-subtle: rgba(239, 235, 233, 0.15);
+    /* Button vars will use the new panel-text-light */
+    --button-active-bg: var(--panel-text-light);
+    --button-active-text: var(--panel-bg-dark); /* Darkest background for active button text */
+    --button-hover-bg: rgba(219, 215, 213, 0.1);
+    --button-hover-text: var(--panel-text-light);
+    
+    --shadow-color: rgba(0, 0, 0, 0.3); /* Darker shadow for dark mode */
+    --text-color-info: #5ac8fa; 
+    --arrow-filter: invert(100%);
+    --panel-text-rgb: 219, 215, 213;
+    --theme-toggle-icon-color: rgba(var(--panel-text-rgb), 0.55);
+    --theme-toggle-hover-icon-color: var(--panel-text-light);
+    --theme-toggle-hover-bg: rgba(var(--panel-text-rgb), 0.15);
+}
+
+html, body, div, header, main, footer, h1, h2, h3, p, a, ul, li, img, button {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px; 
+    line-height: 1.6; 
+    text-rendering: optimizeLegibility;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    scroll-behavior: smooth;
+}
+
+.container-main-wrapper { width: 100%; }
+
+/* Quote Jumbotron Area */
 .quote-jumbotron {
     min-height: 100vh; 
     display: flex;
     flex-direction: column;
     justify-content: center; 
-    align-items: center;  /* Center the .quote-content-wrapper */
+    align-items: center;  
     position: relative; 
     width: 100%; 
-    padding: 40px 0; /* Vertical padding */
+    padding: 30px 20px; 
     background-color: var(--bg-color); 
     transition: background-color 0.3s ease;
 }
 
 .quote-content-wrapper { 
-    max-width: 700px; /* Max width for text block within jumbotron */
+    max-width: 700px; 
     width: 90%;
     text-align: left; 
 }
 
-#quote-text-today, 
-#quote-text-yesterday {
+#quote-text {
     font-family: 'Source Serif Pro', serif;
-    font-size: 1.6em;  /* Kept from previous adjustment */
+    font-size: 1.7em;  /* DECREASED by one step (was 1.8em) */
     font-weight: 400; 
     line-height: 1.55; 
-    margin-bottom: 1.5em; /* INCREASED WHITESPACE above author */
+    margin-bottom: 1.5em; /* INCREASED whitespace above author */
     color: var(--text-color); 
     white-space: pre-line; 
     cursor: pointer; 
-    transition: color 0.2s ease-out;
+    transition: color 0.2s ease-out, opacity 0.25s ease-out; /* Added opacity for JS fades */
 }
-#quote-text-today:active,
-#quote-text-yesterday:active {
-    color: var(--text-color-info);
-}
+#quote-text:active { color: var(--text-color-info); }
 
-.attribution-line {
-    display: flex;
-    align-items: center;
-    gap: 15px; 
-}
+.attribution-line { display: flex; align-items: center; }
 
-#quote-author-today, 
-#quote-author-yesterday { 
-    font-family: 'Source Sans Pro', sans-serif;
-    font-size: 1.35em; /* INCREASED to match citation, as per new request implied */
+#quote-author { 
+    font-family: 'Source Sans Pro', sans-serif; /* Match citation font family */
+    font-size: 1.2em; /* INCREASED by two steps (was 1.05em, then 1.15em) */
     font-weight: 400; /* UNBOLDED */
     color: var(--text-color-light); 
-    transition: color 0.3s ease;
+    transition: color 0.3s ease, opacity 0.25s ease-out;
 }
 
 /* Scroll Down Arrow */
-.scroll-down-arrow { /* ... same ... */ }
+.scroll-down-arrow {
+    position: absolute;
+    bottom: 4vh; 
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    cursor: pointer;
+    opacity: 0.5; 
+    transition: opacity 0.25s ease-in-out, filter 0.3s ease;
+}
+.scroll-down-arrow img { width: 24px; height: auto; filter: var(--arrow-filter); } /* Slightly smaller */
+.scroll-down-arrow:hover { opacity: 0.8; }
+.scroll-down-arrow:focus { outline: 2px solid var(--text-color-info); outline-offset: 2px; border-radius: 50%; }
 
 /* Scrollable Content Area */
 .scrollable-content { width: 100%; }
 
-/* Common class for constraining content within full-width panels */
 .panel-content-constrained {
-    max-width: 800px; 
+    max-width: 700px; /* Unified max-width for panel content */
     margin: 0 auto;
     padding: 0 20px; 
     width: 100%;
@@ -79,170 +142,157 @@
 
 .panel-citation {
     background-color: var(--bg-color); 
-    color: var(--text-color-lighter); 
-    padding: 10vh 0; /* INCREASED WHITESPACE (was 8vh) */
-    text-align: center; 
+    color: var(--text-color); /* Match author color better */
+    padding: 10vh 0; /* LIBERAL WHITESPACE (was 6vh-8vh) */
+    text-align: left; /* Citations often look good left-aligned */
     transition: background-color 0.3s ease, color 0.3s ease;
 }
-.panel-citation .panel-content-constrained { max-width: 700px; }
-#quote-source-full-today, 
-#quote-source-full-yesterday {
+#quote-source-full {
     font-family: 'Source Sans Pro', sans-serif; /* Match Author Font */
-    font-size: 1.35em; /* INCREASED (was 1.55em of serif, now matching author) */
+    font-size: 1.2em; /* INCREASED from 0.95em, now matches author (was 1.35em, then 1.55em) */
+                      /* Let's make it the same as author. */
     line-height: 1.6;
     font-style: normal; /* UNITALICIZED */
-    font-weight: 400; /* Match Author Weight */
+    font-weight: 400;   /* Match Author Weight */
+    opacity: 0; /* For JS fade-in */
+    transition: opacity 0.25s ease-out;
 }
-#quote-source-full-today cite, /* If you still use <cite> inside, it can be italic */
-#quote-source-full-yesterday cite { 
-    font-style: italic; 
-}
+#quote-source-full cite { font-style: italic; } /* Keep <cite> italic if used */
 
-.panel-whitespace.panel-whitespace-large { 
-    height: 10vh; /* Kept, adjust if citation panel provides enough */
-    background-color: var(--bg-color); 
-    transition: background-color 0.3s ease;
-}
+.panel-whitespace.panel-whitespace-large { height: 0vh; /* Remove explicit whitespace, use panel padding */ }
 
-/* Panel for Yesterday/Today Buttons - Styled like Sensible Words */
+/* Panel for Yesterday/Today Buttons */
 .panel-buttons {
-    background-color: rgb(26, 38, 57); /* Dark Blue from Sensible Words */
-    color: rgb(239, 235, 233); /* Cream text */
-    padding: 30px 0;          /* Matches Sensible Words padding in main.css for .panel-buttons */
+    background-color: var(--panel-bg-dark); 
+    color: var(--panel-text-light); 
+    padding: 40px 0; /* DOUBLED (was 30px, which was ~4vh) */
     text-align: center;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
-.panel-buttons .panel-content-constrained.buttons-layout-centered { /* Specific for this panel's content */
-    max-width: 500px; /* Sensible Words button container seems narrower */
+.panel-buttons .panel-content-constrained.buttons-layout-centered {
+    max-width: 450px; 
     display: flex;
-    justify-content: center; /* This will center the buttons-container */
+    justify-content: center;
 }
 .buttons-container {
     display: flex;
-    justify-content: space-around; /* Use space-around like Sensible Words for 2 buttons */
-    width: 100%; /* Allow it to take space within buttons-layout-centered */
-    max-width: 300px; /* Approx width for two buttons + gap */
+    justify-content: space-around; 
+    width: 100%; 
+    max-width: 320px; /* Adjust for two buttons */
 }
 .button {
-    border: 2px solid rgb(239, 235, 233); 
-    color: rgb(239, 235, 233);
+    border: 2px solid var(--button-border-color); 
+    color: var(--panel-text-light);
     background-color: transparent; 
-    padding: 1em 1.5em; /* Matches Sensible Words .button padding */
+    padding: 0.9em 1.4em; 
     text-decoration: none;
-    font-size: 1em; /* Relative to panel's base, or 1.25em of body in Sensible Words */
-    /* Sensible words uses 1.25em on <p> inside button, let's make button font-size 1em */
+    font-size: 1em; /* Relative to body (14px) */
     transition: background-color 0.25s ease-in-out, color 0.25s ease-in-out;
     text-align: center;
-    border-radius: 0px; /* Sensible Words buttons are square */
-    font-weight: 400; /* Sensible Words button text is not bold */
-    flex-grow: 1; /* Allow buttons to grow if needed */
-    max-width: 150px; /* Prevent buttons from becoming too wide */
+    border-radius: 3px; 
+    font-weight: 600; /* Bolder button text */
 }
 .button:hover, .button:focus { 
-    background-color: rgb(239, 235, 233); 
-    color: rgb(26, 38, 57); 
+    background-color: var(--button-hover-bg); 
+    color: var(--button-hover-text); 
     outline: none; 
 }
 .button.button-active { 
-    background-color: rgb(239, 235, 233); 
-    color: rgb(26, 38, 57); 
+    background-color: var(--button-active-bg); 
+    color: var(--button-active-text); 
 }
 
-.panel-info { /* Date panel, now with subtle toggle */
+.panel-info { 
     background-color: var(--panel-bg-medium); 
     color: var(--panel-text-light); 
-    padding: 5vh 20px; /* Adjusted padding */
+    padding: 5vh 20px; 
     text-align: center;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
-.badi-date-title.clickable-date { /* ... same ... */ }
-#gregorianDatePanel.date-text { /* ... same ... */ }
+.badi-date-title.clickable-date { 
+    font-family: 'Source Serif Pro', serif;
+    font-size: 1.6em; /* Slightly reduced */
+    font-weight: 600;
+    margin-bottom: 0.4em; 
+    line-height: 1.3;
+    cursor: pointer; 
+    display: inline-block; 
+    padding: 3px 0;
+    transition: opacity 0.2s ease;
+}
+.badi-date-title.clickable-date:hover { opacity: 0.8; }
+
+#gregorianDatePanel.date-text { 
+    font-size: 0.8em; /* Smaller */
+    color: var(--panel-text-light); 
+    opacity: 0; 
+    max-height: 0; 
+    overflow: hidden;
+    margin-top: 8px; /* Space after toggle */
+    margin-bottom: 0; 
+    line-height: 1.2em; 
+    transition: opacity 0.3s ease, max-height 0.3s ease, margin-top 0.3s ease;
+}
+#gregorianDatePanel.date-text.visible { 
+    opacity: 0.8; 
+    max-height: 2em; 
+}
 
 .theme-toggle-container-subtle { 
-    margin: 12px auto; /* Center it and provide spacing */
-    width: fit-content; /* Shrink to content */
+    margin: 10px auto 0 auto; /* Above Gregorian date, centered */
 }
 #theme-toggle-button {
     background: none;
-    border: none; /* NO BORDER for more subtlety */
-    color: rgba(var(--panel-text-rgb), 0.45); /* EVEN MORE SUBTLE icon color */
-    font-size: 1.3em; /* Keep icon size reasonable */
-    padding: 3px; /* Minimal padding */
+    border: none; 
+    color: var(--theme-toggle-icon-color); 
+    font-size: 1.1em; /* Subtle size */
+    padding: 4px; 
     border-radius: 50%; 
     cursor: pointer;
     line-height: 1;
     transition: color 0.25s ease, transform 0.2s ease;
 }
 #theme-toggle-button:hover, #theme-toggle-button:focus {
-    color: var(--panel-text-light); /* Full color on hover */
-    transform: scale(1.1); /* Slight grow effect */
-    background-color: transparent; /* No background change on hover */
-    border-color: transparent; /* No border change on hover */
+    color: var(--theme-toggle-hover-icon-color); 
+    transform: scale(1.15); 
+    background-color: var(--theme-toggle-hover-bg);
     outline: none;
-    box-shadow: none; /* No shadow */
 }
-/* ... (Icon display logic same) ... */
+/* Icon display logic same */
+.icon-moon { display: var(--icon-moon-display, inline); } 
+.icon-sun { display: var(--icon-sun-display, none); }   
+body.dark-mode .icon-moon { --icon-moon-display: none; }
+body.dark-mode .icon-sun { --icon-sun-display: inline; }
 
-/* Styles for Past Quote Jumbotron - Make it identical to today's */
-.past-quote-jumbotron {
-    min-height: 100vh; /* Make it full height like today's */
-    padding: 40px 20px; 
-    border-top: none; /* Remove top border if it should look like a new "page" */
-    background-color: var(--bg-color); 
-    /* It already inherits .quote-jumbotron styles for flex, align, justify */
-}
-.past-quote-day-label {
-    font-family: 'Source Sans Pro', sans-serif;
-    font-size: 1.1em; /* Subtler label */
-    font-weight: 600;
-    color: var(--text-color-light);
-    margin-bottom: 3em; /* More space before the quote */
-    text-align: center; 
-}
-.past-citation { 
-    background-color: transparent; 
-    padding: 6vh 0 1vh 0; /* Consistent with main citation panel's feel */
-    text-align: center; 
-    margin-top: 1em; 
-}
-.past-citation .panel-content-constrained { max-width: 700px; }
-.past-date-info {
+footer {
+    background-color: var(--panel-bg-dark); 
+    color: var(--text-color-lighter); 
     text-align: center;
-    margin-top: 2.5em; 
-    padding-bottom: 2vh; 
+    padding: 4vh 20px; 
+    font-size: 0.85em; 
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
-.past-badi-date { 
-    font-family: 'Source Serif Pro', serif;
-    font-size: 1em; /* Smaller for past dates */
-    font-weight: 600;
-    color: var(--text-color-light);
-    margin-bottom: 0.2em;
-}
-.past-date-info .date-text { 
-    font-size: 0.8em; /* Smaller for past Gregorian */
-    color: var(--text-color-lighter);
-}
+footer .panel-content-constrained p { padding: 0; margin-bottom: 0; }
 
-footer { /* ... same styling ... */ }
-/* Media Queries ... adjust all new sizes ... */
+
+/* Media Queries */
 @media only screen and (max-width: 768px) {
     body { font-size: 13.5px; } 
-    #quote-text-today, #quote-text-yesterday { font-size: 1.5em; } 
-    #quote-author-today, #quote-author-yesterday { font-size: 1.2em; }  
-    #quote-source-full-today, #quote-source-full-yesterday { font-size: 1.2em; } 
-    .badi-date-title { font-size: 1.7em; } 
-    #theme-toggle-button { font-size: 1.2em; }
-    .past-quote-day-label { font-size: 1em; }
-    .button { font-size: 1em; }
+    #quote-text { font-size: 1.5em; } 
+    #quote-author { font-size: 1.1em; }  
+    #quote-source-full { font-size: 1.1em; } 
+    .panel-citation { padding: 7vh 0; }
+    .badi-date-title { font-size: 1.5em; } 
+    #theme-toggle-button { font-size: 1em; }
 }
+
 @media only screen and (max-width: 480px) {
     body { font-size: 13px; } 
-    .container-main { max-width: 100%; padding: 0 10px; }
-    .quote-content-wrapper { width: 100%; }
-    #quote-text-today, #quote-text-yesterday { font-size: 1.4em; } 
-    #quote-author-today, #quote-author-yesterday { font-size: 1.15em; } 
-    #quote-source-full-today, #quote-source-full-yesterday { font-size: 1.15em; }
-    .badi-date-title { font-size: 1.6em; } 
-    .past-quote-day-label { font-size: 0.95em; }
-    #theme-toggle-button { font-size: 1.1em; }
+    .quote-content-wrapper { width: 95%; }
+    #quote-text { font-size: 1.4em; } 
+    #quote-author { font-size: 1em; } 
+    #quote-source-full { font-size: 1em; }
+    .panel-citation { padding: 6vh 0; }
+    .badi-date-title { font-size: 1.4em; } 
+    #theme-toggle-button { font-size: 1em; }
 }
