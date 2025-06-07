@@ -1,18 +1,57 @@
 // js/script.js
 
-// --- THEME TOGGLE --- (Keep from previous - it works)
-// ...
+// --- THEME TOGGLE ---
+const themeToggleButton = document.getElementById('theme-toggle-button');
+const currentTheme = localStorage.getItem('theme');
+if (currentTheme) {
+    document.body.classList.add(currentTheme);
+} else {
+    document.body.classList.add('light-mode');
+}
+if (themeToggleButton) {
+    themeToggleButton.addEventListener('click', () => {
+        document.body.classList.toggle('dark-mode');
+        document.body.classList.toggle('light-mode');
+        let theme = document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode';
+        localStorage.setItem('theme', theme);
+    });
+}
 
 // --- QUOTE LOGIC ---
 let ALL_QUOTES = [];
 let SHORT_QUOTES = [];
 let CURRENT_DISPLAY_DAY_OFFSET = 0; // 0 for today, -1 for yesterday
-const MAX_QUOTE_WORDS = 75;
+const MAX_QUOTE_WORDS = 75; 
 let currentQuoteObjectForCopy = null;
 
-async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') { /* ... same ... */ }
-function filterQuotesByLength(quotesArray, maxWords) { /* ... same ... */ }
-function getQuoteByDay(quotesArray, dayOfYear) { /* ... same ... */ }
+async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') {
+    try {
+        const response = await fetch(fileName); 
+        if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${fileName}`);
+        return await response.json();
+    } catch (error) {
+        console.error("Could not fetch quotes:", error);
+        return [];
+    }
+}
+
+function filterQuotesByLength(quotesArray, maxWords) {
+    if (!Array.isArray(quotesArray)) return [];
+    return quotesArray.filter(quote => {
+        if (quote && typeof quote.text === 'string') {
+            const wordCount = quote.text.split(/\s+/).filter(word => word.length > 0).length;
+            return wordCount <= maxWords;
+        }
+        return false;
+    });
+}
+
+function getQuoteByDay(quotesArray, dayOfYear) {
+    if (!Array.isArray(quotesArray) || quotesArray.length === 0) return null;
+    const adjustedDay = Math.max(1, Math.min(dayOfYear, 366));
+    const quoteIndex = (adjustedDay - 1) % quotesArray.length;
+    return quotesArray[quoteIndex];
+}
 
 function displayQuoteInJumbotron(quoteObject) {
     const quoteTextElement = document.getElementById('quote-text');
@@ -32,7 +71,7 @@ function displayQuoteInJumbotron(quoteObject) {
                 let authorDisplay = quoteObject.author || 'Unknown';
                 if (quoteObject.tradition === "Bahá’í") authorDisplay = "Bahá’u’lláh";
                 
-                quoteAuthorElement.textContent = authorDisplay; // No hyphen
+                quoteAuthorElement.textContent = authorDisplay;
                 
                 let sourceText = quoteObject.source || 'Unknown Source';
                 let translatorInfo = quoteObject.translator ? ` (trans. ${quoteObject.translator})` : '';
@@ -45,7 +84,7 @@ function displayQuoteInJumbotron(quoteObject) {
             quoteTextElement.style.opacity = 1;
             quoteAuthorElement.style.opacity = 1;
             quoteSourceFullElement.style.opacity = 1;
-        }, 200);
+        }, 200); 
     }
 }
 
@@ -66,7 +105,7 @@ async function initializeAndShowPage() {
     return true; 
 }
 
-function showQuoteForDayOffset(offset) {
+function showQuoteForDayOffset(offset) { 
     if (SHORT_QUOTES.length === 0) { displayQuoteInJumbotron(null); return; }
 
     const todayDateObj = new Date(); 
@@ -75,7 +114,7 @@ function showQuoteForDayOffset(offset) {
 
     const dayOfYearToDisplay = getDayOfYear(targetDateObj);
     const quote = getQuoteByDay(SHORT_QUOTES, dayOfYearToDisplay);
-    displayQuoteInJumbotron(quote); // This updates the single main jumbotron
+    displayQuoteInJumbotron(quote); 
 
     CURRENT_DISPLAY_DAY_OFFSET = offset; 
     updateButtonActiveStates();
@@ -87,11 +126,11 @@ function showQuoteForDayOffset(offset) {
 }
 
 function updateButtonActiveStates() { /* ... same ... */ }
-function setupEventListeners() { /* ... (Ensure button IDs match: today-button, yesterday-button) ... */
+function setupEventListeners() {
     const todayButton = document.getElementById('today-button');
     const yesterdayButton = document.getElementById('yesterday-button');
-    const scrollArrow = document.getElementById('scroll-down-arrow'); // Was scroll-down-arrow-today
-    const quoteTextElement = document.getElementById('quote-text'); // Was quote-text-today
+    const scrollArrow = document.getElementById('scroll-down-arrow');
+    const quoteTextElement = document.getElementById('quote-text');
     const badiDateTitle = document.getElementById('badiDate');
 
     if (todayButton) {
@@ -100,7 +139,6 @@ function setupEventListeners() { /* ... (Ensure button IDs match: today-button, 
             if (CURRENT_DISPLAY_DAY_OFFSET !== 0) {
                 showQuoteForDayOffset(0);
             }
-            // Scroll to top (main jumbotron)
             document.getElementById('main-jumbotron')?.scrollIntoView({ behavior: 'smooth' }); 
         });
     }
@@ -110,20 +148,15 @@ function setupEventListeners() { /* ... (Ensure button IDs match: today-button, 
             if (CURRENT_DISPLAY_DAY_OFFSET !== -1) {
                 showQuoteForDayOffset(-1);
             }
-            // Scroll to top (main jumbotron) to see the changed quote
             document.getElementById('main-jumbotron')?.scrollIntoView({ behavior: 'smooth' });
         });
     }
-    // ... (rest of event listeners: scrollArrow, copyQuote, badiDateTitle click for Gregorian) ...
-    // Ensure copyQuoteToClipboard uses currentQuoteObjectForCopy which is set by displayQuoteInJumbotron
     if (scrollArrow) { /* ... */ }
-    function copyQuoteToClipboard(quoteObj) { /* ... same, uses currentQuoteObjectForCopy ... */ }
+    function copyQuoteToClipboard(quoteObj) { /* ... same ... */ }
     if (quoteTextElement) { quoteTextElement.addEventListener('click', () => copyQuoteToClipboard(currentQuoteObjectForCopy)); }
     if (badiDateTitle) { /* ... same Gregorian toggle logic ... */ }
 }
 
-// --- (Theme toggle JS at the top is fine) ---
-// --- MAIN DOMCONTENTLOADED LISTENER ---
 document.addEventListener('DOMContentLoaded', async () => {
     await initializeAndShowPage(); 
     setupEventListeners();
