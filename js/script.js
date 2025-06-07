@@ -1,31 +1,25 @@
 // js/script.js
 
-// --- THEME TOGGLE ---
+// --- THEME TOGGLE --- (Keep as is)
 const themeToggleButton = document.getElementById('theme-toggle-button');
 const currentTheme = localStorage.getItem('theme');
-
 if (currentTheme) {
     document.body.classList.add(currentTheme);
 } else {
-    document.body.classList.add('light-mode'); // Default
+    document.body.classList.add('light-mode');
 }
-
 if (themeToggleButton) {
     themeToggleButton.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         document.body.classList.toggle('light-mode');
-        
-        let theme = 'light-mode';
-        if (document.body.classList.contains('dark-mode')) {
-            theme = 'dark-mode';
-        }
+        let theme = document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode';
         localStorage.setItem('theme', theme);
     });
 }
 // --- END THEME TOGGLE ---
 
 
-async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') {
+async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') { /* ... same ... */ 
     try {
         const response = await fetch(fileName); 
         if (!response.ok) throw new Error(`HTTP error! status: ${response.status} for ${fileName}`);
@@ -36,7 +30,7 @@ async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') {
     }
 }
 
-function filterQuotesByLength(quotesArray, maxWords) {
+function filterQuotesByLength(quotesArray, maxWords) { /* ... same ... */ 
     if (!quotesArray) return [];
     return quotesArray.filter(quote => {
         if (quote && typeof quote.text === 'string') {
@@ -47,21 +41,21 @@ function filterQuotesByLength(quotesArray, maxWords) {
     });
 }
 
-function getQuoteByDay(quotesArray, dayOfYear) {
+function getQuoteByDay(quotesArray, dayOfYear) { /* ... same ... */
     if (!quotesArray || quotesArray.length === 0) return null;
-    const adjustedDay = Math.max(1, Math.min(dayOfYear, 366)); // Ensure day is 1-366
+    const adjustedDay = Math.max(1, Math.min(dayOfYear, 366));
     const quoteIndex = (adjustedDay - 1) % quotesArray.length;
     return quotesArray[quoteIndex];
 }
 
-let currentQuoteObjectForCopy = null; // Store current quote for copy function
+let currentQuoteObjectForCopy = null; 
 
 function displayQuote(quoteObject) {
     const quoteTextElement = document.getElementById('quote-text');
-    const quoteAuthorElement = document.getElementById('quote-author');
+    const quoteAuthorElement = document.getElementById('quote-author'); 
     const quoteSourceFullElement = document.getElementById('quote-source-full');
 
-    currentQuoteObjectForCopy = quoteObject; // Update for copy button
+    currentQuoteObjectForCopy = quoteObject; 
 
     if (quoteTextElement && quoteAuthorElement && quoteSourceFullElement) {
         if (quoteObject && quoteObject.text) {
@@ -73,11 +67,13 @@ function displayQuote(quoteObject) {
                 quoteTextElement.textContent = quoteObject.text; 
                 
                 let authorDisplay = quoteObject.author || 'Unknown';
-                // (Keep your specific author display logic here if needed for Gita etc.)
-                // For Hidden Words, quoteObject.author is "Bahá’u’lláh"
-                if (quoteObject.tradition === "Bahá’í") {
+                // ... (your existing author/speaker display logic) ...
+                if (quoteObject.tradition === "Bahá’í") { // Example
                     authorDisplay = "Bahá’u’lláh";
-                } // Add other conditions as you add more texts
+                } else if (quoteObject.tradition === "Hinduism" && quoteObject.book && quoteObject.book.includes("Bhagavad-Gita")) {
+                    authorDisplay = "Krishna (Bhagavad-Gita)";
+                }
+
 
                 quoteAuthorElement.textContent = `— ${authorDisplay}`;
                 
@@ -98,14 +94,14 @@ function displayQuote(quoteObject) {
     }
 }
 
-function getDayOfYear(date = new Date()) {
+function getDayOfYear(date = new Date()) { /* ... same ... */ 
     const start = new Date(date.getFullYear(), 0, 0);
     const diff = date - start;
     const oneDay = 1000 * 60 * 60 * 24;
     return Math.floor(diff / oneDay);
 }
 
-function displayGregorianDateForPanel(date = new Date()) {
+function displayGregorianDateForPanel(date = new Date()) { /* ... same ... */
     const gregorianDatePanelElement = document.getElementById('gregorianDatePanel');
     if (gregorianDatePanelElement) {
         const year = date.getFullYear();
@@ -120,7 +116,7 @@ let SHORT_QUOTES = [];
 let CURRENT_DISPLAY_DAY_OFFSET = 0; 
 const MAX_QUOTE_WORDS = 75;
 
-async function initializeQuotes() {
+async function initializeQuotes() { /* ... same ... */
     ALL_QUOTES = await fetchQuotes('data/quotes_hidden_words.json'); 
     if (ALL_QUOTES.length === 0) { displayQuote(null); return false; }
     SHORT_QUOTES = filterQuotesByLength(ALL_QUOTES, MAX_QUOTE_WORDS);
@@ -129,28 +125,23 @@ async function initializeQuotes() {
     return true;
 }
 
-function showQuoteForOffset(offset) {
+function showQuoteForOffset(offset) { /* ... same, calls initializeBadiCalendar ... */
     if (SHORT_QUOTES.length === 0) { displayQuote(null); return; }
-
-    const todayDateObj = new Date(); // Base "today" for offset calculation
+    const todayDateObj = new Date();
     const targetDateObj = new Date(todayDateObj);
     targetDateObj.setDate(todayDateObj.getDate() + offset); 
-
     const dayOfYearToDisplay = getDayOfYear(targetDateObj);
     const quote = getQuoteByDay(SHORT_QUOTES, dayOfYearToDisplay);
     displayQuote(quote);
-
     CURRENT_DISPLAY_DAY_OFFSET = offset;
     updateButtonStates();
-
-    displayGregorianDateForPanel(targetDateObj); // Update Gregorian date in panel
-
+    displayGregorianDateForPanel(targetDateObj);
     if (typeof initializeBadiCalendar === "function") {
-        initializeBadiCalendar(targetDateObj); // Update Badi date for the target day
+        initializeBadiCalendar(targetDateObj); 
     }
 }
 
-function updateButtonStates() {
+function updateButtonStates() { /* ... same ... */
     const todayButton = document.getElementById('today-button');
     const yesterdayButton = document.getElementById('yesterday-button');
     if(todayButton && yesterdayButton){
@@ -163,8 +154,9 @@ function setupEventListeners() {
     const todayButton = document.getElementById('today-button');
     const yesterdayButton = document.getElementById('yesterday-button');
     const scrollArrow = document.querySelector('.scroll-down-arrow');
-    const copyButton = document.getElementById('copy-quote-button');
+    const quoteTextElement = document.getElementById('quote-text'); // Get quote text element
 
+    // ... (todayButton, yesterdayButton, scrollArrow event listeners same as before) ...
     if (todayButton) {
         todayButton.addEventListener('click', (e) => {
             e.preventDefault();
@@ -183,25 +175,40 @@ function setupEventListeners() {
             document.getElementById('scroll-content-start')?.scrollIntoView({ behavior: 'smooth' });
         });
     }
-    if (copyButton) {
-        copyButton.addEventListener('click', () => {
+
+    // NEW: Click-to-copy for the quote text itself
+    if (quoteTextElement) {
+        quoteTextElement.addEventListener('click', () => {
             if (currentQuoteObjectForCopy && currentQuoteObjectForCopy.text) {
                 const textToCopy = `${currentQuoteObjectForCopy.text}\n— ${currentQuoteObjectForCopy.author || ''}, ${currentQuoteObjectForCopy.source || ''}`;
                 navigator.clipboard.writeText(textToCopy).then(() => {
-                    // Optional: Show a "Copied!" message
-                    copyButton.textContent = '✅';
-                    setTimeout(() => { copyButton.textContent = '📋'; }, 1500);
+                    // Brief visual feedback (optional)
+                    // You could briefly change its style or show a tiny temporary message
+                    console.log('Quote copied to clipboard!');
+                    // Example: briefly change color
+                    const originalColor = quoteTextElement.style.color;
+                    quoteTextElement.style.color = 'var(--text-color-info, #3498db)'; // Use a theme color
+                    setTimeout(() => { quoteTextElement.style.color = originalColor; }, 700);
                 }).catch(err => {
                     console.error('Failed to copy text: ', err);
-                    alert('Failed to copy quote.');
+                    // Might need to fall back to a prompt for older browsers or if permissions denied
+                    // For simplicity, just log error for now.
                 });
             }
         });
     }
+
+    // Removed old copyButton event listener
 }
 
-// Main execution
+// Main execution (DOMContentLoaded) - no major changes here needed for these requests
 document.addEventListener('DOMContentLoaded', async () => {
+    const gregorianDateElement = document.getElementById('gregorianDatePanel'); // Check the panel one
+    if (!gregorianDateElement) { 
+      const oldGregorianDatePlaceholder = document.getElementById('gregorianDate');
+      if(oldGregorianDatePlaceholder) oldGregorianDatePlaceholder.style.display = 'none'; 
+    }
+    
     const quotesReady = await initializeQuotes();
     if (quotesReady) {
         showQuoteForOffset(0); 
