@@ -1,9 +1,7 @@
 // js/badi-init.js
 
-// Keep displayBadiDateInfo as is, it just displays whatever dateInfo it gets
-function displayBadiDateInfo(dateInfo) {
-  // console.log("BadiDateToday onReady callback executed. Date Info:", dateInfo); // Keep for debug if needed
-  const badiDateElement = document.getElementById("badiDate");
+function displayBadiDateInfo(dateInfo, elementId = "badiDate") { // Added elementId parameter
+  const badiDateElement = document.getElementById(elementId);
 
   if (badiDateElement && dateInfo) {
     let formattedBadiDate = "";
@@ -16,50 +14,37 @@ function displayBadiDateInfo(dateInfo) {
     badiDateElement.textContent = formattedBadiDate;
   } else if (badiDateElement) {
     badiDateElement.textContent = "Failed to receive Badíʿ Date details.";
-    // console.error("badiDateElement found, but dateInfo was not provided to onReady or was invalid.", dateInfo);
   } else {
-    // console.error("Element with id 'badiDate' not found in the HTML.");
+    // console.error(`Element with id '${elementId}' not found.`);
   }
 }
 
-// Store the BadiDateToday instance if needed for re-init, or just call it
-// let badiDateInstance; // Not strictly needed if we just re-call BadiDateToday()
-
-function initializeBadiCalendar(dateToCalculate = new Date()) { // Takes a date object
+function initializeBadiCalendar(dateToCalculate = new Date(), targetElementId = "badiDate") { // Added targetElementId
   if (typeof BadiDateToday === 'function') {
-    // console.log("BadiDateToday function found. Calling it with settings for date:", dateToCalculate.toDateString());
     try {
       let badiDateConfig = {
-        onReady: displayBadiDateInfo,
+        onReady: (di) => displayBadiDateInfo(di, targetElementId), // Pass targetElementId to onReady
         language: 'en',
-        currentTime: dateToCalculate // Pass the specific date to BadiDateToday
+        currentTime: dateToCalculate 
       };
-
       if (typeof BadiDateLocationChoice !== 'undefined' && BadiDateLocationChoice.askForUserLocation) {
-        // console.log("Setting locationMethod to BadiDateLocationChoice.askForUserLocation");
         badiDateConfig.locationMethod = BadiDateLocationChoice.askForUserLocation;
       } else {
-        // console.warn("BadiDateLocationChoice.askForUserLocation was not found globally. Falling back to raw value 3.");
         badiDateConfig.locationMethod = 3;
       }
       BadiDateToday(badiDateConfig);
     } catch (error) {
       console.error("Error calling BadiDateToday function:", error);
-      const badiDateElement = document.getElementById("badiDate");
-      if (badiDateElement) {
-        badiDateElement.textContent = "Error setting up Badíʿ Date.";
+      const targetElement = document.getElementById(targetElementId);
+      if (targetElement) {
+        targetElement.textContent = "Error setting up Badíʿ Date.";
       }
     }
   } else {
-    console.error("CRITICAL: BadiDateToday function is NOT defined. External script might have failed.");
-    const badiDateElement = document.getElementById("badiDate");
-    if (badiDateElement) {
-      badiDateElement.textContent = "Error: Badíʿ Date script component unavailable.";
-    }
+    // ... (error for BadiDateToday not defined)
   }
 }
 
-// Initial load
 document.addEventListener('DOMContentLoaded', () => {
-    initializeBadiCalendar(); // Initialize for today
+    initializeBadiCalendar(new Date(), "badiDate"); // Initialize for today, targeting main Badi date element
 });
