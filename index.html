@@ -8,20 +8,30 @@
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
-    <div class="container-main"> <!-- Overall wrapper -->
-        
-        <main class="quote-jumbotron"> <!-- Full viewport area for the quote -->
-            <div class="quote-content">
-                <h1 id="quote-text">Loading Sacred Verse...</h1>
-                <h2 id="quote-author-source"></h2> 
-            </div>
-            <!-- Down arrow to indicate scrollable content -->
-            <a href="#scroll-content-start" class="scroll-down-arrow">
-                <img src="img/downArrow-01.png" alt="Scroll down" /> <!-- You'll need an arrow image -->
-            </a>
-        </main>
+    <div class="container-main-wrapper"> <!-- New outermost wrapper for full-width backgrounds -->
+        <div class="container-main"> <!-- For content max-width -->
+            
+            <main class="quote-jumbotron">
+                <div class="quote-content">
+                    <h1 id="quote-text">Loading Sacred Verse...</h1>
+                    <h2 id="quote-author"></h2> <!-- Just author here now -->
+                </div>
+                <a href="#scroll-content-start" class="scroll-down-arrow">
+                    <img src="img/downArrow-01.png" alt="Scroll down" /> 
+                </a>
+            </main>
+        </div> <!-- Close container-main -->
 
         <div id="scroll-content-start" class="scrollable-content">
+            <div class="panel-citation"> <!-- NEW PANEL FOR CITATION -->
+                <div class="citation-container">
+                    <p id="quote-source-full"></p> <!-- Full source/citation here -->
+                </div>
+            </div>
+
+            <!-- Whitespace panel (optional, can be done with margins) -->
+            <div class="panel-whitespace"></div> 
+
             <div class="panel-buttons">
                 <div class="buttons-container">
                     <a href="#" id="yesterday-button" class="button">Yesterday</a>
@@ -31,21 +41,17 @@
 
             <div class="panel-info">
                 <div class="info-container">
-                    <!-- Badíʿ Date will go here instead of "Sensible Words" title -->
                     <h1 id="badiDate" class="badi-date-title">Loading Badíʿ Date...</h1>
-                    <!-- Optional: Add a small descriptive paragraph if you like -->
                     <p class="info-description">A daily verse for reflection.</p> 
                 </div>
             </div>
             
-            <!-- You can add more panels here later like your friend's site if desired -->
-
             <footer>
-                <p>© <span id="current-year"></span> Your Name/Project Name. Inspired by the Ocean of God's words.</p>
+                <!-- Removed copyright line, kept inspiration -->
+                <p>Inspired by the Ocean of God's words.</p>
             </footer>
         </div> <!-- Close scrollable-content -->
-
-    </div> <!-- Close container-main -->
+    </div> <!-- Close container-main-wrapper -->
 
     <!-- Scripts -->
     <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
