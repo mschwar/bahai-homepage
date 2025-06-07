@@ -10,36 +10,34 @@
 </head>
 <body class="light-mode"> 
     <div class="container-main-wrapper"> 
-        <main class="quote-jumbotron" id="main-jumbotron"> <!-- For Today's Quote -->
+        <main class="quote-jumbotron" id="main-jumbotron"> 
             <div class="quote-content-wrapper"> 
-                <h1 id="quote-text-today" title="Click to copy quote">Loading Sacred Verse...</h1>
+                <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse...</h1>
                 <div class="attribution-line"> 
-                    <h2 id="quote-author-today"></h2> 
+                    <h2 id="quote-author"></h2> 
                 </div>
             </div>
-            <a href="#scroll-content-start" id="scroll-down-arrow-today" class="scroll-down-arrow" aria-label="Scroll down"> 
+            <a href="#scroll-content-start" id="scroll-down-arrow" class="scroll-down-arrow" aria-label="Scroll down"> 
                 <img src="img/downArrow-01.png" alt="Scroll down" /> 
             </a>
         </main>
 
         <div id="scroll-content-start" class="scrollable-content">
-            <div class="panel-citation" id="citation-panel-today"> 
+            <div class="panel-citation"> 
                 <div class="panel-content-constrained"> 
-                    <p id="quote-source-full-today"></p> 
+                    <p id="quote-source-full"></p> 
                 </div>
             </div>
 
-            <!-- BUTTONS PANEL -->
             <div class="panel-buttons"> 
                 <div class="panel-content-constrained buttons-layout-centered">
                     <div class="buttons-container">
-                        <a href="#main-jumbotron" id="today-button" class="button button-active">Today</a> 
-                        <a href="#yesterday-jumbotron" id="yesterday-button" class="button">Yesterday</a> 
+                        <a href="#" id="yesterday-button" class="button">Yesterday</a> 
+                        <a href="#" id="today-button" class="button button-active">Today</a> 
                     </div>
                 </div>
             </div>
 
-            <!-- INFO PANEL (Dates & Theme Toggle) -->
             <div class="panel-info"> 
                 <div class="panel-content-constrained"> 
                     <h1 id="badiDate" class="badi-date-title clickable-date" title="Show/Hide Gregorian Date">Loading Badíʿ Date...</h1>
@@ -49,30 +47,6 @@
                             <span class="icon-sun">☀️</span>
                             <span class="icon-moon">🌙</span>
                         </button>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- YESTERDAY'S QUOTE SECTION (Initially Hidden) -->
-            <div id="yesterday-jumbotron" class="quote-jumbotron past-quote-jumbotron" style="display: none;">
-                 <div class="panel-content-constrained"> 
-                    <h2 class="past-quote-day-label">Yesterday</h2>
-                    <div class="quote-content-wrapper"> <!-- Re-use this class for consistent styling -->
-                        <h1 id="quote-text-yesterday" title="Click to copy quote"></h1>
-                        <div class="attribution-line">
-                            <h2 id="quote-author-yesterday"></h2>
-                        </div>
-                    </div>
-                    <!-- Citation for yesterday's quote -->
-                    <div class="panel-citation past-citation" id="citation-panel-yesterday"> 
-                         <div class="panel-content-constrained">
-                            <p id="quote-source-full-yesterday"></p>
-                         </div>
-                    </div>
-                    <!-- Dates for yesterday's quote -->
-                    <div class="past-date-info">
-                        <p id="badiDateYesterday" class="date-text past-badi-date"></p>
-                        <p id="gregorianDateYesterday" class="date-text"></p>
                     </div>
                 </div>
             </div>
