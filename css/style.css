@@ -1,29 +1,96 @@
 /* css/style.css */
 
-/* ... (Keep all previous CSS from :root down to .scroll-down-arrow:focus) ... */
-/* Ensure the following is correct or updated: */
+/* Theme Variables */
+:root {
+    --bg-color: rgb(239, 235, 233); /* Cream */
+    --text-color: rgb(26, 38, 57); /* Dark Blue */
+    --text-color-light: rgba(26, 38, 57, 0.85);
+    --text-color-lighter: rgba(26, 38, 57, 0.7);
+    --panel-bg-dark: rgb(26, 38, 57);
+    --panel-text-light: rgb(239, 235, 233);
+    --panel-bg-medium: rgb(62, 74, 97); /* Lighter Blue */
+    --border-color-subtle: rgba(26, 38, 57, 0.15);
+    --button-border-color: var(--panel-text-light);
+    --button-hover-bg: var(--panel-text-light);
+    --button-hover-text: var(--panel-bg-dark);
+    --shadow-color: rgba(0, 0, 0, 0.12);
+    --text-color-info: #3498db; /* For copy feedback */
+    --arrow-filter: invert(0%);
+}
+
+body.dark-mode {
+    --bg-color: rgb(26, 38, 57);    
+    --text-color: rgb(239, 235, 233); 
+    --text-color-light: rgba(239, 235, 233, 0.85);
+    --text-color-lighter: rgba(239, 235, 233, 0.7);
+    --panel-bg-dark: rgb(16, 24, 37); 
+    --panel-text-light: rgb(200, 200, 200); 
+    --panel-bg-medium: rgb(42, 54, 77); 
+    --border-color-subtle: rgba(239, 235, 233, 0.15);
+    --button-border-color: var(--panel-text-light);
+    --button-hover-bg: var(--panel-text-light);
+    /* --button-hover-text: var(--panel-bg-dark); /* Original dark panel bg */
+    --button-hover-text: rgb(16,24,37); /* Use the darkest panel bg for text on hover */
+    --shadow-color: rgba(255, 255, 255, 0.08);
+    --text-color-info: #5ac8fa; /* Lighter blue for dark mode copy feedback */
+    --arrow-filter: invert(100%);
+}
+
+html, body, div, header, main, footer, h1, h2, h3, p, a, ul, li, img, button {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 14px; 
+    line-height: 1.6; 
+    text-rendering: optimizeLegibility;
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Quote Jumbotron Area */
+.quote-jumbotron {
+    min-height: 100vh; 
+    display: flex;
+    flex-direction: column;
+    justify-content: center; 
+    align-items: center; /* Center the .quote-content-wrapper */   
+    position: relative; 
+    width: 100%; 
+    padding: 20px; /* Padding for the jumbotron itself */
+    background-color: var(--bg-color); /* Ensure jumbotron has theme background */
+    transition: background-color 0.3s ease;
+}
+
+.quote-content-wrapper { /* NEW: To constrain width of quote text block */
+    max-width: 800px; /* Max width for text block */
+    width: 90%;
+    text-align: left; /* Text inside will be left-aligned */
+}
 
 #quote-text {
     font-family: 'Source Serif Pro', serif;
-    font-size: 1.7em; 
+    font-size: 1.7em;  
     font-weight: 400; 
     line-height: 1.5; 
     margin-bottom: 0.8em; 
     color: var(--text-color); 
     white-space: pre-line; 
-    cursor: pointer; /* For click-to-copy indication */
-    transition: color 0.2s ease-out; /* For subtle feedback on click */
+    cursor: pointer; 
+    transition: color 0.2s ease-out;
 }
-#quote-text:active { /* Subtle feedback when clicked for copy */
-    color: var(--text-color-info, #3498db); /* Or another feedback color */
+#quote-text:active {
+    color: var(--text-color-info);
 }
-
 
 .attribution-line {
     display: flex;
     align-items: center;
     gap: 15px; 
-    /* No copy button here anymore */
 }
 
 #quote-author { 
@@ -34,108 +101,196 @@
     transition: color 0.3s ease;
 }
 
-/* Remove styles for old #copy-quote-button if they existed */
-/* #copy-quote-button { ... } */
+/* Scroll Down Arrow */
+.scroll-down-arrow {
+    position: absolute;
+    bottom: 5vh; 
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 10px;
+    cursor: pointer;
+    opacity: 0.6; 
+    transition: opacity 0.25s ease-in-out, filter 0.3s ease;
+}
+.scroll-down-arrow img { 
+    width: 28px; height: auto; 
+    filter: var(--arrow-filter);
+}
+.scroll-down-arrow:hover { opacity: 0.95; }
+.scroll-down-arrow:focus {
+    outline: 2px solid var(--text-color-info);
+    outline-offset: 2px;
+    border-radius: 50%;
+}
+
+/* Scrollable Content Area */
+.scrollable-content { width: 100%; }
+
+/* Common class for constraining content within full-width panels */
+.panel-content-constrained {
+    max-width: 880px; /* Match old .container-main width */
+    margin: 0 auto;
+    padding: 0 15px; /* Horizontal padding for content */
+    width: 100%;
+}
 
 
-/* ... (Keep .scroll-down-arrow and subsequent panel styles) ... */
+.panel-citation {
+    background-color: var(--bg-color); 
+    color: var(--text-color-lighter); 
+    padding: 6vh 0; 
+    text-align: center; 
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+.panel-citation .panel-content-constrained { /* Further constrain citation text if needed */
+     max-width: 700px;
+}
+#quote-source-full { /* This p tag is inside .citation-container (which is now .panel-content-constrained) */
+    font-size: 1.35em; 
+    line-height: 1.55;
+}
+#quote-source-full cite { font-style: italic; }
 
-/* panel-controls now only has buttons */
+.panel-whitespace { height: 7vh; background-color: var(--bg-color); transition: background-color 0.3s ease; }
+
 .panel-controls { 
     background-color: var(--panel-bg-dark); 
     color: var(--panel-text-light); 
-    padding: 4vh 15px; 
+    padding: 4vh 0; 
     text-align: center;
-    /* display: flex; /* No longer needed if only buttons-container is child */
-    /* justify-content: center; */
-    /* align-items: center; */
-    /* gap: 30px; */
-    /* flex-wrap: wrap; */
     transition: background-color 0.3s ease, color 0.3s ease;
+}
+.panel-controls .panel-content-constrained.buttons-layout { /* Apply to the specific panel-content-constrained */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 30px;
+    flex-wrap: wrap;
 }
 .buttons-container {
     display: flex;
     justify-content: center; 
     gap: 20px; 
-    margin: 0 auto; /* Center the button container */
 }
-/* ... (button styles remain the same) ... */
+.button {
+    border: 2px solid var(--button-border-color); 
+    color: var(--panel-text-light);
+    background-color: transparent; 
+    padding: 0.9em 1.4em; 
+    text-decoration: none;
+    font-size: 0.95em; 
+    transition: background-color 0.25s ease-in-out, color 0.25s ease-in-out;
+    min-width: 110px; 
+    text-align: center;
+    border-radius: 3px; 
+    font-weight: 600; 
+}
+.button:hover, .button:focus { 
+    background-color: var(--button-hover-bg); 
+    color: var(--button-hover-text); 
+    outline: none; 
+}
+.button.button-active { 
+    background-color: var(--button-hover-bg); 
+    color: var(--button-hover-text); 
+}
 
-
-/* Theme Toggle new position and style */
-.theme-toggle-container-inline {
-    text-align: center; /* Center the button within its line */
-    margin: 10px 0; /* Add some spacing around it */
+.theme-toggle-container-inline { /* Already centered by parent flex */
+    /* text-align: center; No longer needed */
+    /* margin: 10px 0; Handled by gap */
 }
 #theme-toggle-button {
     background: none;
-    border: 2px solid var(--button-border-color); /* Use panel's text color for border */
-    color: var(--panel-text-light); /* Use panel's text color */
-    font-size: 1.2em; /* Reduced slightly */
-    padding: 0.4em 0.6em; /* Adjusted padding */
+    border: 2px solid var(--button-border-color);
+    color: var(--panel-text-light);
+    font-size: 1.2em; 
+    padding: 0.4em 0.6em; 
     border-radius: 50%; 
     cursor: pointer;
     line-height: 1;
     transition: background-color 0.25s ease, color 0.25s ease, border-color 0.25s ease;
 }
 #theme-toggle-button:hover, #theme-toggle-button:focus {
-    background-color: var(--button-hover-bg); /* Panel text color becomes BG */
-    color: var(--panel-bg-medium); /* Medium panel BG becomes text color */
-    border-color: var(--button-hover-bg); /* Match background */
+    background-color: var(--button-hover-bg);
+    color: var(--button-hover-text); /* Changed from panel-bg-medium */
+    border-color: var(--button-hover-bg);
     outline: none;
 }
 .icon-moon { display: var(--icon-moon-display, inline); } 
 .icon-sun { display: var(--icon-sun-display, none); }   
-
 body.dark-mode .icon-moon { --icon-moon-display: none; }
 body.dark-mode .icon-sun { --icon-sun-display: inline; }
-
-/* Ensure theme variables for button hover are distinct for dark mode */
-body.dark-mode #theme-toggle-button:hover, 
-body.dark-mode #theme-toggle-button:focus {
-    background-color: var(--panel-text-light); /* Creamy text becomes BG */
-    color: var(--panel-bg-medium);       /* Darker blue becomes text */
-    border-color: var(--panel-text-light);
-}
-
+/* Removed redundant dark mode specific hover for toggle button, it should use the variables */
 
 .panel-info {
     background-color: var(--panel-bg-medium); 
     color: var(--panel-text-light); 
-    padding: 7vh 20px; /* Keep substantial padding */
+    padding: 8vh 0; 
     text-align: center;
     transition: background-color 0.3s ease, color 0.3s ease;
 }
-/* ... (rest of .panel-info, .badi-date-title, #gregorianDatePanel, .info-description, footer styles remain largely the same, adjust padding/margins if needed) ... */
-
-/* Example adjustment for dates in panel-info to align with toggle */
 .badi-date-title { 
-    margin-bottom: 0.2em; /* Tighter to toggle */
+    font-family: 'Source Serif Pro', serif;
+    font-size: 2em; 
+    font-weight: 600;
+    margin-bottom: 0.2em; 
+    line-height: 1.3;
 }
 #gregorianDatePanel.date-text { 
-    margin-top: 10px; /* Space after toggle */
+    font-size: 0.9em;
+    color: var(--panel-text-light); /* Ensure it uses panel's light text */
+    opacity: 0.8; /* Slightly subdued */
+    margin-top: 10px; 
     margin-bottom: 0.8em; 
 }
+.info-description {
+    font-size: 1em; 
+    color: var(--panel-text-light); 
+    opacity: 0.9;
+}
+
+footer {
+    background-color: var(--panel-bg-dark); 
+    color: var(--text-color-lighter); 
+    text-align: center;
+    padding: 5vh 0; 
+    font-size: 0.9em; 
+    transition: background-color 0.3s ease, color 0.3s ease;
+}
+footer p { padding: 0; margin-bottom: 0; }
 
 
 /* Media Queries */
 @media only screen and (max-width: 768px) {
-    /* ... (existing media queries, check if theme toggle needs adjustment) ... */
-    #theme-toggle-button {
-        font-size: 1.1em;
-        padding: 0.35em 0.55em;
-    }
+    body { font-size: 13.5px; padding: 15px; } 
+    .quote-jumbotron { padding: 15px; }
+    .quote-content-wrapper { width: 95%; }
+    #quote-text { font-size: 1.6em; } 
+    #quote-author { font-size: 1.1em; }  
+    .panel-citation .panel-content-constrained { max-width: 90%; }
+    #quote-source-full { font-size: 1.25em; } 
+    .panel-citation { padding: 5vh 0; }
+    .panel-controls .panel-content-constrained.buttons-layout { flex-direction: column; gap: 15px; }
+    .badi-date-title { font-size: 1.9em; } 
+    .info-description { font-size: 0.95em; } 
+    .button { padding: 0.8em 1.2em; font-size: 0.9em; width: 70%; max-width: 250px; } 
+    #theme-toggle-button { font-size: 1.1em; padding: 0.35em 0.55em; }
 }
 
 @media only screen and (max-width: 480px) {
-    /* ... (existing media queries) ... */
-     .attribution-line { 
-        /* flex-direction: row; /* Keep on one line if space allows, or revert to column if needed */
-        /* align-items: center; */
-     }
-     #copy-quote-button { /* Ensure it doesn't exist / isn't styled */ }
-     #theme-toggle-button {
-        font-size: 1em;
-        padding: 0.3em 0.5em;
+    body { font-size: 13px; padding: 10px; } 
+    .quote-jumbotron { padding: 10px; }
+    #quote-text { font-size: 1.5em; } 
+    #quote-author { font-size: 1.05em; } 
+    .attribution-line { flex-direction: column; align-items: flex-start; gap: 5px; }
+    .panel-citation .panel-content-constrained { max-width: 95%; }
+    #quote-source-full { font-size: 1.15em; }
+    .panel-citation { padding: 4vh 0; }
+    .scroll-down-arrow img { width: 22px; }
+    .buttons-container { width: 100%; }
+    .badi-date-title { font-size: 1.7em; } 
+    .info-description { font-size: 0.9em; }
+    .panel-buttons, .panel-info, footer {
+        padding-top: 4vh; padding-bottom: 4vh;
     }
 }
