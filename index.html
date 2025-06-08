@@ -4,63 +4,85 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Daily Sacred Verse</title>
-    <link rel="icon" href="img/favicon.png" type="image/png"> 
-    <link href='https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Source+Serif+Pro:400,600' rel='stylesheet' type='text/css'>
+
+    <link rel="icon" href="img/favicon.png" type="image/png">
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:400,700|Source+Serif+Pro:400,600"
+          rel="stylesheet" type="text/css">
+
     <link rel="stylesheet" href="css/style.css">
 </head>
-<body class="light-mode"> 
-    <!-- NO .container-main-wrapper or .container-main at this top level -->
 
-    <main class="quote-jumbotron" id="main-jumbotron"> 
-        <div class="quote-content-wrapper"> <!-- This constrains the jumbotron's text -->
-            <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse...</h1>
-            <div class="attribution-line"> 
-                <h2 id="quote-author"></h2> 
+<body class="light-mode">
+<!------------ TODAY (main) JUMBOTRON ------------>
+<main class="quote-jumbotron" id="main-jumbotron">
+    <div class="quote-content-wrapper">
+        <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse…</h1>
+        <div class="attribution-line">
+            <h2 id="quote-author"></h2>
+        </div>
+    </div>
+
+    <a href="#scroll-content-start" id="scroll-down-arrow" class="scroll-down-arrow"
+       aria-label="Scroll down"><img src="img/downArrow-01.png" alt=""></a>
+</main>
+
+<!------------ PANELS (citation / buttons / info) ------------>
+<div id="scroll-content-start" class="scrollable-content">
+
+    <div class="panel-citation">
+        <div class="panel-content-constrained">
+            <p id="quote-source-full"></p>
+        </div>
+    </div>
+
+    <div class="panel-buttons">
+        <div class="panel-content-constrained buttons-layout-centered">
+            <div class="buttons-container">
+                <a href="#" id="yesterday-button" class="button">Yesterday</a>
+                <a href="#" id="today-button" class="button button-active">Today</a>
             </div>
         </div>
-        <a href="#scroll-content-start" id="scroll-down-arrow" class="scroll-down-arrow" aria-label="Scroll down"> 
-            <img src="img/downArrow-01.png" alt="Scroll down" /> 
-        </a>
-    </main>
+    </div>
 
-    <div id="scroll-content-start" class="scrollable-content"> <!-- This div will be 100% width by default -->
-        <div class="panel-citation"> 
-            <div class="panel-content-constrained"> 
-                <p id="quote-source-full"></p> 
+    <div class="panel-info">
+        <div class="panel-content-constrained">
+            <h1 id="badiDate" class="badi-date-title clickable-date"
+                title="Show / hide Gregorian date">Loading Badíʿ Date…</h1>
+
+            <p id="gregorianDatePanel" class="date-text" style="display:none;"></p>
+
+            <div class="theme-toggle-container-subtle">
+                <button id="theme-toggle-button" aria-label="Toggle light / dark theme">
+                    <span class="icon-sun">☀️</span>
+                    <span class="icon-moon">🌙</span>
+                </button>
             </div>
         </div>
+    </div>
 
-        <div class="panel-buttons"> 
-            <div class="panel-content-constrained buttons-layout-centered">
-                <div class="buttons-container">
-                    <a href="#" id="yesterday-button" class="button">Yesterday</a> 
-                    <a href="#" id="today-button" class="button button-active">Today</a> 
-                </div>
-            </div>
+    <footer><div class="panel-content-constrained"></div></footer>
+</div>
+
+<!------------ YESTERDAY JUMBOTRON (hidden until needed) ------------>
+<section class="quote-jumbotron" id="yesterday-jumbotron-display" style="display:none;">
+    <div class="quote-content-wrapper">
+        <h1 id="quote-text-yesterday" title="Click to copy quote">Loading Sacred Verse…</h1>
+        <div class="attribution-line">
+            <h2 id="quote-author-yesterday"></h2>
         </div>
 
-        <div class="panel-info"> 
-            <div class="panel-content-constrained"> 
-                <h1 id="badiDate" class="badi-date-title clickable-date" title="Show/Hide Gregorian Date">Loading Badíʿ Date...</h1>
-                <p id="gregorianDatePanel" class="date-text" style="display: none;"></p> 
-                <div class="theme-toggle-container-subtle">  
-                    <button id="theme-toggle-button" aria-label="Toggle light/dark theme">
-                        <span class="icon-sun">☀️</span>
-                        <span class="icon-moon">🌙</span>
-                    </button>
-                </div>
-            </div>
-        </div>
-        
-        <footer>
-            <div class="panel-content-constrained">
-                <p>Inspired by the Ocean of God's words.</p> <!-- Text removed here as per your request -->
-            </footer>
-        </div> 
-    </div> 
+        <p id="quote-source-full-yesterday" class="quote-source-yesterday"></p>
 
-    <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
-    <script src="js/badi-init.js" defer></script>
-    <script src="js/script.js" defer></script>
+        <div class="yesterday-date-block">
+            <h1 id="badiDateYesterday" class="badi-date-title"></h1>
+            <p id="gregorianDateYesterday" class="date-text" style="opacity:.85;"></p>
+        </div>
+    </div>
+</section>
+
+<!------------ SCRIPTS ------------>
+<script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
+<script src="js/badi-init.js" defer></script>
+<script src="js/script.js" defer></script>
 </body>
 </html>
