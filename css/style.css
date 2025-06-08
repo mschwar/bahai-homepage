@@ -1,7 +1,7 @@
 /*  THEME ROOTS  ---------------------------------------------------------- */
 :root{
   --bg-color:#EFEBE9; --text-color:#1A2639; --text-color-light:rgba(26,38,57,.8);
-  --panel-buttons-bg:#1A2639; --panel-buttons-text:#EFEBE9;
+  --panel-buttons-bg:#0E1B30; --panel-buttons-text:#EFEBE9;
   --button-border:var(--panel-buttons-text); --button-hover-bg:rgba(239,235,233,.10);
   --button-active-bg:var(--panel-buttons-text); --button-active-text:var(--panel-buttons-bg);
   --arrow-filter:invert(0%); --theme-icon:#bbb;
@@ -22,76 +22,67 @@ body{
   transition:background .3s ease,color .3s ease;
 }
 
+/*  FLOATING THEME TOGGLE  ------------------------------------------------ */
+.theme-toggle-floating{
+  position:fixed;top:16px;right:16px;z-index:1000;
+  background:none;border:none;font-size:.8em;opacity:.45;color:var(--theme-icon);
+  border-radius:50%;padding:4px;cursor:pointer;line-height:1;
+  transition:opacity .25s,transform .2s}
+.theme-toggle-floating:hover{opacity:.85;transform:scale(1.1)}
+.icon-sun{display:none}
+body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
+
 /*  JUMBOTRONS  ----------------------------------------------------------- */
 .quote-jumbotron{
   min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  padding:40px 20px;background:var(--bg-color);transition:background .3s ease}
+  padding:40px 20px;background:var(--bg-color)}
 .quote-content-wrapper{max-width:700px;width:90%;text-align:left}
-#quote-text,#quote-text-yesterday{
-  font-family:'Source Serif Pro',serif;font-size:1.5em;font-weight:400;line-height:1.55;
-  margin-bottom:1.5em;color:var(--text-color);cursor:pointer;white-space:pre-line}
+#quote-text,#quote-text-yesterday{font-family:'Source Serif Pro',serif;font-size:1.5em;
+  font-weight:400;line-height:1.55;margin-bottom:1.5em;cursor:pointer;white-space:pre-line}
 #quote-author,#quote-author-yesterday{
-  font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;
-  color:var(--text-color-light)}
+  font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;color:var(--text-color-light)}
 .scroll-down-arrow{position:absolute;bottom:5vh;left:50%;transform:translateX(-50%);
   opacity:.5;cursor:pointer;transition:opacity .25s}
 .scroll-down-arrow img{width:24px;height:auto;filter:var(--arrow-filter)}
 .scroll-down-arrow:hover{opacity:.8}
 
-/*  PANELS & CONTAINERS  -------------------------------------------------- */
+/*  PANELS ---------------------------------------------------------------- */
 .panel-content-constrained{max-width:700px;margin:0 auto;padding:0 20px}
-
-/* TODAY citation panel */
 .panel-citation{padding:2.5vh 0 12vh;text-align:center}
 #quote-source-full{
-  font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;
-  font-style:normal;color:var(--text-color-light)}
+  font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;color:var(--text-color-light)}
 
-/* BUTTON PANELS --------------------------------------------------------- */
 .panel-buttons{background:var(--panel-buttons-bg);color:var(--panel-buttons-text);text-align:center}
-.panel-date{border-bottom:1px solid rgba(255,255,255,.08);padding:20px 0}
-.panel-buttons-yesterday{padding:27px 0} /* ⅔ of original height */
-.buttons-layout-centered{display:flex;justify-content:center}
+.panel-date{border-bottom:1px solid rgba(255,255,255,.08);padding:20px 0}        /* ½ height */
+.panel-buttons-yesterday{padding:27px 0}                                         /* ⅔ height */
 
 .button{
   border:2px solid var(--button-border);background:transparent;color:var(--panel-buttons-text);
-  padding:.9em 1.4em;font-size:1em;text-decoration:none;border-radius:3px;min-width:120px;
-  transition:background .25s,color .25s;font-weight:400}
+  padding:.9em 1.4em;font-size:1em;border-radius:3px;min-width:120px;
+  transition:background .25s,color .25s;font-weight:400;text-decoration:none}
 .button:hover{background:var(--button-hover-bg)}
 .button-active{background:var(--button-active-bg);color:var(--button-active-text)}
+.buttons-layout-centered{display:flex;justify-content:center}
 
-/* Badíʿ date + Gregorian */
-.badi-date-title{
-  font-family:'Source Serif Pro',serif;font-size:2.2em;font-weight:600;
+.badi-date-title{font-family:'Source Serif Pro',serif;font-size:2.2em;font-weight:600;
   margin-bottom:.3em;cursor:pointer}
-.date-text{
-  font-size:1em;color:var(--panel-buttons-text);opacity:0;max-height:0;overflow:hidden;
-  transition:opacity .3s,max-height .3s}
+.date-text{font-size:1em;opacity:0;max-height:0;overflow:hidden;
+  transition:opacity .3s,max-height .3s;color:var(--panel-buttons-text)}
 .date-text.visible{opacity:.85;max-height:3em}
 
-/* Theme toggle – tiny & subtle */
-.theme-toggle-container-subtle{margin:12px auto 0}
-#theme-toggle-button{
-  background:none;border:none;color:var(--theme-icon);font-size:.8em;opacity:.55;
-  padding:2px;cursor:pointer;border-radius:50%;line-height:1;transition:opacity .25s,transform .2s}
-#theme-toggle-button:hover{opacity:.85;transform:scale(1.1)}
-.icon-sun{display:none}
-body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
-
-/* -------------- YESTERDAY ARROW & CITATION ----------------------------- */
+/*  YESTERDAY ARROW & CITATION  ------------------------------------------- */
 .toggle-citation-arrow{
   display:block;margin:12vh auto 0;opacity:.5;cursor:pointer;transition:opacity .25s}
 .toggle-citation-arrow img{width:24px;height:auto;filter:var(--arrow-filter)}
 .toggle-citation-arrow:hover{opacity:.8}
 
 .yesterday-citation{
-  font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;
-  color:var(--text-color-light);text-align:center;
-  margin:7.5vh auto 12vh;          /* aligns with today’s */
-  opacity:0;max-height:0;overflow:hidden;transition:opacity .3s,max-height .3s}
+  font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;color:var(--text-color-light);
+  text-align:center;margin:7.5vh auto 12vh;opacity:0;max-height:0;overflow:hidden;
+  transition:opacity .3s,max-height .3s}
 .yesterday-citation.visible{opacity:.9;max-height:5em}
 
-/*  MOBILE TWEAKS  -------------------------------------------------------- */
+/*  MOBILE  --------------------------------------------------------------- */
 @media(max-width:768px){
   body{font-size:13.5px}
   .panel-date{padding:15px 0}
