@@ -1,211 +1,182 @@
-// js/script.js
+// js/script.js  –  fully self-contained
 
-// --- THEME TOGGLE ---
-const themeToggleButton = document.getElementById('theme-toggle-button');
-const currentTheme = localStorage.getItem('theme');
-if (currentTheme) { document.body.classList.add(currentTheme); } 
-else { document.body.classList.add('light-mode'); }
+/* ----------  CONSTANTS  ---------- */
+const MAX_QUOTE_WORDS = 75;
 
-if (themeToggleButton) {
-    themeToggleButton.addEventListener('click', () => {
+/* ----------  THEME SET-UP ---------- */
+const themeToggleBtn = document.getElementById('theme-toggle-button');
+const savedTheme = localStorage.getItem('theme');
+document.body.classList.add(savedTheme || 'light-mode');
+if (themeToggleBtn){
+    themeToggleBtn.addEventListener('click', () => {
         document.body.classList.toggle('dark-mode');
         document.body.classList.toggle('light-mode');
-        localStorage.setItem('theme', document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode');
+        localStorage.setItem(
+            'theme',
+            document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode'
+        );
     });
 }
 
-// --- QUOTE LOGIC ---
-let ALL_QUOTES = [];
-let SHORT_QUOTES = [];
-const MAX_QUOTE_WORDS = 75; 
-let currentQuoteObjectForToday = null;
-let currentQuoteObjectForYesterday = null;
-let isYesterdaySectionVisible = false;
-
-async function fetchQuotes(fileName = 'data/quotes_hidden_words.json') { /* ... same ... */ }
-function filterQuotesByLength(quotesArray, maxWords) { /* ... same ... */ }
-function getQuoteByDay(quotesArray, dayOfYear) { /* ... same ... */ }
-
-function displayQuote(quoteObject, type = "today") { // 'type' can be "today" or "yesterday"
-    const textElId = type === "today" ? 'quote-text' : 'quote-text-yesterday';
-    const authorElId = type === "today" ? 'quote-author' : 'quote-author-yesterday';
-    const sourceElId = type === "today" ? 'quote-source-full' : 'quote-source-full-yesterday';
-
-    const quoteTextElement = document.getElementById(textElId);
-    const quoteAuthorElement = document.getElementById(authorElId);
-    const quoteSourceFullElement = document.getElementById(sourceElId);
-
-    if (type === 'today') currentQuoteObjectForToday = quoteObject;
-    else currentQuoteObjectForYesterday = quoteObject;
-
-    if (quoteTextElement && quoteAuthorElement && quoteSourceFullElement) {
-        // No opacity animation for now for simplicity during debug
-        if (quoteObject && quoteObject.text) {
-            quoteTextElement.textContent = quoteObject.text; 
-            let authorDisplay = quoteObject.author || 'Unknown';
-            if (quoteObject.tradition === "Bahá’í") authorDisplay = "Bahá’u’lláh";
-            quoteAuthorElement.textContent = authorDisplay; 
-            
-            let sourceText = quoteObject.source || 'Unknown Source';
-            let translatorInfo = quoteObject.translator ? ` (trans. ${quoteObject.translator})` : '';
-            quoteSourceFullElement.innerHTML = `<cite>${sourceText}</cite>${translatorInfo}`;
-        } else {
-            quoteTextElement.textContent = "No suitable sacred verse available.";
-            quoteAuthorElement.textContent = "";
-            quoteSourceFullElement.innerHTML = "";
-        }
-    } else {
-        console.error(`Error displaying quote: One or more elements not found for type "${type}"`);
+/* ----------  QUOTE HELPERS ---------- */
+async function fetchQuotes(path = 'data/quotes_hidden_words.json') {
+    try {
+        const res = await fetch(path);
+        if (!res.ok) throw new Error(res.statusText);
+        return await res.json();
+    } catch (e) {
+        console.error('Failed to fetch quotes:', e);
+        return [];
     }
 }
 
-function getDayOfYear(date = new Date()) { /* ... same ... */ }
-function displayGregorianDate(date = new Date(), elementId) { /* ... same ... */ }
+const countWords = t => (t || '').trim().split(/\s+/).length;
 
-async function initializeAndShowPage() {
-    ALL_QUOTES = await fetchQuotes('data/quotes_hidden_words.json'); 
-    if (!Array.isArray(ALL_QUOTES) || ALL_QUOTES.length === 0) { 
-        displayQuote(null, "today"); return false; 
-    }
-    SHORT_QUOTES = filterQuotesByLength(ALL_QUOTES, MAX_QUOTE_WORDS);
-    if (!Array.isArray(SHORT_QUOTES) || SHORT_QUOTES.length === 0) { 
-        console.warn(`No quotes met MAX_QUOTE_WORDS (${MAX_QUOTE_WORDS}). Using ALL_QUOTES as fallback for today.`);
-        SHORT_QUOTES = ALL_QUOTES; // Fallback to all quotes if filter yields none
-        if (SHORT_QUOTES.length === 0) { // Still nothing
-             displayQuote(null, "today"); return false; 
-        }
-    }
-    console.log(`Using ${SHORT_QUOTES.length} quotes for display (after filtering).`);
-
-    const todayDateObj = new Date();
-    const dayOfYearToday = getDayOfYear(todayDateObj);
-    const todaysQuote = getQuoteByDay(SHORT_QUOTES, dayOfYearToday);
-    displayQuote(todaysQuote, "today"); 
-    
-    displayGregorianDate(todayDateObj, "gregorianDatePanel");
-    if (typeof initializeBadiCalendar === "function") {
-        initializeBadiCalendar(todayDateObj, "badiDate"); 
-    }
-    return true; 
+function filterQuotesByLength(quotes, maxWords) {
+    return quotes.filter(q => q.text && countWords(q.text) <= maxWords);
 }
 
-function showYesterdaySection() {
-    if (SHORT_QUOTES.length === 0) {
-        // Try to initialize if it hasn't happened
-        if (ALL_QUOTES.length > 0) SHORT_QUOTES = filterQuotesByLength(ALL_QUOTES, MAX_QUOTE_WORDS);
-        if (SHORT_QUOTES.length === 0) {
-             displayQuote(null, "yesterday"); return;
-        }
-    }
-
-    const today = new Date();
-    const yesterdayDateObj = new Date(today);
-    yesterdayDateObj.setDate(today.getDate() - 1); 
-
-    const dayOfYearYesterday = getDayOfYear(yesterdayDateObj);
-    const yesterdaysQuote = getQuoteByDay(SHORT_QUOTES, dayOfYearYesterday);
-    
-    displayQuote(yesterdaysQuote, "yesterday");
-    displayGregorianDate(yesterdayDateObj, "gregorianDateYesterday");
-    if (typeof initializeBadiCalendar === "function") {
-        initializeBadiCalendar(yesterdayDateObj, "badiDateYesterday");
-    }
-
-    const yesterdaySection = document.getElementById('yesterday-jumbotron-display');
-    if (yesterdaySection) {
-        const wasHidden = yesterdaySection.style.display === 'none';
-        yesterdaySection.style.display = 'flex'; 
-        if (wasHidden) { // Only scroll if it was just made visible
-            setTimeout(() => { 
-                 yesterdaySection.scrollIntoView({ behavior: 'smooth', block: 'start' });
-            }, 50); 
-        }
-        isYesterdaySectionVisible = true;
-    }
-    
-    document.getElementById('yesterday-button')?.classList.add('button-active');
-    document.getElementById('today-button')?.classList.remove('button-active');
+function dayOfYear(d = new Date()) {
+    const start = new Date(d.getFullYear(), 0, 0);
+    const diff = d - start + (start.getTimezoneOffset() - d.getTimezoneOffset()) * 6e4;
+    return Math.floor(diff / 8.64e7); // ms per day
 }
 
-function setupEventListeners() {
-    const todayButton = document.getElementById('today-button');
-    const yesterdayButton = document.getElementById('yesterday-button');
-    const scrollArrow = document.getElementById('scroll-down-arrow');
-    const quoteTextToday = document.getElementById('quote-text'); // Main quote text
-    const quoteTextYesterday = document.getElementById('quote-text-yesterday');
-    const badiDateTitle = document.getElementById('badiDate');
+function pickQuote(quotes, index) {
+    if (!quotes.length) return null;
+    return quotes[index % quotes.length];
+}
 
-    if (todayButton) {
-        todayButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            document.getElementById('main-jumbotron').scrollIntoView({ behavior: 'smooth' });
-            // Ensure main panel dates reflect today
-            const todayDateObj = new Date();
-            displayGregorianDate(todayDateObj, "gregorianDatePanel");
-            if (typeof initializeBadiCalendar === "function") {
-                initializeBadiCalendar(todayDateObj, "badiDate"); 
-            }
-            todayButton.classList.add('button-active');
-            yesterdayButton?.classList.remove('button-active');
-            
-            const yesterdaySection = document.getElementById('yesterday-jumbotron-display');
-            if (yesterdaySection) yesterdaySection.style.display = 'none'; // Hide yesterday section
-            isYesterdaySectionVisible = false;
+/* ----------  RENDER HELPERS ---------- */
+function renderQuote(obj, type = 'today') {
+    const prefix = type === 'today' ? '' : '-yesterday';
+    const txt  = document.getElementById(`quote-text${prefix}`);
+    const auth = document.getElementById(`quote-author${prefix}`);
+    const src  = document.getElementById(`quote-source-full${prefix}`);
+
+    if (!txt || !auth || !src) return;
+
+    if (!obj) {
+        txt.textContent = 'No suitable sacred verse available.';
+        auth.textContent = '';
+        src.innerHTML = '';
+        return;
+    }
+
+    txt.textContent  = obj.text;
+    auth.textContent = obj.tradition === 'Bahá’í' ? 'Bahá’u’lláh' : (obj.author || '');
+    src.innerHTML    = `<cite>${obj.source || 'Source unknown'}</cite>${obj.translator ? ` (trans. ${obj.translator})` : ''}`;
+}
+
+function renderGregorian(date, elId) {
+    const el = document.getElementById(elId);
+    if (!el) return;
+    el.textContent = date.toLocaleDateString(
+        'en-US',
+        { weekday:'long', year:'numeric', month:'long', day:'numeric' }
+    );
+}
+
+/* ----------  STATE ---------- */
+let quotesAll = [];
+let quotesShort = [];
+let quoteTodayObj = null;
+let quoteYestObj = null;
+
+/* ----------  INITIALISE PAGE ---------- */
+async function initPage() {
+    quotesAll = await fetchQuotes();
+    if (!quotesAll.length) { renderQuote(null); return; }
+
+    quotesShort = filterQuotesByLength(quotesAll, MAX_QUOTE_WORDS);
+    if (!quotesShort.length) quotesShort = quotesAll;        // fall-back
+
+    /* today */
+    const now = new Date();
+    quoteTodayObj = pickQuote(quotesShort, dayOfYear(now));
+    renderQuote(quoteTodayObj, 'today');
+    renderGregorian(now, 'gregorianDatePanel');
+    initializeBadiCalendar(now, 'badiDate');
+}
+
+function showYesterday() {
+    const yesterdayDiv = document.getElementById('yesterday-jumbotron-display');
+    if (!yesterdayDiv) return;
+
+    const yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+    quoteYestObj = pickQuote(quotesShort, dayOfYear(yesterday));
+    renderQuote(quoteYestObj, 'yesterday');
+    renderGregorian(yesterday, 'gregorianDateYesterday');
+    initializeBadiCalendar(yesterday, 'badiDateYesterday');
+
+    yesterdayDiv.style.display = 'flex';
+    setTimeout(() => yesterdayDiv.scrollIntoView({behavior:'smooth'}), 30);
+}
+
+function hideYesterday() {
+    const div = document.getElementById('yesterday-jumbotron-display');
+    if (div) div.style.display = 'none';
+}
+
+/* ----------  EVENTS ---------- */
+function copyToClipboard(obj){
+    if(!obj || !obj.text) return;
+    let txt = obj.text;
+    if (obj.author)      txt += `\n— ${obj.author}`;
+    if (obj.source)      txt += `, ${obj.source}`;
+    if (obj.translator)  txt += ` (trans. ${obj.translator})`;
+    navigator.clipboard.writeText(txt.trim()).then(()=>alert('Quote copied!'));
+}
+
+function setEvents() {
+    /* buttons */
+    const btnToday     = document.getElementById('today-button');
+    const btnYesterday = document.getElementById('yesterday-button');
+
+    btnYesterday?.addEventListener('click', e => {
+        e.preventDefault();
+        btnYesterday.classList.add('button-active');
+        btnToday?.classList.remove('button-active');
+        showYesterday();
+    });
+
+    btnToday?.addEventListener('click', e => {
+        e.preventDefault();
+        hideYesterday();
+        document.getElementById('main-jumbotron')
+                .scrollIntoView({behavior:'smooth'});
+        /* refresh top dates */
+        const now = new Date();
+        renderGregorian(now,'gregorianDatePanel');
+        initializeBadiCalendar(now,'badiDate');
+        btnToday.classList.add('button-active');
+        btnYesterday?.classList.remove('button-active');
+    });
+
+    /* down arrow */
+    document.getElementById('scroll-down-arrow')
+            ?.addEventListener('click',e=>{
+                e.preventDefault();
+                document.getElementById('scroll-content-start')
+                        .scrollIntoView({behavior:'smooth'});
+            });
+
+    /* quote copy */
+    document.getElementById('quote-text')
+            .addEventListener('click',()=>copyToClipboard(quoteTodayObj));
+    document.getElementById('quote-text-yesterday')
+            .addEventListener('click',()=>copyToClipboard(quoteYestObj));
+
+    /* Badíʿ date → show / hide Gregorian */
+    document.getElementById('badiDate')
+        .addEventListener('click', () => {
+            const el = document.getElementById('gregorianDatePanel');
+            const vis = el.classList.toggle('visible');
+            if (!vis) el.style.opacity = 0;
         });
-    }
-    if (yesterdayButton) {
-        yesterdayButton.addEventListener('click', (e) => {
-            e.preventDefault();
-            showYesterdaySection(); 
-        });
-    }
-    if (scrollArrow) { /* ... same ... */ }
-
-    function copyQuoteToClipboard(quoteObj) { 
-        if (quoteObj && quoteObj.text) {
-            let textToCopy = quoteObj.text;
-            if (quoteObj.author) textToCopy += `\n— ${quoteObj.author}`;
-            if (quoteObj.source) textToCopy += `, ${quoteObj.source}`; // Add full source to copy
-            if (quoteObj.translator) textToCopy += ` (trans. ${quoteObj.translator})`;
-            
-            navigator.clipboard.writeText(textToCopy.trim()).then(() => {
-                alert("Quote copied to clipboard!"); 
-            }).catch(err => console.error('Failed to copy text: ', err));
-        }
-    }
-
-    if (quoteTextToday) { quoteTextToday.addEventListener('click', () => copyQuoteToClipboard(currentQuoteObjectForToday)); }
-    if (quoteTextYesterday) { quoteTextYesterday.addEventListener('click', () => copyQuoteToClipboard(currentQuoteObjectForYesterday));}
-
-    if (badiDateTitle) {
-        badiDateTitle.addEventListener('click', () => {
-            const gregorianEl = document.getElementById('gregorianDatePanel');
-            if (gregorianEl) {
-                const isCurrentlyHidden = gregorianEl.style.display === 'none' || gregorianEl.style.display === '';
-                if (isCurrentlyHidden) {
-                    gregorianEl.style.display = 'block';
-                    requestAnimationFrame(() => { 
-                        requestAnimationFrame(() => {
-                             gregorianEl.style.opacity = '0.85'; 
-                             gregorianEl.classList.add('visible');
-                        });
-                    });
-                } else {
-                    gregorianEl.style.opacity = '0';
-                    gregorianEl.classList.remove('visible');
-                    gregorianEl.addEventListener('transitionend', function handler() {
-                        if (gregorianEl.style.opacity === '0') { 
-                             gregorianEl.style.display = 'none';
-                        }
-                        gregorianEl.removeEventListener('transitionend', handler);
-                    }, { once: true });
-                }
-            }
-        });
-    }
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
-    await initializeAndShowPage(); 
-    setupEventListeners();
+document.addEventListener('DOMContentLoaded', async ()=>{
+    await initPage();
+    setEvents();
 });
