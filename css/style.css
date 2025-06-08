@@ -41,25 +41,18 @@ body{
 /*  PANELS & CONTAINERS  -------------------------------------------------- */
 .panel-content-constrained{max-width:700px;margin:0 auto;padding:0 20px}
 
-/* TODAY citation panel: more whitespace below */
+/* TODAY citation panel */
 .panel-citation{padding:2.5vh 0 12vh;text-align:center}
 #quote-source-full{
   font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;
   font-style:normal;color:var(--text-color-light)}
 
 /* BUTTON PANELS --------------------------------------------------------- */
-.panel-buttons{
-  background:var(--panel-buttons-bg);color:var(--panel-buttons-text);
-  padding:40px 0;text-align:center}
+.panel-buttons{background:var(--panel-buttons-bg);color:var(--panel-buttons-text);text-align:center}
+.panel-date{border-bottom:1px solid rgba(255,255,255,.08);padding:20px 0}
+.panel-buttons-yesterday{padding:27px 0} /* ⅔ of original height */
 .buttons-layout-centered{display:flex;justify-content:center}
 
-/* ↓ Badíʿ-date panel now half height */
-.panel-date{border-bottom:1px solid rgba(255,255,255,.08);padding:20px 0}
-
-/* ↓ Yesterday-button panel reduced by 1/3 */
-.panel-buttons-yesterday{padding:27px 0}
-
-/* Buttons */
 .button{
   border:2px solid var(--button-border);background:transparent;color:var(--panel-buttons-text);
   padding:.9em 1.4em;font-size:1em;text-decoration:none;border-radius:3px;min-width:120px;
@@ -67,7 +60,7 @@ body{
 .button:hover{background:var(--button-hover-bg)}
 .button-active{background:var(--button-active-bg);color:var(--button-active-text)}
 
-/* Badíʿ date + Gregorian line */
+/* Badíʿ date + Gregorian */
 .badi-date-title{
   font-family:'Source Serif Pro',serif;font-size:2.2em;font-weight:600;
   margin-bottom:.3em;cursor:pointer}
@@ -76,7 +69,7 @@ body{
   transition:opacity .3s,max-height .3s}
 .date-text.visible{opacity:.85;max-height:3em}
 
-/* Theme toggle – smaller & translucent */
+/* Theme toggle – tiny & subtle */
 .theme-toggle-container-subtle{margin:12px auto 0}
 #theme-toggle-button{
   background:none;border:none;color:var(--theme-icon);font-size:.8em;opacity:.55;
@@ -87,15 +80,14 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
 
 /* -------------- YESTERDAY ARROW & CITATION ----------------------------- */
 .toggle-citation-arrow{
-  display:inline-block;margin:60px auto 0;opacity:.5;cursor:pointer;
-  transition:opacity .25s}
+  display:block;margin:12vh auto 0;opacity:.5;cursor:pointer;transition:opacity .25s}
 .toggle-citation-arrow img{width:24px;height:auto;filter:var(--arrow-filter)}
 .toggle-citation-arrow:hover{opacity:.8}
 
 .yesterday-citation{
   font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;
   color:var(--text-color-light);text-align:center;
-  margin:60px auto 12vh;               /* match today’s spacing */
+  margin:7.5vh auto 12vh;          /* aligns with today’s */
   opacity:0;max-height:0;overflow:hidden;transition:opacity .3s,max-height .3s}
 .yesterday-citation.visible{opacity:.9;max-height:5em}
 
