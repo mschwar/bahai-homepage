@@ -12,7 +12,7 @@
 </head>
 
 <body class="light-mode">
-  <!------ TODAY JUMBOTRON ------>
+  <!------- TODAY JUMBOTRON ------->
   <main class="quote-jumbotron" id="main-jumbotron">
     <div class="quote-content-wrapper">
       <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse…</h1>
@@ -25,7 +25,7 @@
        aria-label="Scroll down"><img src="img/downArrow-01.png" alt=""></a>
   </main>
 
-  <!------ PANELS: citation → today-btn → info-panel → yesterday-btn ------>
+  <!------- PANELS: citation → today-btn → info → yesterday-btn ------->
   <div id="scroll-content-start" class="scrollable-content">
 
     <div class="panel-citation">
@@ -45,7 +45,8 @@
         <h1 id="badiDate" class="badi-date-title clickable-date"
             title="Show / hide Gregorian date">Loading Badíʿ Date…</h1>
 
-        <p id="gregorianDatePanel" class="date-text" style="display:none;"></p>
+        <!-- reveals via `.visible` class (no inline display:none) -->
+        <p id="gregorianDatePanel" class="date-text"></p>
 
         <div class="theme-toggle-container-subtle">
           <button id="theme-toggle-button" aria-label="Toggle light / dark theme">
@@ -65,7 +66,7 @@
     <footer><div class="panel-content-constrained"></div></footer>
   </div>
 
-  <!------ YESTERDAY JUMBOTRON ------>
+  <!------- YESTERDAY JUMBOTRON ------->
   <section class="quote-jumbotron" id="yesterday-jumbotron-display" style="display:none;">
     <div class="quote-content-wrapper">
       <h1 id="quote-text-yesterday" title="Click to copy quote">Loading Sacred Verse…</h1>
@@ -75,7 +76,7 @@
     </div>
   </section>
 
-  <!------ SCRIPTS ------>
+  <!------- SCRIPTS ------->
   <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
   <script src="js/badi-init.js" defer></script>
   <script src="js/script.js" defer></script>
