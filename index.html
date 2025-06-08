@@ -12,7 +12,6 @@
 </head>
 
 <body class="light-mode">
-  <!------- TODAY JUMBOTRON ------->
   <main class="quote-jumbotron" id="main-jumbotron">
     <div class="quote-content-wrapper">
       <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse…</h1>
@@ -20,14 +19,11 @@
         <h2 id="quote-author"></h2>
       </div>
     </div>
-
     <a href="#scroll-content-start" id="scroll-down-arrow" class="scroll-down-arrow"
        aria-label="Scroll down"><img src="img/downArrow-01.png" alt=""></a>
   </main>
 
-  <!------- PANELS: citation → today-btn → info → yesterday-btn ------->
   <div id="scroll-content-start" class="scrollable-content">
-
     <div class="panel-citation">
       <div class="panel-content-constrained">
         <p id="quote-source-full"></p>
@@ -44,10 +40,7 @@
       <div class="panel-content-constrained">
         <h1 id="badiDate" class="badi-date-title clickable-date"
             title="Show / hide Gregorian date">Loading Badíʿ Date…</h1>
-
-        <!-- reveals via `.visible` class (no inline display:none) -->
         <p id="gregorianDatePanel" class="date-text"></p>
-
         <div class="theme-toggle-container-subtle">
           <button id="theme-toggle-button" aria-label="Toggle light / dark theme">
             <span class="icon-sun">☀️</span><span class="icon-moon">🌙</span>
@@ -56,7 +49,6 @@
       </div>
     </div>
 
-    <!-- Yesterday button lives in its own dark panel -->
     <div class="panel-buttons panel-buttons-yesterday">
       <div class="panel-content-constrained buttons-layout-centered">
         <a href="#" id="yesterday-button" class="button">Yesterday</a>
@@ -66,7 +58,6 @@
     <footer><div class="panel-content-constrained"></div></footer>
   </div>
 
-  <!------- YESTERDAY JUMBOTRON ------->
   <section class="quote-jumbotron" id="yesterday-jumbotron-display" style="display:none;">
     <div class="quote-content-wrapper">
       <h1 id="quote-text-yesterday" title="Click to copy quote">Loading Sacred Verse…</h1>
@@ -76,7 +67,6 @@
     </div>
   </section>
 
-  <!------- SCRIPTS ------->
   <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
   <script src="js/badi-init.js" defer></script>
   <script src="js/script.js" defer></script>
