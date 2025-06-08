@@ -7,7 +7,7 @@
   --button-active-bg:var(--panel-buttons-text); --button-active-text:var(--panel-buttons-bg);
   --arrow-filter:invert(0%); --theme-icon:#bbb;
 }
-body.dark-mode{ /* colours swapped for dark mode */
+body.dark-mode{
   --bg-color:#1A2639; --text-color:#EFEBE9; --text-color-light:rgba(239,235,233,.8);
   --panel-buttons-bg:#101825; --panel-buttons-text:#DBD7D5;
   --panel-info-bg:#2A364D; --panel-info-text:#DBD7D5;
@@ -41,16 +41,17 @@ body{
 .scroll-down-arrow:hover{opacity:.8}
 
 /*  PANELS  --------------------------------------------------------------- */
-.scrollable-content{}
-.panel-content-constrained{max-width:700px;margin:0 auto;width:100%;padding:0 20px}
+.panel-content-constrained{max-width:700px;margin:0 auto;padding:0 20px}
 
-/* citation panel: equal padding top & bottom so text sits midway */
-.panel-citation{padding:7.5vh 0;text-align:center}
+/* Citation: equidistant between arrow & next panel */
+.panel-citation{padding:2.5vh 0 7.5vh;text-align:center}
 #quote-source-full{
   font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;
   font-style:normal;color:var(--text-color-light)}
+
+/* Buttons panels now half-height */
 .panel-buttons{background:var(--panel-buttons-bg);color:var(--panel-buttons-text);
-  padding:80px 0;text-align:center}
+  padding:40px 0;text-align:center}
 .buttons-layout-centered{display:flex;justify-content:center}
 .button{
   border:2px solid var(--button-border);background:transparent;color:var(--panel-buttons-text);
@@ -58,13 +59,18 @@ body{
   transition:background .25s,color .25s;font-weight:400}
 .button:hover{background:var(--button-hover-bg)}
 .button-active{background:var(--button-active-bg);color:var(--button-active-text)}
+
+/* Info panel spacing keeps golden-ratio with new button height */
 .panel-info{background:var(--panel-info-bg);color:var(--panel-info-text);
-  padding:129px 0;text-align:center}
+  padding:65px 0;text-align:center}
 .badi-date-title{font-family:'Source Serif Pro',serif;font-size:2.2em;font-weight:600;
   margin-bottom:.4em;cursor:pointer}
-.date-text{font-size:.8em;color:var(--panel-info-text);opacity:0;max-height:0;overflow:hidden;
+
+/* bigger Gregorian date (click-to-reveal) */
+.date-text{
+  font-size:1em;color:var(--panel-info-text);opacity:0;max-height:0;overflow:hidden;
   margin-top:8px;transition:opacity .3s,max-height .3s}
-.date-text.visible{opacity:.85;max-height:2em}
+.date-text.visible{opacity:.85;max-height:3em}
 
 /* theme toggle */
 .theme-toggle-container-subtle{margin:12px auto 0}
@@ -76,8 +82,14 @@ body{
 body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
 
 /*  MOBILE TWEAKS  -------------------------------------------------------- */
-@media(max-width:768px){body{font-size:13.5px}}
+@media(max-width:768px){
+  body{font-size:13.5px}
+  .panel-buttons{padding:30px 0}
+  .panel-info{padding:49px 0}
+}
 @media(max-width:480px){
   body{font-size:13px}
   .buttons-layout-centered{flex-direction:column;gap:10px}
+  .panel-buttons{padding:25px 0}
+  .panel-info{padding:41px 0}
 }
