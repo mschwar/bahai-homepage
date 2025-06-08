@@ -14,16 +14,19 @@
 </head>
 
 <body class="light-mode">
+  <!-- FLOATING THEME TOGGLE (top-right) -->
+  <button id="theme-toggle-button" class="theme-toggle-floating" aria-label="Toggle light / dark mode">
+    <span class="icon-sun">☀️</span><span class="icon-moon">🌙</span>
+  </button>
+
   <!-- TODAY JUMBOTRON -->
   <main class="quote-jumbotron" id="main-jumbotron">
     <div class="quote-content-wrapper">
       <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse…</h1>
-      <div class="attribution-line">
-        <h2 id="quote-author"></h2>
-      </div>
+      <div class="attribution-line"><h2 id="quote-author"></h2></div>
     </div>
     <a
-      href="#scroll-content-start"
+      href="#"
       id="scroll-down-arrow"
       class="scroll-down-arrow"
       aria-label="Scroll down"
@@ -50,14 +53,7 @@
         >
           Loading Badíʿ Date…
         </h1>
-
         <p id="gregorianDatePanel" class="date-text"></p>
-
-        <div class="theme-toggle-container-subtle">
-          <button id="theme-toggle-button" aria-label="Toggle light / dark theme">
-            <span class="icon-sun">☀️</span><span class="icon-moon">🌙</span>
-          </button>
-        </div>
       </div>
     </div>
 
@@ -75,15 +71,13 @@
   <section
     class="quote-jumbotron"
     id="yesterday-jumbotron-display"
-    style="display: none"
+    style="display:none"
   >
     <div class="quote-content-wrapper">
       <h1 id="quote-text-yesterday" title="Click to copy quote">
         Loading Sacred Verse…
       </h1>
-      <div class="attribution-line">
-        <h2 id="quote-author-yesterday"></h2>
-      </div>
+      <div class="attribution-line"><h2 id="quote-author-yesterday"></h2></div>
 
       <!-- ARROW THAT TOGGLES CITATION -->
       <a
@@ -99,10 +93,7 @@
     </div>
   </section>
 
-  <script
-    src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js"
-    defer
-  ></script>
+  <script src="https://wondrous-badi.today/scripts/BadiDateToday.v1.js" defer></script>
   <script src="js/badi-init.js" defer></script>
   <script src="js/script.js" defer></script>
 </body>
