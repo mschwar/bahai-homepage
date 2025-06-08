@@ -12,6 +12,7 @@
 </head>
 
 <body class="light-mode">
+  <!-- TODAY JUMBOTRON -->
   <main class="quote-jumbotron" id="main-jumbotron">
     <div class="quote-content-wrapper">
       <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse…</h1>
@@ -24,23 +25,21 @@
   </main>
 
   <div id="scroll-content-start" class="scrollable-content">
+    <!-- CITATION -->
     <div class="panel-citation">
       <div class="panel-content-constrained">
         <p id="quote-source-full"></p>
       </div>
     </div>
 
-    <div class="panel-buttons">
-      <div class="panel-content-constrained buttons-layout-centered">
-        <a href="#" id="today-button" class="button button-active">Today</a>
-      </div>
-    </div>
-
-    <div class="panel-info">
-      <div class="panel-content-constrained">
+    <!-- BADÍʿ DATE PANEL (replaces former Today-button panel) -->
+    <div class="panel-buttons panel-date">
+      <div class="panel-content-constrained date-layout-centered">
         <h1 id="badiDate" class="badi-date-title clickable-date"
             title="Show / hide Gregorian date">Loading Badíʿ Date…</h1>
+
         <p id="gregorianDatePanel" class="date-text"></p>
+
         <div class="theme-toggle-container-subtle">
           <button id="theme-toggle-button" aria-label="Toggle light / dark theme">
             <span class="icon-sun">☀️</span><span class="icon-moon">🌙</span>
@@ -49,6 +48,7 @@
       </div>
     </div>
 
+    <!-- YESTERDAY BUTTON PANEL -->
     <div class="panel-buttons panel-buttons-yesterday">
       <div class="panel-content-constrained buttons-layout-centered">
         <a href="#" id="yesterday-button" class="button">Yesterday</a>
@@ -58,6 +58,7 @@
     <footer><div class="panel-content-constrained"></div></footer>
   </div>
 
+  <!-- YESTERDAY JUMBOTRON -->
   <section class="quote-jumbotron" id="yesterday-jumbotron-display" style="display:none;">
     <div class="quote-content-wrapper">
       <h1 id="quote-text-yesterday" title="Click to copy quote">Loading Sacred Verse…</h1>
