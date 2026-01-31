@@ -33,6 +33,7 @@ const dom = {
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const scrollBehavior = prefersReducedMotion ? 'auto' : 'smooth';
+let autoScrollTriggered = false;
 
 /* -------------------------  THEME TOGGLE  ----------------------- */
 const savedTheme = localStorage.getItem('theme');
@@ -259,6 +260,16 @@ function setEvents() {
     document.querySelector('.panel-date')?.scrollIntoView({ behavior: scrollBehavior });
   });
 
+  document.addEventListener('mousemove', (event) => {
+    if (autoScrollTriggered) return;
+    if (window.scrollY > 10) return;
+    const threshold = window.innerHeight - 60;
+    if (event.clientY >= threshold) {
+      autoScrollTriggered = true;
+      document.querySelector('.panel-date')?.scrollIntoView({ behavior: scrollBehavior });
+    }
+  });
+
   dom.yesterdayButton?.addEventListener('click', () => {
     if (!dom.yesterdaySection) return;
     dom.yesterdaySection.hidden = false;
@@ -274,6 +285,8 @@ function setEvents() {
 
   dom.copyButton?.addEventListener('click', () => copyQuote(todayObj, dom.copyStatus));
   dom.copyButtonYesterday?.addEventListener('click', () => copyQuote(yestObj, dom.copyStatusYesterday));
+  dom.quoteText?.addEventListener('click', () => copyQuote(todayObj, dom.copyStatus));
+  dom.quoteTextYesterday?.addEventListener('click', () => copyQuote(yestObj, dom.copyStatusYesterday));
 
   dom.badiDate?.addEventListener('click', () => {
     dom.gregorianDatePanel?.classList.toggle('visible');
