@@ -25,3 +25,7 @@
 - Offline / JSON fetch failure
 - Keyboard-only navigation
 - Confirm `.DS_Store` and `.obsidian/` are not in `main`
+
+## Pending manual validation
+
+- Browser-based checks (location allow/deny, offline simulation, mobile layout) need to be run locally in a browser.
