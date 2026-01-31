@@ -4,6 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Daily Sacred Verse</title>
+  <meta
+    name="description"
+    content="A minimalist homepage that shares a daily verse from The Hidden Words and the current Badíʿ date."
+  />
+  <meta property="og:title" content="Daily Sacred Verse" />
+  <meta
+    property="og:description"
+    content="A minimalist homepage that shares a daily verse from The Hidden Words and the current Badíʿ date."
+  />
+  <meta property="og:type" content="website" />
 
   <link rel="icon" href="img/favicon.png" type="image/png" />
   <link
@@ -22,16 +32,25 @@
   <!-- TODAY JUMBOTRON -->
   <main class="quote-jumbotron" id="main-jumbotron">
     <div class="quote-content-wrapper">
-      <h1 id="quote-text" title="Click to copy quote">Loading Sacred Verse…</h1>
-      <div class="attribution-line"><h2 id="quote-author"></h2></div>
+      <h1 id="quote-text" aria-live="polite" aria-atomic="true">Loading Sacred Verse…</h1>
+      <div class="attribution-line"><p id="quote-author" class="quote-author"></p></div>
+      <div class="quote-actions">
+        <button id="copy-button" type="button" class="button button-inline">Copy</button>
+        <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
+      </div>
+      <div class="status-row">
+        <p id="status-message" class="status-message" role="status" aria-live="polite"></p>
+        <button id="retry-button" type="button" class="button button-inline" hidden>Retry</button>
+      </div>
     </div>
-    <a
-      href="#"
+    <button
       id="scroll-down-arrow"
       class="scroll-down-arrow"
-      aria-label="Scroll down"
-      ><img src="img/downArrow-01.png" alt=""
-    /></a>
+      type="button"
+      aria-label="Scroll to date section"
+    >
+      <img src="img/downArrow-01.png" alt="Scroll to date section" />
+    </button>
   </main>
 
   <!--  SCROLLABLE SECTION  -->
@@ -46,21 +65,32 @@
     <!-- BADÍʿ DATE  -->
     <div class="panel-buttons panel-date">
       <div class="panel-content-constrained date-layout-centered">
-        <h1
+        <h2
           id="badiDate"
           class="badi-date-title clickable-date"
           title="Show / hide Gregorian date"
+          role="button"
+          tabindex="0"
         >
           Loading Badíʿ Date…
-        </h1>
+        </h2>
         <p id="gregorianDatePanel" class="date-text"></p>
+        <p id="location-message" class="date-note" role="status" aria-live="polite"></p>
       </div>
     </div>
 
     <!-- YESTERDAY BUTTON -->
     <div class="panel-buttons panel-buttons-yesterday">
       <div class="panel-content-constrained buttons-layout-centered">
-        <a href="#" id="yesterday-button" class="button">Yesterday</a>
+        <button
+          id="yesterday-button"
+          class="button"
+          type="button"
+          aria-expanded="false"
+          aria-controls="yesterday-jumbotron-display"
+        >
+          Yesterday
+        </button>
       </div>
     </div>
 
@@ -68,25 +98,28 @@
   </div>
 
   <!--  YESTERDAY JUMBOTRON  -->
-  <section
-    class="quote-jumbotron"
-    id="yesterday-jumbotron-display"
-    style="display:none"
-  >
+  <section class="quote-jumbotron" id="yesterday-jumbotron-display" hidden>
     <div class="quote-content-wrapper">
-      <h1 id="quote-text-yesterday" title="Click to copy quote">
+      <h2 id="quote-text-yesterday" aria-live="polite" aria-atomic="true">
         Loading Sacred Verse…
-      </h1>
-      <div class="attribution-line"><h2 id="quote-author-yesterday"></h2></div>
+      </h2>
+      <div class="attribution-line"><p id="quote-author-yesterday" class="quote-author"></p></div>
+      <div class="quote-actions">
+        <button id="copy-button-yesterday" type="button" class="button button-inline">Copy</button>
+        <p id="copy-status-yesterday" class="copy-status" role="status" aria-live="polite"></p>
+      </div>
 
       <!-- ARROW THAT TOGGLES CITATION -->
-      <a
-        href="#"
+      <button
         id="yesterday-arrow"
         class="toggle-citation-arrow"
+        type="button"
         aria-label="Show citation"
-        ><img src="img/downArrow-01.png" alt=""
-      /></a>
+        aria-controls="quote-source-full-yesterday"
+        aria-expanded="false"
+      >
+        <img src="img/downArrow-01.png" alt="Toggle citation" />
+      </button>
 
       <!-- HIDDEN CITATION -->
       <p id="quote-source-full-yesterday" class="yesterday-citation"></p>
