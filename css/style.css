@@ -41,7 +41,7 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
   margin-bottom:1.5em;white-space:pre-line}
 .quote-author{
   font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;color:var(--text-color-light)}
-.quote-actions{display:flex;align-items:center;gap:12px;margin:6px 0 4px}
+.quote-actions{display:none}
 .status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
 .status-message,.copy-status{font-size:.95em;color:var(--text-color-light);min-height:1.2em}
 .copy-status{margin:0}
@@ -49,7 +49,8 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
 
 /*  ↓ MAIN SCROLL ARROW – now left-justified  */
 .scroll-down-arrow{
-  position:absolute;bottom:5vh;left:20px;opacity:.5;cursor:pointer;transition:opacity .25s;
+  position:absolute;bottom:5vh;left:50%;transform:translateX(-50%);
+  opacity:.5;cursor:pointer;transition:opacity .25s;
   background:none;border:none;padding:0}
 .scroll-down-arrow img{width:24px;height:auto;filter:var(--arrow-filter)}
 .scroll-down-arrow:hover{opacity:.8}
