@@ -4,7 +4,7 @@ function displayBadiDateInfo(info, elementId = 'badiDate') {
   if (!el) return;
 
   if (!info) {
-    el.textContent = 'Failed to load Badíʿ date.';
+    el.textContent = 'Badíʿ date unavailable.';
     return;
   }
 
@@ -28,19 +28,54 @@ function displayBadiDateInfo(info, elementId = 'badiDate') {
   }
 }
 
-function initializeBadiCalendar(date = new Date(), targetId = 'badiDate') {
+function buildBadiKey(info) {
+  if (!info || !info.bYear || !info.bMonthNameAr || !info.bDay) return null;
+  return `badi:${info.bYear}-${info.bMonthNameAr}-${info.bDay}`;
+}
+
+function initializeBadiCalendar(date = new Date(), targetId = 'badiDate', options = {}) {
+  const { onReady, onFailure } = options;
+  const target = document.getElementById(targetId);
+  if (!target) return;
+
   if (typeof BadiDateToday !== 'function') {
     console.error('BadiDateToday JS not loaded.');
-    document.getElementById(targetId).textContent = 'Badíʿ date script missing';
+    target.textContent = 'Badíʿ date unavailable.';
+    if (onFailure) onFailure('script-missing');
     return;
   }
 
-  BadiDateToday({
-    onReady: di => displayBadiDateInfo(di, targetId),
-    language: 'en',
-    currentTime: date,
-    locationMethod:
-      (typeof BadiDateLocationChoice !== 'undefined' &&
-       BadiDateLocationChoice.askForUserLocation) || 3
-  });
+  let finished = false;
+  const finishFailure = (reason, error) => {
+    if (finished) return;
+    finished = true;
+    target.textContent = 'Badíʿ date unavailable.';
+    if (onFailure) onFailure(reason, error);
+  };
+
+  const timeoutId = window.setTimeout(() => {
+    if (finished) return;
+    target.textContent = 'Badíʿ date unavailable.';
+    if (onFailure) onFailure('timeout');
+  }, 4000);
+
+  try {
+    BadiDateToday({
+      onReady: di => {
+        if (finished) return;
+        finished = true;
+        window.clearTimeout(timeoutId);
+        displayBadiDateInfo(di, targetId);
+        if (onReady) onReady(di, buildBadiKey(di));
+      },
+      language: 'en',
+      currentTime: date,
+      locationMethod:
+        (typeof BadiDateLocationChoice !== 'undefined' &&
+         BadiDateLocationChoice.askForUserLocation) || 3
+    });
+  } catch (error) {
+    window.clearTimeout(timeoutId);
+    finishFailure('exception', error);
+  }
 }
