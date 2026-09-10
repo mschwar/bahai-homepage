@@ -11,10 +11,11 @@
 //   A. deterministic day-of-year selection over the <=75-word subset
 //   B. today / yesterday relationship
 //   C. cache-by-date (Gregorian key) incl. boot-from-cache + lastKey
-//   D. the Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
-//   E. theme persistence
+//   D. cache hygiene: today's verse is stored under the Gregorian key only; the Badíʿ-day
+//      key is NOT written (TECH_DEBT_AND_RISKS.md #7, fixed) so a cache hit can't mismatch
+//   E. theme persistence: body carries exactly one of light-mode/dark-mode (queue C7)
 //   F. Badici fallback / graceful degradation when the external lib is unreachable
-//   G. clipboard copy (primary + execCommand fallback + failure)
+//   G. clipboard copy (primary + execCommand fallback + failure); copy row is visible (C6)
 //   H. reduced-motion scroll behavior
 //
 // Run:   node tests/parity.mjs   (uses the globally-installed playwright + bundled
@@ -229,27 +230,33 @@ await run('C. Cache-by-date (Gregorian key)', [
 ]);
 
 await run('D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)', [
-  ['today\'s quote is ALSO written under the Badici-day key (the wrinkle)', async () => {
+  ['today quote is NOT written under the Badici-day key (wrinkle fixed; Gregorian key is authoritative for reads)', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page, { badiInfo: { bDay: 4, bMonthMeaning: 'Light', bMonthNameAr: 'Núr', bYear: 182, bEraAbbrev: 'BE' } });
     const gregKey = `dailyVerse:${TODAY_KEY}`;
     const greg = JSON.parse(await page.evaluate(k => localStorage.getItem(k), gregKey));
     const badi = await page.evaluate(k => localStorage.getItem(k), BADI_KEY);
-    if (!badi) throw new Error('expected today\'s quote under the Badici-day key (the #7 wrinkle)');
-    const badiParsed = JSON.parse(badi);
-    if (badiParsed.text !== greg.text) throw new Error('Badici-key value != today\'s Gregorian-key value (wrinkle not preserved)');
-    if (badiParsed.text !== expToday.text) throw new Error('Badici-key value != oracle today');
-    console.log(`      gregKey=${gregKey}  badiKey=${BADI_KEY}  both == today's verse  (wrinkle pinned)`);
     const last = await page.evaluate(() => localStorage.getItem('dailyVerse:lastKey'));
-    console.log(`      dailyVerse:lastKey == ${last}  (note: points at the Badici key after badi onReady)`);
-    if (last !== 'badi:182-Núr-4') throw new Error(`expected lastKey to point at the Badici key, got ${last}`);
+    // The wrinkle (TECH_DEBT_AND_RISKS.md #7) wrote today's verse ALSO under the Badíʿ-day key,
+    // and lastKey ended up pointing there. Nothing ever reads that key, and a later Badíʿ cache
+    // hit could render a mismatched verse. The fix (option (a)) stops writing it entirely; the
+    // Gregorian key is the only authoritative read source. Re-pinned here to the corrected behavior.
+    if (badi !== null) throw new Error("expected NO quote under the Badici-day key after the fix");
+    if (last !== TODAY_KEY) throw new Error(`expected lastKey to point at the Gregorian key, got '${last}'`);
+    if (greg.text !== expToday.text) throw new Error('Gregorian-key value mismatch with oracle today');
+    if (greg.text !== (await txt(page, '#quote-text')).trim()) throw new Error('Gregorian cache != rendered');
+    console.log(`      gregKey=${gregKey}  lastKey==${TODAY_KEY}  badiKey=absent  (wrinkle fixed & pinned)`);
     await ctx.close();
   }],
 ]);
 
 await run('E. Theme persistence', [
-  ['applies saved dark-mode on load', async () => {
+  // After queue C7 the body must carry EXACTLY ONE of light-mode/dark-mode, on first load
+  // and after a reload to a saved theme (previously it could carry both, with correctness
+  // resting on CSS specificity). The hardcoded <body class="light-mode"> default is replaced
+  // on init (js/script.js: classList.remove both, then add the saved/default one).
+  ['applies saved dark-mode on load, body carries exactly one theme class', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await blockExternal(page); await fixClock(page);
@@ -257,18 +264,22 @@ await run('E. Theme persistence', [
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
     const cls = await page.getAttribute('body', 'class');
     if (!cls.includes('dark-mode')) throw new Error(`expected dark-mode class, got: ${cls}`);
+    if (cls.includes('light-mode')) throw new Error('dark and light both present on load');
+    if (cls.trim().split(/\s+/).filter(Boolean).length !== 1) throw new Error(`expected exactly one theme class, got: ${cls}`);
     await ctx.close();
   }],
-  ['defaults to light-mode when no saved theme', async () => {
+  ['defaults to light-mode when no saved theme, exactly one theme class', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await blockExternal(page); await fixClock(page);
     await page.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
     const cls = await page.getAttribute('body', 'class');
     if (!cls.includes('light-mode')) throw new Error(`expected light-mode class, got: ${cls}`);
+    if (cls.includes('dark-mode')) throw new Error('dark present when no theme saved');
+    if (cls.trim().split(/\s+/).filter(Boolean).length !== 1) throw new Error(`expected exactly one theme class, got: ${cls}`);
     await ctx.close();
   }],
-  ['toggle flips the class and persists to localStorage', async () => {
+  ['toggle flips the class and persists; reload to a saved theme leaves exactly one theme class', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await blockExternal(page); await fixClock(page);
@@ -281,14 +292,10 @@ await run('E. Theme persistence', [
     if (!after.includes(stored)) throw new Error(`localStorage theme (${stored}) not reflected in body class (${after})`);
     // survives reload: the saved theme is still the effective theme after reload
     await page.reload({ waitUntil: 'domcontentloaded' });
-    const afterReload = await page.getAttribute('body', 'class');
+    const afterReload = (await page.getAttribute('body', 'class')).trim();
     if (!afterReload.includes(stored)) throw new Error(`saved theme (${stored}) not applied after reload; classes=${afterReload}`);
-    // NOTE (parity finding): index.html hardcodes <body class="light-mode">, so after a reload
-    // the body carries BOTH 'light-mode' and the saved 'dark-mode' classes. dark-mode wins via
-    // CSS specificity, so the effective theme is correct, but the class list is not clean.
-    if (afterReload.includes('light-mode') && afterReload.includes('dark-mode')) {
-      console.log('      (parity note) body ends with both light-mode+dark-mode after reload to a saved dark theme');
-    }
+    const themeTokens = afterReload.split(/\s+/).filter(t => t === 'light-mode' || t === 'dark-mode');
+    if (themeTokens.length !== 1) throw new Error(`after reload to a saved theme the body must carry exactly one theme class (C7); got: ${afterReload}`);
     await ctx.close();
   }],
 ]);
@@ -360,8 +367,7 @@ await run('G. Clipboard copy', [
       window.__copied = null;
       Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { window.__copied = t; } } });
     });
-    // NOTE (parity finding): .quote-actions{display:none} hides #copy-button; the reachable
-    // copy affordance is a click on the quote text itself (also wired to the same handler).
+    // The copy row is visible (queue C6); the quote text is ALSO wired to the same handler.
     await page.click('#quote-text');
     await page.waitForTimeout(50);
     const copied = await page.evaluate(() => window.__copied);
@@ -371,20 +377,84 @@ await run('G. Clipboard copy', [
     if (status !== 'Copied.') throw new Error(`expected Copied., got: ${status}`);
     await ctx.close();
   }],
-  ['parity: the copy action row is hidden by CSS (.quote-actions{display:none})', async () => {
+  ['parity: the copy action row is VISIBLE and the copy button is a real, perceivable control', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page);
-    const hidden = await page.evaluate(() => {
+    const vis = await page.evaluate(() => {
       const row = document.querySelector('.quote-actions');
       const btn = document.getElementById('copy-button');
       const rowCs = getComputedStyle(row);
-      const btnVisible = btn.getBoundingClientRect().width > 0 && btn.getBoundingClientRect().height > 0;
-      return { rowDisplay: rowCs.display, btnDisplay: getComputedStyle(btn).display, btnVisible };
+      const r = row.getBoundingClientRect();
+      const b = btn.getBoundingClientRect();
+      return { rowDisplay: rowCs.display, rowVisible: r.width > 0 && r.height > 0, btnVisible: b.width > 0 && b.height > 0, btnDisabled: btn.disabled };
     });
-    if (hidden.rowDisplay !== 'none') throw new Error(`expected .quote-actions display:none, got ${hidden.rowDisplay}`);
-    if (hidden.btnVisible) throw new Error('copy-button should not be visible while its parent is display:none');
-    console.log('      .quote-actions display=none (row hidden); button not visible; copy reachable via #quote-text click');
+    if (vis.rowDisplay === 'none' || !vis.rowVisible) throw new Error(`copy row must be visible after C6, got display=${vis.rowDisplay} rowVisible=${vis.rowVisible}`);
+    if (!vis.btnVisible) throw new Error('copy-button should be visible');
+    if (vis.btnDisabled) throw new Error('copy-button should be enabled after quote load');
+    // LAYOUT IS NOT PERCEIVABILITY. The row was restored to display:flex while the button's
+    // label and border resolved to the same colour as the page background (the .button rule,
+    // declared later at equal specificity, overrode .button-inline and applied the dark
+    // .panel-buttons palette to the light jumbotron): a 1:1 ratio, i.e. an invisible control
+    // that a size-based assertion happily passed. Pin the contrast, in both themes.
+    const contrast = async () => page.evaluate(() => {
+      const btn = document.getElementById('copy-button');
+      const cs = getComputedStyle(btn);
+      let el = btn, bg = 'rgba(0, 0, 0, 0)';
+      while (el) {
+        const c = getComputedStyle(el).backgroundColor;
+        if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
+        el = el.parentElement;
+      }
+      const nums = s => (s.match(/[\d.]+/g) || []).map(Number);
+      const lum = c => {
+        const [r, g, b] = nums(c).slice(0, 3).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const a = lum(cs.color), b2 = lum(bg);
+      return { color: cs.color, bg, ratio: +(((Math.max(a, b2) + 0.05) / (Math.min(a, b2) + 0.05)).toFixed(2)) };
+    });
+    const light = await contrast();
+    if (light.ratio < 4.5) throw new Error(`copy-button label must be perceivable in light mode; contrast ${light.ratio}:1 (${light.color} on ${light.bg})`);
+    // and the same in the dark theme, where the palette swaps
+    const darkCtx = await browser.newContext();
+    const darkPage = await darkCtx.newPage();
+    await blockExternal(darkPage); await fixClock(darkPage);
+    await darkPage.addInitScript(() => localStorage.setItem('theme', 'dark-mode'));
+    await darkPage.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await darkPage.waitForFunction(() => document.getElementById('quote-text').textContent !== 'Loading Sacred Verse…', { timeout: 15000 }).catch(() => {});
+    // The theme swap runs through a CSS transition (body: .3s, .button: .25s), so a colour read
+    // taken immediately lands mid-interpolation and yields a meaningless ratio. Wait until the
+    // computed colour stops changing before measuring -- polling for stability rather than
+    // sleeping, so it does not depend on the faked clock's timer semantics.
+    await darkPage.waitForFunction(() => {
+      const btn = document.getElementById('copy-button');
+      if (!btn) return false;
+      const c = getComputedStyle(btn).color;
+      if (window.__lastColor === c) return true;
+      window.__lastColor = c;
+      return false;
+    }, { timeout: 5000 }).catch(() => {});
+    const dark = await darkPage.evaluate(() => {
+      const btn = document.getElementById('copy-button');
+      const cs = getComputedStyle(btn);
+      let el = btn, bg = 'rgba(0, 0, 0, 0)';
+      while (el) {
+        const c = getComputedStyle(el).backgroundColor;
+        if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
+        el = el.parentElement;
+      }
+      const nums = s => (s.match(/[\d.]+/g) || []).map(Number);
+      const lum = c => {
+        const [r, g, b] = nums(c).slice(0, 3).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      };
+      const a = lum(cs.color), b2 = lum(bg);
+      return { color: cs.color, bg, ratio: +(((Math.max(a, b2) + 0.05) / (Math.min(a, b2) + 0.05)).toFixed(2)) };
+    });
+    if (dark.ratio < 4.5) throw new Error(`copy-button label must be perceivable in dark mode; contrast ${dark.ratio}:1 (${dark.color} on ${dark.bg})`);
+    await darkCtx.close();
+    console.log(`      .quote-actions visible (C6); copy button perceivable — light ${light.ratio}:1, dark ${dark.ratio}:1`);
     await ctx.close();
   }],
   ['falls back to execCommand copy when navigator.clipboard rejects', async () => {

@@ -1,0 +1,164 @@
+C6 + C7 + tech-debt #7 — owner product batch
+============================================
+
+queue units: C6 (invisible copy affordance), C7 (dual theme classes), TECH_DEBT_AND_RISKS.md #7
+             (the Badíʿ-day cache write)
+executor:    Hermes agent (work started by a second agent that stopped before committing;
+             verified, corrected and finished by the parent session)
+authority:   owner decisions in-session 2026-09-10 — C6 option (a), C7 option (a), #7 option (a).
+             Recorded as docs/DECISIONS.md D16. All three touch frozen files, which AGENTS.md
+             puts behind owner sign-off.
+gate:        human — modifies css/style.css and js/script.js
+
+Baseline note: this batch was rebased onto main after the C9 location-downgrade work merged
+(PR #15). The hash set at the foot is therefore the COMBINED baseline — C9's js/badi-init.js
+plus this batch's css/style.css and js/script.js — which is the one that should be treated as
+current once this lands. D13 declined to claim a final baseline for exactly this reason.
+
+--------------------------------------------------------------------------------
+C6 — the copy affordance is visible again
+--------------------------------------------------------------------------------
+css/style.css: `.quote-actions{display:none}` became `display:flex` with the same
+gap/wrap/margin treatment as the sibling `.status-row`. The clipboard handler, the status
+element and both fallbacks in js/script.js were already present and are untouched: the row was
+designed and built, and only CSS hid it.
+
+DEFECT FOUND DURING VERIFICATION, AND FIXED — the first attempt restored the row but the button
+was INVISIBLE, so C6 was not actually satisfied. Measured, not guessed:
+
+  before the correction:  label rgb(239,235,233) on rgb(239,235,233)  ->  contrast 1:1
+  after the correction:   light 12.85:1 ; dark 12.85:1
+
+Cause: `.button-inline` (line 48) sets `color: var(--text-color); border-color: var(--text-color)`
+— which is the theme-correct ink, #1A2639 on the cream jumbotron and #EFEBE9 on the navy one.
+But `.button` (line 69) is declared LATER at equal specificity, so it won, applying
+`--panel-buttons-text` / `--button-border` — a palette designed for the DARK `.panel-buttons`
+date band — to the LIGHT jumbotron. The result was a white-on-white rectangle: a control that
+occupied 120x45 px and could not be seen.
+
+Correction: the selector is scoped to `.quote-jumbotron .button-inline` (specificity 0-2-0),
+so it wins over `.button` in both themes and `--text-color` resolves correctly per theme. One
+selector change, no new variables, no markup change. Applies to all three inline buttons, which
+all live inside `.quote-jumbotron` sections (#copy-button, #copy-button-yesterday, #retry-button).
+
+WHY THE FIRST PASS MISSED IT — recorded because it is the useful lesson. The first attempt's
+verification asserted the row was not `display:none`, that the row and button had non-zero
+boxes, and that the button was enabled. Every one of those is true of an invisible white
+rectangle. A presence/size check cannot see colour. The first visual check was what caught it,
+and it was then confirmed objectively by measuring contrast rather than trusting either signal.
+
+--------------------------------------------------------------------------------
+C7 — the body carries exactly one theme class
+--------------------------------------------------------------------------------
+js/script.js now removes both `light-mode` and `dark-mode` before adding the saved (or default)
+class:
+
+  document.body.classList.remove('light-mode', 'dark-mode');
+  document.body.classList.add(savedTheme || 'light-mode');
+
+Previously `index.html` hardcoded `<body class="light-mode">` and the script appended, so a
+reload to a saved dark theme left BOTH classes on the body, with the effective theme correct
+only because `dark-mode` happened to win on CSS specificity. `index.html` is untouched; the
+requirement was exactly one theme class at the end, not a redesign.
+
+--------------------------------------------------------------------------------
+tech-debt #7 — the Badíʿ-day cache write is gone
+--------------------------------------------------------------------------------
+js/script.js no longer executes `saveCachedQuote(pendingBadiKey, todayObj)`, and the
+`pendingBadiKey` variable is removed. Nothing ever READ the Badíʿ-day key, and that write could
+leave a mismatched verse to be served on a later Badíʿ cache hit if the date boundary shifted —
+user-visible wrong text on a product whose doctrine is one passage per day. The Gregorian key is
+now the only authoritative read source.
+
+`js/badi-init.js` still supplies the Badíʿ key to the `onReady` callback (its `succeed()` passes
+`buildBadiKey(di)`). That is left deliberately: the key is part of badi-init's callback contract
+and removing it would be an unnecessary change to a file this batch does not otherwise touch. The
+consumer simply no longer uses it, which the in-code comment states.
+
+--------------------------------------------------------------------------------
+PARITY: DELIBERATE RE-PINS, AND ONE STRENGTHENING
+--------------------------------------------------------------------------------
+command: make parity
+BEFORE (at origin/main, before this batch):  18 passed, 0 failed
+AFTER  (section F added by C9 in main):      19 passed, 0 failed
+Assertion COUNT is unchanged by this batch — three existing assertions were re-pinned and one
+was strengthened, all in tests/parity.mjs:
+
+  Section D  was: asserts today's verse IS written under the Badíʿ key and that lastKey points
+                  there (pinning the defect as expected behaviour).
+             now: asserts the Badíʿ key is ABSENT and lastKey points at the GREGORIAN key.
+                  A test that pins a known defect is a trap for the next agent; this re-pin is
+                  the deliberate correction.
+
+  Section E  was: asserted the saved theme applied, and LOGGED a note when the body carried both
+                  classes. Logging is not pinning — the defect could disappear or worsen with the
+                  suite still green.
+             now: ASSERTS exactly one theme token on load, on default, and after a reload to a
+                  saved theme; the log-only note is removed.
+
+  Section G  was: asserted the copy row was HIDDEN (display:none) — a test that pinned the
+                  defect.
+             now: asserts the row is VISIBLE, the button is a real enabled control, AND that the
+                  button's label is PERCEIVABLE — contrast of the computed label colour against
+                  the first opaque background behind it must be >= 4.5:1, measured in BOTH the
+                  light and dark themes.
+
+That last assertion was verified to have teeth rather than assumed to: with the CSS correction
+temporarily reverted, the suite failed exactly as intended —
+
+  FAIL  parity: the copy action row is VISIBLE and the copy button is a real, perceivable control
+        copy-button label must be perceivable in light mode; contrast 1:1
+        (rgb(239, 235, 233) on rgb(239, 235, 233))
+  == RESULT: 18 passed, 1 failed ==
+
+— and passes at 12.85:1 in both themes with the correction restored.
+
+Full green run at the final tree:
+  == RESULT: 19 passed, 0 failed ==
+  Quotes checked: 153 / Errors: 0 / Warnings: 0 / Duplicate texts: 0
+
+--------------------------------------------------------------------------------
+VISUAL EVIDENCE (element region: quote -> attribution -> copy row)
+--------------------------------------------------------------------------------
+C6-before-copy-affordance.png   row display:none; no button present at all
+C6-after-copy-affordance.png    row display:flex; "Copy" button visible with a dark border and
+                                dark label below the attribution
+Both read as images, not just measured: the "after" was described as a clean layout with a
+clearly visible Copy button in the lower left; the "before" as containing no control at all.
+Four earlier screenshots produced before the contrast correction were deleted rather than kept,
+because they show the broken state and would be misleading evidence beside the final ones.
+
+--------------------------------------------------------------------------------
+FROZEN-FILE HASHES (sha256) — COMBINED baseline (C9 + this batch)
+--------------------------------------------------------------------------------
+index.html          5b3d8f79f0dd24f47d814b43f92fe2026ab8967be08c354498be95d852d0d9b5  (unchanged)
+css/style.css       4d811437930e031df637378802abfe7692f95e052166a70fad8a7f81d37103e0  CHANGED (C6)
+css/wallpaper.css   4326866c94f784a87e403d77d759e2425e84c259d5f169bd9651aaeafaa44301  (unchanged)
+js/script.js        47e2800f8b2f83f18ff182c9f49e39010b8b7a5d5abeb8dd47165801578e5ccc  CHANGED (C7 + #7)
+js/badi-init.js     80eb5e3f455da4f55deabbfeaf58fd9d8da1d56523bdd2fcf56ce97485f30807  (from C9, PR #15)
+js/quote-core.js    6a0102cc735e664fa69d2be1cf43829c63b263458bbf66b1790a7f2ba6ea217a  (unchanged)
+js/wallpaper.js     a6eea8b260e8e45e0f0c7794d516a7c89946e4004204101a4080a77f6c3e354a  (unchanged)
+data/quotes_hidden_words.json
+                    fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  (unchanged)
+ios/widget/QuoteStore.swift
+                    e188eca190a74fca34e4ee042d50a9be4723be67569307809b4604b350c4aaea  (unchanged)
+ios/widget/quotes_hidden_words.json
+                    fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  (unchanged)
+
+Compared with D11's H2A set, exactly three files differ: css/style.css and js/script.js (this
+batch) and js/badi-init.js (C9). The other seven are byte-identical.
+
+--------------------------------------------------------------------------------
+NOT DONE, STATED EXPLICITLY
+--------------------------------------------------------------------------------
+- `.button:hover{background:var(--button-hover-bg)}` still resolves to a ~10%-opacity wash of
+  the PANEL palette, so on the light jumbotron the hover tint is nearly invisible. The label and
+  border are perceivable (the C6 requirement), but the hover feedback is weak in light mode.
+  Left alone deliberately: fixing it means either a new colour variable or a second scoped
+  override, i.e. a design decision wider than the defect. Recorded so the next reader does not
+  rediscover it as a surprise.
+- `docs/audit/2026-09-10/TECH_DEBT_AND_RISKS.md` #7 still reads "→ H2A candidate" and is NOT
+  edited. That directory is the immutable Phase 0 record (docs/DECISIONS.md D10), so closures
+  are recorded in docs/queue.md and here, not by rewriting the audit.
+- C6's original entry also permitted "add an explicit visible control (option (b))". Option (a)
+  made the designed row visible; no new control was added.

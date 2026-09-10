@@ -46,6 +46,9 @@ let autoScrollTriggered = false;
 
 /* -------------------------  THEME TOGGLE  ----------------------- */
 const savedTheme = localStorage.getItem('theme');
+// Replace rather than append so the body carries exactly ONE of
+// light-mode / dark-mode even after a reload to a saved theme (queue C7).
+document.body.classList.remove('light-mode', 'dark-mode');
 document.body.classList.add(savedTheme || 'light-mode');
 
 dom.themeToggleBtn?.addEventListener('click', () => {
@@ -124,7 +127,6 @@ function setButtonEnabled(button, enabled) {
 let quotes = [];
 let todayObj = null;
 let yestObj = null;
-let pendingBadiKey = null;
 let badiInitialized = false;
 
 /* ----------------------  INITIALISE PAGE  ----------------------- */
@@ -164,8 +166,6 @@ async function initPage() {
     renderQuote(yestObj, '-yesterday');
     saveCachedQuote(todayKey, todayObj);
 
-    if (pendingBadiKey) saveCachedQuote(pendingBadiKey, todayObj);
-
     setButtonEnabled(dom.copyButton, true);
     setButtonEnabled(dom.copyButtonYesterday, true);
     setButtonEnabled(dom.yesterdayButton, true);
@@ -188,9 +188,12 @@ function startBadiCalendar() {
 
   initializeBadiCalendar(new Date(), 'badiDate', {
     onReady: (info, badiKey) => {
-      pendingBadiKey = badiKey;
+      // Tech-debt #7: the Badíʿ-day key is never read, so we do NOT persist
+      // today's verse under it — that write could render a mismatched verse on a
+      // later Badíʿ cache hit if the date boundary shifted. The Gregorian key is
+      // the only authoritative cache for reads. `badiKey` is still supplied by
+      // js/badi-init.js for callers that want it; this one no longer needs it.
       setLocationMessage('');
-      if (todayObj && pendingBadiKey) saveCachedQuote(pendingBadiKey, todayObj);
     },
     onFailure: (reason) => {
       console.warn('Badíʿ date unavailable:', reason);

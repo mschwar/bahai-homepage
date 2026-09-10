@@ -396,6 +396,7 @@ value and the downgrade window are now named constants if that trade is ever rev
 `onerror` and its plain-`http` fallback are upstream defects that this works around rather than fixes.
 
 *Source:* owner decision in-session 2026-09-10 (`C9` option (a)); `docs/queue.md` `C9`.
+
 ## D14 — Root documentation map, H1.10 closed, and the roadmap/governance decision · accepted 2026-09-10
 
 Three documentation-only decisions, accepted by the owner in-session on 2026-09-10. None touches a product file
@@ -515,6 +516,64 @@ is not what changes the outcome: the ipinfo request is issued whenever no positi
 *Source:* `docs/queue.md` `C9` (OPEN); the live run outputs quoted verbatim in the pull request for this
 change.
 
+## D16 — Owner batch: copy affordance restored (and made perceivable), one theme class, Badíʿ cache write removed · accepted 2026-09-10
+
+Closes queue units `C6` and `C7` and tech-debt item `#7`, whose option (a) the owner chose for each
+in-session on 2026-09-10. All three touch frozen files (`css/style.css`, `js/script.js`), which `AGENTS.md`
+puts behind owner sign-off; that decision is the authorization.
+
+**`C6` — the copy row is visible, and the button is actually perceivable.** `.quote-actions` returns to
+`display:flex` with the same treatment as its sibling `.status-row`; the clipboard handler, the status element
+and both fallbacks were already present and are untouched. **A second defect surfaced while verifying the first:**
+the restored row contained an invisible button. `.button-inline` sets `color`/`border-color` to
+`var(--text-color)` — the theme-correct ink — but `.button` is declared *later* at equal specificity and won,
+applying the dark `.panel-buttons` palette to the light jumbotron. The button measured
+`rgb(239,235,233)` on `rgb(239,235,233)`: **contrast 1:1**, a 120×45 px rectangle nobody could see. Scoping the
+rule to `.quote-jumbotron .button-inline` (specificity 0-2-0) fixes the cascade with one selector change and
+no new variables or markup; contrast is now **12.85:1 in both themes**.
+
+*Why the first attempt missed it, recorded because it is the transferable part:* its checks were that the row
+was not `display:none`, that the row and button had non-zero boxes, and that the button was not disabled. Every
+one of those is true of an invisible white rectangle. **Presence is not perceivability** — a layout assertion
+cannot see colour. Section G therefore now asserts the button label's contrast (≥ 4.5:1) against the first
+opaque background behind it, measured in both themes, and that assertion was **verified to fail at 1:1** against
+the un-corrected CSS rather than assumed to work.
+
+**`C7` — exactly one theme class on the body.** `js/script.js` removes `light-mode` and `dark-mode` before
+adding the saved (or default) one, so a reload to a saved dark theme no longer leaves both. Previously the
+effective theme was correct only because `dark-mode` happened to win on CSS specificity — correctness resting on
+cascade order between two contradictory classes. `index.html` is untouched.
+
+**Tech-debt `#7` — the Badíʿ-day cache write is gone.** `js/script.js` no longer executes
+`saveCachedQuote(pendingBadiKey, todayObj)`; the variable is removed. Nothing ever read that key, and the write
+could serve a mismatched verse on a later Badíʿ cache hit if the date boundary shifted — user-visible wrong text
+on a product whose doctrine is one passage per day. The Gregorian key is now the only authoritative read source.
+`js/badi-init.js` still supplies the key to its `onReady` callback, deliberately: it is part of that file's
+contract and removing it would widen this change for no benefit.
+
+**Parity: three deliberate re-pins and one strengthening, count unchanged.** Section D now asserts the Badíʿ key
+is *absent* and `lastKey` points at the Gregorian key — the previous assertion pinned the defect as expected
+behaviour, which is a trap for the next agent. Section E now *asserts* the single-theme-class invariant instead
+of logging a note (logging is not pinning). Section G now asserts visibility, an enabled control, **and**
+contrast in both themes. `make parity` is **19 passed, 0 failed**; `make validate` is 153/0/0/0.
+
+**Evidence.** `docs/audit/2026-09-10/C6_C7_DEBT7_RUN.txt` (all three changes, both parity runs, the verified
+failing run of the new assertion, before/after screenshots, and both hash sets). Screenshots:
+`C6-before-copy-affordance.png` and `C6-after-copy-affordance.png`. Four earlier captures from before the
+contrast correction were deleted rather than kept, because they show the broken state.
+
+**Current frozen-file baseline (combined with `D13`/`C9`, which merged first).** Changed:
+`css/style.css` `4d811437…` (this batch), `js/script.js` `47e2800f…` (this batch), `js/badi-init.js`
+`80eb5e3f…` (from `C9`, PR #15). Unchanged: `index.html`, `css/wallpaper.css`, `js/quote-core.js`,
+`js/wallpaper.js`, `data/quotes_hidden_words.json` and both `ios/widget/` files, all byte-identical to D11's
+set. This is the combined baseline `D13` declined to claim, and it is the one to treat as current.
+
+**Recorded limitation, not fixed.** `.button:hover` still resolves to a ~10%-opacity wash of the *panel*
+palette, so the hover tint is nearly invisible on the light jumbotron. The label and border are perceivable,
+which is what `C6` required; fixing the hover would mean a new colour variable or a second scoped override — a
+design decision wider than the defect. Named here so it is not rediscovered as a surprise.
+
+*Source:* owner decisions in-session 2026-09-10 (`C6`, `C7`, tech-debt `#7`, option (a) each); `docs/queue.md`.
 ## D17 — Super Linter: CSS and the redundant Python linters off; the phantom checks resolved · accepted 2026-09-10
 
 **Owner authorization.** `.github/` is CI configuration, which `AGENTS.md` places behind owner sign-off (its
