@@ -51,12 +51,23 @@ The full agent-facing contract is `AGENTS.md`.
 
 ### Experimental ambient surfaces (unlinked, off the parity path)
 
+Both exist to put the *same* daily verse on other surfaces. Neither is linked from `index.html` and neither is
+on the parity path — **a change to `js/script.js` has no obligation to propagate to them.** That coupling is
+queue unit `H2B`'s problem, not a silent expectation on every future change.
+
 | Surface | Live URL | Status |
 |---|---|---|
-| Wallpaper generator | <https://mschwar.github.io/bahai-homepage/wallpaper.html> | `wallpaper.html` + `css/wallpaper.css` + `js/wallpaper.js`; React 18 via `unpkg.com`; deployed but **not linked from `index.html`** |
-| iOS widget | — | `ios/widget/*.swift` + a bundled corpus copy; **source only, no `.xcodeproj`, not buildable in-repo** |
+| Wallpaper generator | <https://mschwar.github.io/bahai-homepage/wallpaper.html> | `wallpaper.html` + `css/wallpaper.css` + `js/wallpaper.js`; React 18 loaded from `unpkg.com`; pick device size / appearance / font scale, renders today's verse onto a canvas with Download PNG. **Deployed but unreachable from the homepage** — there is no link to it anywhere in `index.html`. |
+| iOS widget | *(no live URL — source only)* | `ios/widget/DailyVerseWidget.swift`, `ios/widget/QuoteStore.swift` and a bundled corpus copy. WidgetKit + SwiftUI, day-of-year selection, refresh at next midnight. |
 
-Both surface the *same* daily verse on other surfaces. Neither is on the parity path.
+**Honest status of the widget:** there is **no `.xcodeproj` / `.xcworkspace` in this repo**, so as committed it
+is *source and data only* and **cannot be built or tested in-repo**. Any claim to have "built" or "tested" the
+widget is false. `QuoteStore.swift` also duplicates the selection logic and the 75-word cap — the same
+three-way duplication described in the AGENTS contract (Appendix A below).
+
+Per owner decision D3 both surfaces are **kept**, not deleted and not built out; deleting them would destroy
+in-flight intent, building them out would be unjustified churn. Adding an on-page link to them would edit
+`index.html` and is therefore a separate, owner-visible unit (`H1.10` in `docs/queue.md`).
 
 ### Archived / historical
 
@@ -209,6 +220,20 @@ selection + caching logic. There is **no schema version and no provenance record
 
 Until the collection contract lands (queue unit `H2B`), changing the corpus means changing all three copies.
 Do not pretend the contract exists.
+
+## Experimental ambient surfaces (off the parity path)
+
+Both are unlinked from `index.html` and neither is on the parity path — **a change to `js/script.js` has no
+obligation to propagate to them**; that coupling is `H2B`'s problem, not a standing expectation.
+
+- **Wallpaper** — `wallpaper.html` + `css/wallpaper.css` + `js/wallpaper.js`, live at
+  <https://mschwar.github.io/bahai-homepage/wallpaper.html> (React 18 from `unpkg.com`). Deployed but
+  unreachable from the homepage.
+- **iOS widget** — `ios/widget/*.swift` + a bundled corpus copy. **No `.xcodeproj` exists, so it is source and
+  data only and cannot be built or tested in-repo.** Never claim to have built or tested it.
+
+Owner decision D3 keeps both. Adding an on-page link would edit `index.html` and is a separate owner-visible
+unit (`H1.10` in `docs/queue.md`).
 
 ## Autonomy boundary
 
