@@ -26,6 +26,14 @@ plus H1C (`…/H1C_ORPHAN_UNPUBLISH.md`).
 
 **Evidence:** `PHASE1_HANDOFF.md` (per-gate command output).
 
+**H1.2 closure — 2026-09-10, post-handoff (deviation D-A closed).** The root `AGENTS.md` now exists, with
+content byte-identical to the retired `README.md` Appendix A, and the appendix is gone. Alongside it: the three
+`README.md` pointer references and `docs/RUNBOOK.md`'s header now name `AGENTS.md`; `CONTRIBUTING.md`'s broken
+commands were fixed (`python` → `python3`; unpinned `pip install requests beautifulsoup4 lxml` →
+`pip install -r requirements-dev.txt`) because bare `python` is the pyenv failure mode `RUNBOOK.md` §7 already
+records; and `PHASE1_HANDOFF.md`'s deviation section carries an append-only closure note. H1 stays
+`in-progress` — the remaining exit gate is the owner's recorded acceptance of `PHASE1_HANDOFF.md`.
+
 ## H1.10 — on-page link to the ambient surfaces · **pending (optional, owner-visible)** · gate: human
 
 Owner decision Q1 was "document + link" for the wallpaper and widget; H1 links them from the docs only,
@@ -85,6 +93,57 @@ in this repo (correctly absent).
 
 Add the verified Ruhi memorization export as a real collection; exercise the selector in normal daily use.
 **Evidence:** the loaded collection + a day-of-year selection check + Hidden Words parity unchanged.
+
+---
+
+## Candidate units — documented defects, not yet authorized
+
+Found during the post-handoff review of `PHASE1_HANDOFF.md` and the appendix retirement. Each names a contract
+and a gate. Neither is scheduled; neither is authorized.
+
+### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · gate: human
+
+**Evidence (2026-09-10):** `gh run list --workflow "Lint Code Base"` returns `failure` for the HEAD commit
+(`docs: add PHASE1_HANDOFF.md with gate evidence`, run `34524938962`, 1m57s) and for both Phase 0 doc commits.
+The only post-H1 success is the code-only unpublish commit. Root cause from `gh run view --log-failed`: the
+`textlint` terminology rule rejects the words this project documents itself with — `repo` → `repository`,
+`build system` → `build tool` — in `README.md`, `PHASE1_HANDOFF.md`, `docs/RUNBOOK.md` and the Phase 0 audit
+docs. Secondary: `.github/workflows/super-linter.yml` pins `github/super-linter@v4` (superseded/archived
+upstream) and the run logs `Failed to call GitHub Status API` (curl 403) noise before exiting.
+
+**Why it is a defect, not cosmetics:** the default branch advertises a failing check to every cold-start agent,
+while `README.md` and `docs/RUNBOOK.md` both claim CI is "hygiene only, does not gate or deploy". A red check
+everyone has learned to ignore is worse than no check — and it trains agents to dismiss red before they can
+tell the two kinds apart.
+
+**Contract:** pick exactly one and record it in `docs/DECISIONS.md` —
+(a) keep Super Linter but disable the natural-language/terminology rules for markdown (`.textlintrc` /
+`FILTER_REGEX_EXCLUDE`), on a supported action version;
+(b) adopt the rule's vocabulary project-wide (~30+ replacements across 5+ docs — manual rewrites of the
+prohibitions in `AGENTS.md` / `DECISIONS.md` are explicitly not acceptable collateral); or
+(c) delete the workflow and let `make validate` be the one documented check.
+**Exit gate:** the resulting run on `main` is green, and the choice is recorded.
+**Gate:** human — CI configuration is outside the agent autonomy boundary (`AGENTS.md`: "Do not add CI/deploy
+changes … as a side effect").
+
+### C2 — Root docs are unmapped: live docs, spent residue, and history are indistinguishable · gate: agent
+
+**Evidence:** `README.md`'s "Where the truth lives" list and its three status bands do not name
+`AUDIT_NOTES.md`, `CONTRIBUTING.md`, `HANDOFF.md`, `PHASE1_HANDOFF.md`, `START_HOMEPAGE_RETROFIT.md` or
+`SECURITY.md`, and all six sit in the publicly served root. Two are spent by construction:
+`START_HOMEPAGE_RETROFIT.md` is a launcher whose "first authorized task" is the Phase 0 archaeology prompt
+(executed), and `AUDIT_NOTES.md` is dated 2026-01-31 and is not reconciled with the Phase 0 audit that
+superseded it — its recorded decisions are not cited anywhere in `docs/DECISIONS.md`.
+
+**Why it is a defect:** H1's stated purpose was that a cold-start agent can tell what is current. Six root
+markdown files with no declared status leave the reader to guess which are live, which are historical, and
+which are the bootstrap that produced this phase.
+
+**Contract:** classify each root `.md` as live / historical / bootstrap, state the classification in
+`README.md` ("Where the truth lives"), and move the historical ones under `docs/history/` behind a SUPERSEDED
+banner using the D5 mechanism. Non-destructive: nothing is deleted, and no frozen file is touched.
+**Evidence:** the classified map in `README.md` + `git ls-files '*.md'` before/after.
+**Gate:** agent — documentation only.
 
 ---
 

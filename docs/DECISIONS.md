@@ -108,3 +108,17 @@ H1 close, verified by sha256 before and after.
 *Why:* H1's entire value is that the product does not change; "I didn't edit it" is not evidence, a hash is.
 
 *Source:* `SCOPE_AND_GATES.md` gate 1 / `OWNER_DECISIONS.md`.
+
+## D9 — README Appendix A retired; the agent contract now exists as root `AGENTS.md` · accepted 2026-09-10
+
+The agent contract lives at root `AGENTS.md`, byte-identical to the text that had been preserved verbatim in
+`README.md` Appendix A. The appendix is removed and every reference to it (`README.md` ×3, `docs/RUNBOOK.md`)
+now names `AGENTS.md`.
+
+*Why:* D7's appendix was a documented fallback, not the preferred delivery, and its manual step has now been
+performed — the runtime's protected-agent-instruction prompt was approved and the write went through. Keeping
+the contract in two places would create two authorities for one text, and the duplicate would drift the first
+time either copy was edited.
+
+*Source:* `OWNER_DECISIONS.md` Q5 and D7. This entry closes D7's fallback clause additively; D7's own text is
+not edited (append-only ledger).
