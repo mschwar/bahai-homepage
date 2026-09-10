@@ -109,13 +109,14 @@ secrets, spelling and workflow security are on; the natural-language style gloss
 would rewrite frozen product files or append-only records are off.
 
 **Where lint coverage actually comes from — read the log, not the badge.** The job can report `success` having
-checked nothing. Two Super Linter **v4** runs on `main` did exactly that — merge commits created locally with
+checked nothing: two Super Linter **v4** runs on `main` did exactly that — merge commits created locally with
 `git merge --no-ff` and pushed (`No files were found in the GITHUB_WORKSPACE to lint!`, runs `34525756201` and
-`34526018773`), while plain pushes and PR runs linted their files. Under **v8** a merge commit created by
-GitHub's own PR merge *did* lint its files (run `34528829696`, which named all eight). So: empty-set runs are
-not a general property of merge commits, and the **local merge + push** path under v8 has not been retested —
-that is queue unit `C3`. The practical rule stands either way: **if it matters, land it through a PR and confirm
-the run log names your files.**
+`34526018773`) — which is how a red lint failure went unnoticed for three commits. That behaviour does not
+reproduce on **v8**: a merge commit created by GitHub's PR merge named its eight files (run `34528829696`), and
+the **local `git merge --no-ff` + push** path was retested on 2026-09-10 (`1ea76c5`, run `34531596264`) and
+named the two files it read. No landing path in use here is currently known to lint nothing. Keep reading the
+log rather than the badge when coverage matters — confirm the run names your files (queue `C3`, closed on that
+evidence).
 
 A red run is a defect to fix, not noise to scroll past. Between the Phase 0 audit and the H1 handoff this job
 failed on three consecutive doc commits and nobody noticed, because the docs said it was "hygiene only". If it

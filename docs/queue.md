@@ -109,7 +109,8 @@ Add the verified Ruhi memorization export as a real collection; exercise the sel
 Found during the post-handoff review of `PHASE1_HANDOFF.md`, the appendix retirement and the CI repair. Each
 names a contract and a gate. `C1` is done; `C2` and `C3` are not scheduled and not authorized. `C4` and `C5`
 were added on 2026-09-10 from the review of the `actions/checkout` bump (D10, third addendum); none of
-`C2`–`C5` is scheduled or authorized.
+`C2`–`C5` is scheduled or authorized. `C3` closed the same day on the retest its own contract asked for, using
+no configuration change; `C2`, `C4` and `C5` remain open.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -172,9 +173,13 @@ banner using the D5 mechanism. Non-destructive: nothing is deleted, and no froze
 **Evidence:** the classified map in `README.md` + `git ls-files '*.md'` before/after.
 **Gate:** agent — documentation only.
 
-### C3 — CI linted nothing on two merge-commit pushes (v4); the v8 behaviour needs pinning down · gate: human
+### C3 — CI linted nothing on two merge-commit pushes (v4) · **done** · gate: human (no configuration change was needed)
 
-**Evidence (2026-09-10), all seven runs examined:**
+**Outcome (2026-09-10): closed as a v4 artifact, on the retest the contract asked for.** No CI configuration was
+touched, so nothing crossed the autonomy boundary this unit's gate exists to protect — the retest is an
+observation and the closure is documentation.
+
+**Evidence (2026-09-10), all nine runs examined:**
 
 | Run | Head | How it reached the runner | Super Linter | Result |
 |---|---|---|---|---|
@@ -185,27 +190,23 @@ banner using the D5 mechanism. Non-destructive: nothing is deleted, and no froze
 | `34527479040` | `f67f470` | pull request | v8 | linted its files, success |
 | `34528462515` | `acf706d` | pull request | v8 | linted its 8 files (named in the log), success |
 | `34528829696` | `a5c046b` | merge commit created by GitHub's PR merge | v8 | linted its 8 files (named in the log), success |
+| `34531219266` | `d094517` | merge commit created by GitHub's PR merge | v8 | linted its file (named in the log), success |
+| `34531596264` | `1ea76c5` | **local `git merge --no-ff`, pushed** | v8 | linted its 2 files, named in the log, success |
 
-**What this does and does not establish.** Both empty-set runs were Super Linter **v4** and both were merge
-commits created locally and pushed. Under **v8** the one merge-commit run — created by GitHub's PR merge —
-linted its files normally, so the empty set is *not* a general property of merge commits, and it has not been
-reproduced on v8. Unverified: the **local `git merge --no-ff` + push** path under v8, which is how most of this
-repository's history landed and which the two observed failures used. An earlier draft of this unit claimed
-"a merge-commit push to `main` lints nothing"; the run above disproves that as a general statement, and this
-entry is corrected rather than kept for the tidier story.
+**The answer the unit was waiting for.** Run `34531596264` is the local merge path — the one that produced both
+empty-set runs under v4. It gathered a non-empty file list and named what it read:
 
-**Why it still matters:** the failure mode is silent — the job reports `success` having checked nothing, which
-is how C1 hid for three commits. If the local-merge path under v8 behaves the same way, then "green on `main`"
-remains unearned on this repository's most common landing path.
+```text
+No merge conflicts found in /github/workspace/docs/DECISIONS.md /github/workspace/docs/queue.md
+```
 
-**Contract:** run the local-merge path once under v8 and read the run log.
-(a) If it names the files it linted, close this unit as a v4 artifact (and delete the caveat from
-`docs/RUNBOOK.md` §5).
-(b) If it still finds no files, pick a trigger that always has a diff to work from (`pull_request` only is the
-simplest) or document the no-op as accepted — and make `docs/RUNBOOK.md` §5 say whichever is true.
-**Exit gate:** a run log that either names the files it linted on that path, or a recorded decision that the
-path is deliberately uncovered.
-**Gate:** human — CI configuration is outside the agent autonomy boundary.
+So the empty set was a **v4** behaviour, as the correction above suspected, and it does not reproduce on v8 on
+any path this repository uses. `docs/RUNBOOK.md` §5 no longer carries the unresolved-caveat sentence.
+
+**Why it was worth resolving rather than documenting again:** the failure mode is silent — the job reports
+`success` having checked nothing — which is how C1 hid for three commits. "Green on `main`" only means something
+if the run actually read the files, and on this repository's most common landing path that had been assumed
+rather than observed.
 
 ### C4 — Dependabot has no stated policy for major-version bumps · gate: human
 
