@@ -125,3 +125,18 @@ Answers recorded in `bootstrap/packets/2026-09-10-phase1-agent-first-retrofit/OW
 **Next phase is now available:** run the regenerated Phase 1 packet —
 `bootstrap/packets/2026-09-10-phase1-agent-first-retrofit/01_PROMPT.txt` (H1 + owner-approved H1C).
 The Phase 0 `prompts/02_*` placeholder is superseded and must not be used.
+
+---
+
+## 12 · H1 execution note (2026-09-10, appended — the Phase 0 record above is unchanged)
+
+The Phase 1 packet was executed: H1.1–H1.9 + H1C, eleven commits, pushed to `main`. **The ten acceptance
+gates in `SCOPE_AND_GATES.md` are closed with pasted command output, with one explicit deviation** (the
+runtime blocked the `AGENTS.md` write, so the contract ships as `README.md` Appendix A with a manual step).
+
+Gate 1/2 parity held exactly — the five frozen files hash to the same sha256 as at baseline and the live site
+is byte-identical to the repo. Gate 9 closed 35 seconds after the push: all four orphaned endpoints are 404
+while the payload is retained on the pushed, never-merge `archive/legacy-multifaith` branch.
+
+**Full evidence, queue state, deviations and the deferred list: `PHASE1_HANDOFF.md`.**
+Work stopped there — H2A, H2B, R1 and H3 remain gated behind separate authorization.

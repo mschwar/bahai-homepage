@@ -29,7 +29,9 @@ These are the product. Changing them is a product change, not a refactor:
 - **No framework, no build system, no bundler, no runtime dependency** may be added to the served site.
 - **Single `main` branch, and the whole branch is publicly served** (see *Deploy*).
 
-The full agent-facing contract is `AGENTS.md`.
+The full agent-facing contract is in **Appendix A** at the end of this file. It is *not yet* a root
+`AGENTS.md`: this runtime refused the write, so the contract ships verbatim as an appendix with a one-time
+manual step (see the note at the top of Appendix A, and `PHASE1_HANDOFF.md` §4, deviation D-A).
 
 ---
 
@@ -132,7 +134,8 @@ subdirectory of `main`.
 - `docs/queue.md` — the forward work queue (states, gates, evidence fields).
 - `docs/DECISIONS.md` — the decision ledger.
 - `docs/RUNBOOK.md` — run / validate / deploy / recovery operational runbook.
-- `AGENTS.md` — the agent contract (invariants, commands, autonomy boundary, forbidden list).
+- **Appendix A** below — the agent contract (invariants, commands, autonomy boundary, forbidden list).
+  Normally this lives at root as `AGENTS.md`; a human must still perform that one-time step.
 
 ## Deferred
 

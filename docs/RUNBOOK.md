@@ -1,6 +1,7 @@
 # Runbook — run, validate, deploy, recover
 
-Operational companion to `README.md` (product) and `AGENTS.md` (contract). All commands below were executed on
+Operational companion to `README.md` (product) and the agent contract (currently `README.md` Appendix A — the
+root `AGENTS.md` file still needs its one-time manual step). All commands below were executed on
 this host on 2026-09-10; the output recorded here is the output they produced.
 
 ## 1 · Runtime topology
