@@ -170,33 +170,39 @@ banner using the D5 mechanism. Non-destructive: nothing is deleted, and no froze
 **Evidence:** the classified map in `README.md` + `git ls-files '*.md'` before/after.
 **Gate:** agent — documentation only.
 
-### C3 — CI lints nothing on a merge-commit push · gate: human
+### C3 — CI linted nothing on two merge-commit pushes (v4); the v8 behaviour needs pinning down · gate: human
 
-**Evidence (2026-09-10):** of the five `Lint Code Base` runs examined, every plain commit push and PR run found
-its files, and both merge-commit pushes to `main` found none:
+**Evidence (2026-09-10), all seven runs examined:**
 
-| Run | Head | Commit kind | Result |
-|---|---|---|---|
-| `34524824941` | `ebe5b78` | plain | linted its files, success |
-| `34524938962` | `20bfe1a` | plain | linted its files, **failure** (the C1 bug) |
-| `34525756201` | `d4e1d30` | **merge** | `No files were found … to lint!`, success |
-| `34526018773` | `a8bf7e5` | **merge** | `No files were found … to lint!`, success |
-| `34527479040` | `f67f470` | plain (PR) | linted its files, success |
+| Run | Head | How it reached the runner | Super Linter | Result |
+|---|---|---|---|---|
+| `34524824941` | `ebe5b78` | plain push | v4 | linted its files, success |
+| `34524938962` | `20bfe1a` | plain push | v4 | linted its files, **failure** (the C1 bug) |
+| `34525756201` | `d4e1d30` | local `git merge --no-ff`, pushed | v4 | **`No files were found … to lint!`**, success |
+| `34526018773` | `a8bf7e5` | local `git merge --no-ff`, pushed | v4 | **`No files were found … to lint!`**, success |
+| `34527479040` | `f67f470` | pull request | v8 | linted its files, success |
+| `34528462515` | `acf706d` | pull request | v8 | linted its 8 files (named in the log), success |
+| `34528829696` | `a5c046b` | merge commit created by GitHub's PR merge | v8 | linted its 8 files (named in the log), success |
 
-Super Linter computes "changed files" from the push range; for a merge commit that computation yields an empty
-set, so the job exits green having checked nothing.
+**What this does and does not establish.** Both empty-set runs were Super Linter **v4** and both were merge
+commits created locally and pushed. Under **v8** the one merge-commit run — created by GitHub's PR merge —
+linted its files normally, so the empty set is *not* a general property of merge commits, and it has not been
+reproduced on v8. Unverified: the **local `git merge --no-ff` + push** path under v8, which is how most of this
+repository's history landed and which the two observed failures used. An earlier draft of this unit claimed
+"a merge-commit push to `main` lints nothing"; the run above disproves that as a general statement, and this
+entry is corrected rather than kept for the tidier story.
 
-**Why it matters:** every unit in this repository's history has landed as a branch + merge. On that path the
-merge commit is the only thing `main` sees, and it is unchecked — so "CI is green on `main`" can be true and
-meaningless at the same time. This is the same failure mode as C1 (green/red that does not correspond to
-reality), one level down.
+**Why it still matters:** the failure mode is silent — the job reports `success` having checked nothing, which
+is how C1 hid for three commits. If the local-merge path under v8 behaves the same way, then "green on `main`"
+remains unearned on this repository's most common landing path.
 
-**Contract (pick one and record it):** (a) accept it and rely on the PR run as the coverage point — already
-documented in `docs/RUNBOOK.md` §5; (b) move the trigger to `pull_request` only, so the check always has a
-diff to work from; or (c) drive the lint from a slightly different event so merges are covered too. Whichever
-is chosen, the `docs/RUNBOOK.md` §5 claim must match what the workflow actually does.
-**Exit gate:** a merged change to `main` whose lint coverage is provable (either by a run that names the files
-it linted, or by a documented, deliberate decision that the PR run is the coverage point).
+**Contract:** run the local-merge path once under v8 and read the run log.
+(a) If it names the files it linted, close this unit as a v4 artifact (and delete the caveat from
+`docs/RUNBOOK.md` §5).
+(b) If it still finds no files, pick a trigger that always has a diff to work from (`pull_request` only is the
+simplest) or document the no-op as accepted — and make `docs/RUNBOOK.md` §5 say whichever is true.
+**Exit gate:** a run log that either names the files it linted on that path, or a recorded decision that the
+path is deliberately uncovered.
 **Gate:** human — CI configuration is outside the agent autonomy boundary.
 
 ---
