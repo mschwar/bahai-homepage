@@ -387,8 +387,10 @@ recorded in `.github/workflows/super-linter.yml` with its reason beside it, in t
   — so the prior state was a three-flag contradiction — and this job lacks `pull-requests: write`, so the PR
   summary comment could never post anyway. The owner chose to turn the summary **off**, not on; both enable
   flags are now explicitly `false`, making the set consistent so the warning cannot occur.
-- **Black/Ruff — option (a): Ruff lint genuinely runs.** `VALIDATE_PYTHON_RUFF: true`;
-  `VALIDATE_PYTHON_BLACK: false`; `VALIDATE_PYTHON_RUFF_FORMAT: false`. Read from super-linter's
+- **Black/Ruff — option (a): Ruff lint genuinely runs.** `VALIDATE_PYTHON_BLACK: false`;
+  `VALIDATE_PYTHON_RUFF_FORMAT: false`; `VALIDATE_PYTHON_RUFF` is left at its default `true` (not toggled,
+  because super-linter rejects a config that mixes explicit `true` and `false` `VALIDATE_*` entries — this
+  repository's config is exclude-only). Read from super-linter's
   `lib/functions/validation.sh`: the "Black and Ruff … conflict" warning fires when `VALIDATE_PYTHON_BLACK`
   and `VALIDATE_PYTHON_RUFF_FORMAT` are both `true` — the conflict is Black vs Ruff's *formatter*, not the
   linter. Ruff is the Python linter of record and runs for real on `scripts/*.py`. Turning it on surfaced
