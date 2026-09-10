@@ -1,0 +1,13 @@
+# Development-only dependencies for the scrapers (scripts/scrape_*.py).
+#
+# These are NOT runtime dependencies. The served site is static HTML/CSS/JS + JSON and
+# never references this file or these packages. Pinned to the versions verified on the
+# maintainer's host (2026-09-10).
+#
+# Usage:
+#   python3 -m venv .venv && source .venv/bin/activate
+#   pip install -r requirements-dev.txt
+
+requests==2.34.2
+beautifulsoup4==4.15.0
+lxml==6.1.3
