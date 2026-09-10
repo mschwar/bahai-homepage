@@ -45,14 +45,14 @@ exception to the freeze and requires an explicit new authorization.
 
 **Evidence:** before/after screenshots, re-run sha256s, owner sign-off.
 
-## H2A — live-site refactor / parity · **in-progress (first half done)** · gate: agent (H1 accepted 2026-09-10 → gate satisfied)
+## H2A — live-site refactor / parity · **done** · gate: agent (H1 accepted 2026-09-10 → gate satisfied; refactor half owner-authorized 2026-09-10)
 
-**Gate satisfied, refactor still NOT authorized.** Owner acceptance of H1 (`PHASE1_HANDOFF.md` §9) removes
-H2A's precondition. As written, H2A has two halves with **different authority**: the parity suite is now
-written and passing (first half complete), but the refactor it enables changes frozen files (`AGENTS.md`: a
-frozen-file change "needs an owner decision and parity evidence") and therefore needs its own explicit
-authorization. Executors must not treat the satisfied gate as covering both halves — the refactor half is
-**not covered** by H1's gate and remains unexecuted pending that authorization.
+**Authorization (2026-09-10).** H2A has two halves with different authority. The parity suite (first half)
+was covered by H1's gate; the refactor half changes frozen files and, per `AGENTS.md`, needed its own
+"owner decision and parity evidence". The owner granted that authorization in-session on 2026-09-10, and the
+decision is recorded as **D11** — which supersedes D8's byte-identical freeze for exactly the files H2A
+touched. An executor reading this later must not infer authority from the satisfied gate alone: D11 is the
+authority, and it is scoped to this refactor.
 
 Contract: **write behavioral parity tests first, change implementation second.** The parity set must cover
 deterministic day-of-year selection, today/yesterday match, cache-by-date **including the Badíʿ-day-cache
@@ -82,17 +82,37 @@ recorded verbatim in `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt`. Coverage:
   reachable copy affordance is a click on the quote text itself (wired to the same handler);
 - H. reduced-motion scroll (`behavior: auto` under `prefers-reduced-motion: reduce`, `smooth` otherwise).
 
-**No frozen file was modified.** `tests/parity.mjs`, the `parity` Makefile target, and the run log are the
-only additions. The **refactor half is NOT started and NOT authorized** — it remains pending its own owner
-authorization as this unit's second half.
+**First half carried no frozen-file change.** `tests/parity.mjs`, the `parity` Makefile target, and the run
+log were the only additions.
 
-Only then consider safe refactors: extract the selection/collection logic into a shared module (currently
-duplicated across `js/script.js`, `js/wallpaper.js`, `ios/widget/QuoteStore.swift`), normalize run docs, and
-convert the `innerHTML` Badíʿ string to text nodes (#11). **No framework adoption.**
+### Second half — the refactor · **done 2026-09-10** (branch `refactor/h2a-shared-quote-core`)
 
-**Exit gate:** parity suite green *before* and *after* the refactor.
-**Evidence:** `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt` (first-half run, 18/0), parity suite output
-before/after any future refactor; frozen-file hashes.
+Executed as the packet ordered, behavior-preserving, no framework/bundler/build step:
+
+- **Selection/collection logic extracted** into `js/quote-core.js` (new) — the single JavaScript source of
+  truth for `MAX_QUOTE_WORDS`, `QUOTES_PATH`, the word-count filter, day-of-year selection, the date and
+  cache-key helpers, the corpus fetch, and a `createQuoteCache(prefix[, lastKeyKey])` factory.
+  `js/script.js` and `js/wallpaper.js` consume it; each keeps its own cache namespace (`dailyVerse:` /
+  `dailyWallpaper:`) and only `script.js` records a `lastKey`, so both caches behave exactly as before.
+- **Debt `#11` closed** — `js/badi-init.js` builds the two-line Badíʿ label from text nodes + `<br>` instead
+  of `el.innerHTML`. Same rendering, no HTML parsing of the value.
+- **Run docs normalized** — `docs/RUNBOOK.md` §§1, 3, 6, 8, including a run-record format the new log follows.
+
+**Not done, deliberately:** `ios/widget/QuoteStore.swift` is unchanged. The packet forbids unifying the
+Swift reimplementation in H2A and defers it to `H2B`; a JS module cannot be shared with Swift in any case.
+Debt `#1`'s "three places" is therefore now **two** (`js/quote-core.js`, `ios/widget/QuoteStore.swift`),
+and `docs/RUNBOOK.md` §8 says so. Closing the remaining one is `H2B`'s job.
+
+**No framework adoption**, no new runtime dependency, no new manifest. The wallpaper surface is on the
+refactor's blast radius but off the parity path, so it was verified separately (headless: shared core
+loaded, canvas painted, no console/page errors).
+
+**Exit gate — closed.** Parity suite green *before* and *after*: `18 passed, 0 failed` both times, the two
+raw outputs byte-identical.
+**Evidence:** `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt` (first-half run, 18/0) and
+`docs/audit/2026-09-10/H2A_REFACTOR_PARITY_RUN.txt` (both halves of this unit — the before/after runs,
+the frozen-file sha256 sets, and the separate wallpaper-surface check). The frozen-file hashes are recorded
+in that second file and in `docs/DECISIONS.md` **D11**.
 
 ## H2B — collection / source abstraction · **pending** · gate: agent (after the data contract is written)
 

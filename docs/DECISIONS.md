@@ -233,3 +233,50 @@ on `main`, `34531219266` (`push`, head `d094517`): `success` — the `Checkout c
 repository-object-format probe and its includeIf credential handling, and the lint job named the file it linted
 (`.github/workflows/super-linter.yml`), so the file set was not empty. Two configuration warnings surfaced in
 that same log and are queued as `C5`; the update path this bump travelled is queued as `C4`.
+
+## D11 — H2A refactor: shared quote core; the freeze is superseded for the H2A scope · accepted 2026-09-10
+
+The owner authorized, in-session on 2026-09-10, the frozen-file changes queue unit `H2A`'s refactor half
+requires. `AGENTS.md` states that a change to a frozen file "needs an owner decision and parity evidence" —
+this entry is the decision, and the evidence is cited below. D8 declared `index.html`, `css/*`, `js/*`,
+`data/quotes_hidden_words.json` and `ios/widget/*` byte-identical **for H1**; H1 is closed, so this entry
+supersedes D8 for exactly the files H2A touched. D8's text is left as written (append-only ledger) and its
+H1 hash set remains the H1 record.
+
+**What changed** (executed on branch `refactor/h2a-shared-quote-core`):
+
+1. **Shared module.** `js/quote-core.js` (new) is the single JavaScript source of truth for `MAX_QUOTE_WORDS`,
+   `QUOTES_PATH`, the word-count filter, day-of-year selection, the date and cache-key helpers, the corpus
+   fetch, and a `createQuoteCache(prefix[, lastKeyKey])` factory. `js/script.js` and `js/wallpaper.js` now
+   consume it instead of each reimplementing it (debt #1/#4). Each surface keeps its own cache namespace
+   (`dailyVerse:` / `dailyWallpaper:`) and only `script.js` passes a `lastKeyKey`, so both caches behave
+   exactly as before. It is a classic script attaching one global, `QuoteCore` — no module system, bundler,
+   manifest or build step (`AGENTS.md`), loaded by `index.html` and `wallpaper.html` before its consumers.
+2. **Debt #11 closed.** `js/badi-init.js` builds the two-line Badíʿ label from text nodes plus a `<br>`
+   element instead of assigning to `el.innerHTML`: `textContent = ''`, then `createTextNode` /
+   `createElement('br')` / `createTextNode`. Same rendering; the value is no longer parsed as HTML.
+3. **Run docs normalized** — `docs/RUNBOOK.md` §§1, 3, 6 and 8, including a documented run-record format
+   that the new run log follows.
+
+**Why.** Two JavaScript files reimplementing the same selection and caching logic is the mechanism by which
+a corpus contract rots — change one and forget the other. Extracting it first gives H2B a single JS seam to
+build the collection contract on. The refactor was deliberately behavior-preserving: the parity suite's
+before and after outputs are byte-identical, so nothing user-visible changed. The `innerHTML` conversion is
+strictness only — the input was never attacker-controlled.
+
+**Not changed, stated explicitly:** `ios/widget/QuoteStore.swift`. H2A's packet (step 4) forbids unifying
+the Swift reimplementation here and defers it to the H2B contract; a JavaScript module cannot be shared with
+Swift in any case. The widget remains the second copy of the corpus + cap.
+
+**Evidence.** `docs/audit/2026-09-10/H2A_REFACTOR_PARITY_RUN.txt` — `make parity` reporting
+`18 passed, 0 failed` **before** (at `d24a628`) and **after**, the two raw outputs byte-identical; the
+frozen-file sha256 sets for both states with the changed hashes called out; and a separate headless check of
+the off-parity-path wallpaper surface, which loads the shared core, paints its canvas and reports no page or
+console errors.
+
+**Current frozen-file hashes (H2A baseline).** Recorded in that file under "Frozen-file hashes". They
+replace D8's for `index.html`, `js/script.js`, `js/badi-init.js` and `js/wallpaper.js`, and add the new
+`js/quote-core.js`; `css/style.css`, `css/wallpaper.css`, `data/quotes_hidden_words.json` and both
+`ios/widget/` files still match D8 byte for byte.
+
+*Source:* owner authorization in-session 2026-09-10; `docs/queue.md` H2A; `H2A_PARITY_REFACTOR.md` step 2.

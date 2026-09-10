@@ -40,12 +40,13 @@ python3 scripts/validate_quotes.py data/quotes_hidden_words.json
 ## Data contract — current reality
 
 There is exactly **one corpus**, `data/quotes_hidden_words.json` (153 records, `{text, source, author}`).
-Its path and the `MAX_QUOTE_WORDS = 75` cap are **hard-coded in three places** — `js/script.js`,
-`js/wallpaper.js`, `ios/widget/QuoteStore.swift` — and each of those reimplements the same
-selection + caching logic. There is **no schema version and no provenance record**, and
-`ios/widget/quotes_hidden_words.json` is a byte-identical copy with no regeneration step.
+Its path and the `MAX_QUOTE_WORDS = 75` cap are **hard-coded in two places** — `js/quote-core.js` (the shared
+JS source of truth, consumed by both `js/script.js` and `js/wallpaper.js` after H2A) and
+`ios/widget/QuoteStore.swift` (a Swift reimplementation, deliberately not unified). There is **no schema
+version and no provenance record**, and `ios/widget/quotes_hidden_words.json` is a byte-identical copy with
+no regeneration step.
 
-Until the collection contract lands (queue unit `H2B`), changing the corpus means changing all three copies.
+Until the collection contract lands (queue unit `H2B`), changing the corpus means changing both copies.
 Do not pretend the contract exists.
 
 ## Experimental ambient surfaces (off the parity path)

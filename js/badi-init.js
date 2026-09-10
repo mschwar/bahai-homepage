@@ -21,7 +21,12 @@ function displayBadiDateInfo(info, elementId = 'badiDate') {
        line 2:  182 BE                                         */
     const line1 = `Day ${bDay}, ${bMonthNameAr} (${bMonthMeaning.toLowerCase()})`;
     const line2 = `${bYear} ${bEraAbbrev}`;
-    el.innerHTML = `${line1}<br>${line2}`;
+    // TECH_DEBT_AND_RISKS.md #11: build the two-line label from text nodes +
+    // <br> rather than innerHTML. Same rendering, no HTML parsing of the value.
+    el.textContent = '';
+    el.appendChild(document.createTextNode(line1));
+    el.appendChild(document.createElement('br'));
+    el.appendChild(document.createTextNode(line2));
   } else {
     console.warn('Badíʿ date object incomplete:', info);
     el.textContent = 'Badíʿ date unavailable.';

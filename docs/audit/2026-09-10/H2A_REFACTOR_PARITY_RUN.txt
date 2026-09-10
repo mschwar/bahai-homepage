@@ -1,0 +1,187 @@
+H2A — parity suite, green BEFORE and AFTER the shared-core refactor
+=====================================================================
+
+queue unit: H2A (refactor half)
+executor:   Hermes agent, owner-authorized in-session 2026-09-10
+authority:  docs/DECISIONS.md D11 — supersedes D8's byte-identical freeze for the H2A scope only
+contract:   write behavioral parity tests first, change implementation second; parity green before AND after
+
+Scope executed:
+  1. extract the selection/collection logic duplicated across js/script.js and js/wallpaper.js into the
+     shared module js/quote-core.js (plain classic script — no framework, bundler or build step);
+  2. replace the innerHTML Badici string with text nodes + <br> (TECH_DEBT_AND_RISKS.md #11);
+  3. normalize run docs (docs/RUNBOOK.md sections 1, 3, 6, 8 — see "Doc normalization" at the foot).
+
+Not executed, stated explicitly: ios/widget/QuoteStore.swift is UNCHANGED. The H2A packet
+(bootstrap/.../workunits/H2A_PARITY_REFACTOR.md, step 4) forbids unifying the Swift reimplementation here
+and defers it to the H2B collection contract; a JS module cannot be shared with Swift in any case.
+
+--------------------------------------------------------------------------------
+RUN 1 of 2 — BEFORE the refactor
+--------------------------------------------------------------------------------
+command: make parity
+cwd: /Users/mschwar/Developer/bahai-homepage
+date: 2026-09-10T16:13:51Z
+git: d24a628 (branch main, working tree clean)
+playwright: 1.59.1
+node: v26.0.0
+=== raw output ===
+node tests/parity.mjs
+
+## A. Deterministic day-of-year selection over the <=75-word subset
+      dayOfYear=166 shortSubsetLen=128 idx=38
+PASS  selects the expected verse for "today"
+PASS  selection is stable across reloads (same fixed day)
+      yesterday idx=37
+PASS  today is distinct from yesterday when dayOfYear differs
+
+## B. Today / yesterday relationship
+PASS  yesterday button reveals the yesterday section with yesterday's verse
+
+## C. Cache-by-date (Gregorian key)
+PASS  boots from cache when the quote fetch fails (offline cache-boot)
+PASS  after a fresh load, today's verse is cached under dailyVerse:<todayKey> and lastKey is set
+
+## D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
+      gregKey=dailyVerse:2026-06-15  badiKey=dailyVerse:badi:182-Núr-4  both == today's verse  (wrinkle pinned)
+      dailyVerse:lastKey == badi:182-Núr-4  (note: points at the Badici key after badi onReady)
+PASS  today's quote is ALSO written under the Badici-day key (the wrinkle)
+
+## E. Theme persistence
+PASS  applies saved dark-mode on load
+PASS  defaults to light-mode when no saved theme
+      (parity note) body ends with both light-mode+dark-mode after reload to a saved dark theme
+PASS  toggle flips the class and persists to localStorage
+
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+
+## G. Clipboard copy
+PASS  copy via clicking today's quote text writes "<text>\n— <author>" to navigator.clipboard
+      .quote-actions display=none (row hidden); button not visible; copy reachable via #quote-text click
+PASS  parity: the copy action row is hidden by CSS (.quote-actions{display:none})
+PASS  falls back to execCommand copy when navigator.clipboard rejects
+PASS  reports "Copy failed." when both paths fail
+
+## H. Reduced-motion scroll behavior
+PASS  uses behavior auto (instant) when prefers-reduced-motion: reduce
+PASS  uses behavior smooth when reduced-motion is not preferred
+
+== RESULT: 18 passed, 0 failed ==
+--------------------------------------------------------------------------------
+RUN 2 of 2 — AFTER the refactor
+--------------------------------------------------------------------------------
+command: make parity
+cwd: /Users/mschwar/Developer/bahai-homepage
+date: 2026-09-10T16:15:29Z
+git: working tree on branch refactor/h2a-shared-quote-core (pre-commit; the landing commit carries this
+     same tree — the content identity is the frozen-file hash set below)
+playwright: 1.59.1
+node: v26.0.0
+=== raw output ===
+node tests/parity.mjs
+
+## A. Deterministic day-of-year selection over the <=75-word subset
+      dayOfYear=166 shortSubsetLen=128 idx=38
+PASS  selects the expected verse for "today"
+PASS  selection is stable across reloads (same fixed day)
+      yesterday idx=37
+PASS  today is distinct from yesterday when dayOfYear differs
+
+## B. Today / yesterday relationship
+PASS  yesterday button reveals the yesterday section with yesterday's verse
+
+## C. Cache-by-date (Gregorian key)
+PASS  boots from cache when the quote fetch fails (offline cache-boot)
+PASS  after a fresh load, today's verse is cached under dailyVerse:<todayKey> and lastKey is set
+
+## D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
+      gregKey=dailyVerse:2026-06-15  badiKey=dailyVerse:badi:182-Núr-4  both == today's verse  (wrinkle pinned)
+      dailyVerse:lastKey == badi:182-Núr-4  (note: points at the Badici key after badi onReady)
+PASS  today's quote is ALSO written under the Badici-day key (the wrinkle)
+
+## E. Theme persistence
+PASS  applies saved dark-mode on load
+PASS  defaults to light-mode when no saved theme
+      (parity note) body ends with both light-mode+dark-mode after reload to a saved dark theme
+PASS  toggle flips the class and persists to localStorage
+
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+
+## G. Clipboard copy
+PASS  copy via clicking today's quote text writes "<text>\n— <author>" to navigator.clipboard
+      .quote-actions display=none (row hidden); button not visible; copy reachable via #quote-text click
+PASS  parity: the copy action row is hidden by CSS (.quote-actions{display:none})
+PASS  falls back to execCommand copy when navigator.clipboard rejects
+PASS  reports "Copy failed." when both paths fail
+
+## H. Reduced-motion scroll behavior
+PASS  uses behavior auto (instant) when prefers-reduced-motion: reduce
+PASS  uses behavior smooth when reduced-motion is not preferred
+
+== RESULT: 18 passed, 0 failed ==
+
+Comparability: the two raw outputs above are byte-identical (verified with diff — exit 0, no output).
+18 passed, 0 failed, both gates. Exit code 0 for both runs.
+
+--------------------------------------------------------------------------------
+Frozen-file hashes (sha256)
+--------------------------------------------------------------------------------
+The freeze covers index.html, css/*, js/*, data/quotes_hidden_words.json, ios/widget/* (D8). H2A changed
+four of them plus added one; everything else is byte-identical to the H1 baseline.
+
+BEFORE (H1 baseline, commit d24a628) — identical to docs/DECISIONS.md D8:
+0d1a6f0ff7b8b3ff1f715da90e998d3a1949814f7c271814dd5aa69acb0b36c5  index.html
+2a08588cc93767af4a82028114bbfc505539085bfadb48b8c5a29e75ebf56de7  css/style.css
+4326866c94f784a87e403d77d759e2425e84c259d5f169bd9651aaeafaa44301  css/wallpaper.css
+11f88eb2bbab951d13bc43502c16b23ba8719284b5e26f0bbd3b79514f4798c8  js/script.js
+3bfd20540065efb1e4cfd422cddd11f60a32fa4ea7f371a09bbe0a712502509a  js/badi-init.js
+f0f8c76e1ae478a2b919b454e0b63da071767f2100f92454b49478ecb51176ce  js/wallpaper.js
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  data/quotes_hidden_words.json
+e188eca190a74fca34e4ee042d50a9be4723be67569307809b4604b350c4aaea  ios/widget/QuoteStore.swift
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  ios/widget/quotes_hidden_words.json
+
+AFTER (H2A refactor):
+5b3d8f79f0dd24f47d814b43f92fe2026ab8967be08c354498be95d852d0d9b5  index.html
+2a08588cc93767af4a82028114bbfc505539085bfadb48b8c5a29e75ebf56de7  css/style.css
+4326866c94f784a87e403d77d759e2425e84c259d5f169bd9651aaeafaa44301  css/wallpaper.css
+73b43a3d2b0867c3bfa34b1864e9aa44150341814dabd66fb49ac28c89590167  js/script.js
+5831f0e922ce5b7b5b2d04373379d8c9abf2ed78fdbc6f2ee5cc9dc399ea65f1  js/badi-init.js
+6a0102cc735e664fa69d2be1cf43829c63b263458bbf66b1790a7f2ba6ea217a  js/quote-core.js
+a6eea8b260e8e45e0f0c7794d516a7c89946e4004204101a4080a77f6c3e354a  js/wallpaper.js
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  data/quotes_hidden_words.json
+e188eca190a74fca34e4ee042d50a9be4723be67569307809b4604b350c4aaea  ios/widget/QuoteStore.swift
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  ios/widget/quotes_hidden_words.json
+
+Changed:
+  index.html              0d1a6f0f... -> 5b3d8f79...   (loads js/quote-core.js before js/badi-init.js + js/script.js)
+  js/script.js            11f88eb2... -> 73b43a3d...   (delegates selection + caching to the shared core)
+  js/badi-init.js         3bfd2054... -> 5831f0e9...   (innerHTML -> text nodes + <br>, debt #11)
+  js/wallpaper.js         f0f8c76e... -> a6eea8b2...   (delegates selection + caching to the shared core)
+  js/quote-core.js        (new)       -> 6a0102cc...   (the shared module)
+Unchanged (byte-identical):
+  css/style.css, css/wallpaper.css, data/quotes_hidden_words.json, ios/widget/QuoteStore.swift,
+  ios/widget/quotes_hidden_words.json
+
+--------------------------------------------------------------------------------
+Wallpaper surface (off the parity path, but modified by this refactor)
+--------------------------------------------------------------------------------
+The parity suite covers index.html only, so js/wallpaper.js + wallpaper.html were verified separately with
+an ad-hoc headless Chromium check (not committed). Result: window.QuoteCore exposes all 11 exports;
+canvas 1170x2532 painted (centre pixel opaque, RGBA [228,219,209,255]); date label rendered; zero page
+errors and zero console errors.
+
+--------------------------------------------------------------------------------
+Doc normalization
+--------------------------------------------------------------------------------
+docs/RUNBOOK.md:
+  - section 1 topology now names js/quote-core.js as the shared selection/caching layer;
+  - section 3 loses the stale claim "There is no behavioral/UI test yet" and gains section 3.1, which
+    documents make parity and defines the run-record format used by this file;
+  - section 6 rollback now cites D8 (H1 baseline) and D11 (H2A baseline) as the two hash sets;
+  - section 8 no longer says the path/cap are hard-coded in three places: it is two (js/quote-core.js and
+    ios/widget/QuoteStore.swift).
+This file follows the format defined in section 3.1.

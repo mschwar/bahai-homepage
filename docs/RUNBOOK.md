@@ -9,10 +9,11 @@ There is no server-side runtime. Everything happens in the browser:
 
 ```text
 browser ──index.html──▶ data/quotes_hidden_words.json          (fetch, no-store)
-   │                    js/script.js  (selection + cache + copy + theme + yesterday)
+   │                    js/quote-core.js (selection + caching, shared)
+   │                    js/script.js  (render + copy + theme + yesterday)
    ├──▶ https://wondrous-badi.today/scripts/BadiDateToday.v1.js  (Badíʿ date library)
    ├──▶ https://fonts.googleapis.com/... (Source Sans Pro / Source Serif Pro)
-   └── (experimental, unlinked) /wallpaper.html ─▶ React 18 UMD (unpkg) ─▶ same corpus
+   └── (experimental, unlinked) /wallpaper.html ─▶ React 18 UMD (unpkg) ─▶ js/quote-core.js ─▶ same corpus
 ```
 
 | External dependency | Used by | Failure mode |
@@ -61,8 +62,37 @@ Duplicate texts: 0
 ```
 
 `validate_quotes.py` checks only the data shape: list-of-objects, non-empty `text` and `source`, `author`
-as a warning, and duplicate texts. **There is no behavioral/UI test yet** — that is the first step of queue
-unit `H2A`, and until it exists any JS change is unverified by construction.
+as a warning, and duplicate texts. It says nothing about behavior.
+
+### 3.1 · Parity (behavioral) check — `make parity`
+
+The behavioral proof of record. It drives the **real** page in headless Chromium (Playwright) and pins
+selection, today/yesterday, caching, theme, the Badíʿ fallback, clipboard copy and reduced-motion. A JS
+change is unverified by construction until this is green.
+
+```bash
+make parity                 # alias: node tests/parity.mjs
+```
+
+Expected: `== RESULT: 18 passed, 0 failed ==` and exit code 0. Dev-only: needs the global `playwright` +
+its bundled Chromium (`npx playwright install chromium`); it adds no manifest and touches no frozen file.
+**Any change to `js/*`, `index.html` or the corpus must show this green *before* and *after*.**
+
+**Run-record format.** A recorded run is a plain-text file under `docs/audit/<date>/` with this exact header
+block, followed by the verbatim command output:
+
+```text
+command: <the command run>
+cwd: <absolute working directory>
+date: <ISO-8601 UTC timestamp>
+playwright: <version>
+node: <version>
+=== raw output ===
+<verbatim stdout, including the == RESULT line ==>
+```
+
+Record the run as produced — do not tidy, trim or re-wrap it. The `== RESULT` line is the evidence; a run
+recorded without it proves nothing.
 
 ## 4 · Regenerate the corpus (dev-only)
 
@@ -131,7 +161,8 @@ check on the PR.
 
 - **Bad doc or tooling commit:** `git revert <sha>` and push. Docs-only changes cannot break the site.
 - **Bad change to a frozen file:** `git checkout <last-good-sha> -- index.html css js data/quotes_hidden_words.json`
-  then push. The frozen-file sha256s live in `PHASE1_HANDOFF.md` and `docs/DECISIONS.md` (D8).
+  then push. The frozen-file sha256s live in `PHASE1_HANDOFF.md` (H1 baseline) and `docs/DECISIONS.md`
+  (**D8** for the H1 baseline, **D11** for the H2A refactor baseline and the authority that superseded it).
 - **Accidentally published a payload:** delete it from `main` (a subdirectory move unpublishes nothing),
   confirm the live URL 404s with a cache-buster, and keep the bytes on an `archive/*` branch. This is exactly
   what D4/H1C did for the orphaned multi-faith data; the restore command is in `docs/DECISIONS.md` (D4).
@@ -154,7 +185,8 @@ check on the PR.
 ## 8 · Data contract reality (until `H2B` lands)
 
 One corpus, `data/quotes_hidden_words.json` (153 records, `{text, source, author}`). The path and the
-`MAX_QUOTE_WORDS = 75` cap are hard-coded in **three** places — `js/script.js`, `js/wallpaper.js`,
-`ios/widget/QuoteStore.swift` — and each reimplements the same selection/caching logic. No schema version, no
-provenance record. Changing the corpus today means changing all three copies. This is honest debt, not a
+`MAX_QUOTE_WORDS = 75` cap now live in **two** places: `js/quote-core.js` (the single JS source of truth
+shared by `index.html` and `wallpaper.html` after H2A) and `ios/widget/QuoteStore.swift` (a Swift
+reimplementation, deliberately not unified — see queue `H2A`/`H2B`). No schema version, no provenance
+record. Changing the corpus today means changing the JS core and the Swift copy. This is honest debt, not a
 contract; do not document it as one.
