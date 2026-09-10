@@ -273,3 +273,42 @@ Everything in §3 is raw output produced in this session on this host, in the or
 - The Phase 0 audit's claim that the React CDN dependency was "not re-verified" was closed here: all three
   external dependencies were re-checked live today (fonts 200, `BadiDateToday.v1.js` 200, unpkg react@18 200)
   and recorded in `docs/RUNBOOK.md`.
+
+## 8 · Closure note (appended 2026-09-10, post-handoff — an append, not a rewrite)
+
+Appended by the follow-up session that acted on §6's first item. The body above is unchanged apart from a
+one-character typo fix in the header line (`**Authorization:***` → `**Authorization:**`).
+
+**Gate 3 / deviation D-A is now closed.** A root `AGENTS.md` exists, with content byte-identical to the text
+`README.md` Appendix A had preserved (extracted the marker segment programmatically and compared: identical).
+The appendix is retired, and `README.md` (three pointers), `docs/RUNBOOK.md`, `CONTRIBUTING.md` and
+`docs/queue.md` now reference `AGENTS.md`. Decision `D9` in `docs/DECISIONS.md` records it; D7's text is
+untouched (the ledger is append-only).
+
+**Gates 1, 2 and 7 re-verified at closure** — the freeze is intact and the site is unchanged:
+
+```
+$ shasum -a 256 index.html css/style.css js/script.js js/badi-init.js data/quotes_hidden_words.json
+0d1a6f0f…b36c5  index.html          2a08588c…f56de7  css/style.css
+11f88eb2…9c8c8  js/script.js        3bfd2054…2509a  js/badi-init.js
+fdcd492d…aea4   data/quotes_hidden_words.json
+
+$ curl -sL ".../index.html?v=$TS" | shasum -a 256     → http=200 size=4701
+0d1a6f0ff7b8b3ff1f715da90e998d3a1949814f7c271814dd5aa69acb0b36c5
+$ curl -sL ".../data/quotes_hidden_words.json?v=$TS"  → http=200 size=60008
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4
+
+$ make validate          → Quotes checked: 153 / Errors: 0 / Warnings: 0 / Duplicate texts: 0   (exit 0)
+```
+
+All three match the §3 baselines exactly, so `live == repo == baseline` still holds two commits later.
+
+**One live discrepancy found, recorded rather than fixed (outside this unit's scope):** the Super Linter
+workflow is **red on `main` at this handoff's own commit** (run `34524938962`,
+`docs: add PHASE1_HANDOFF.md with gate evidence`) — `textlint`'s terminology rule rejects words the docs use
+about themselves (`repo` → `repository`, `build system` → `build tool`). Read §3's gate 10 together with it:
+the H1/H1C commits are pushed, but not green. Evidence, cause and a proposed contract are in `docs/queue.md` →
+"Candidate units" `C1`; a second unit `C2` covers the unmapped root docs. Neither is scheduled, and neither
+was authorized by this packet, so neither was touched.
+
+**Still deferred, unchanged from §6:** H1.2 is now complete; H1.10, H2A, H2B, R1, H3 and the never-list stand.
