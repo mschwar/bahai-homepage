@@ -185,3 +185,46 @@ docs/RUNBOOK.md:
   - section 8 no longer says the path/cap are hard-coded in three places: it is two (js/quote-core.js and
     ios/widget/QuoteStore.swift).
 This file follows the format defined in section 3.1.
+
+--------------------------------------------------------------------------------
+POST-DEPLOY LIVE VERIFICATION (after the merge to main)
+--------------------------------------------------------------------------------
+Merged as ee31f96 (squash of PR #9). GitHub Pages rebuilt from main; the live asset
+https://mschwar.github.io/bahai-homepage/js/quote-core.js serves HTTP 200 and is
+byte-identical to the committed file (sha256 6a0102cc735e664fa69d2be1cf43829c63b263458bbf66b1790a7f2ba6ea217a
+in both places), and the live index.html carries the new load order
+(quote-core.js, badi-init.js, script.js).
+
+Two headless rounds against the LIVE origin, using the local corpus as an oracle:
+
+Round 1 (8 checks, 2 failed -- recorded as they happened, not tidied):
+  - PASS  live today verse == the oracle for the real current date
+          (2026-09-10, dayOfYear 253, short-subset len 128, idx 125: "O Son of Desire! ...")
+  - PASS  live author rendered (Bahá’u’lláh)
+  - PASS  live QuoteCore global present (all 11 exports) on the deployed page
+  - PASS  live click-to-copy payload == "<text>\n-- <author>"
+  - PASS  live wallpaper paints its canvas (1170x2532, centre pixel opaque);
+          live wallpaper has no page/console errors
+  - FAIL  a Badici assertion was VACUOUS: it checked the element was non-empty and not the
+          fallback, while the element was still showing its loading placeholder. Same
+          logging-not-pinning trap the suite warns about; the check was wrong, not the page.
+  - FAIL  one console error, which round 2 traced to the third-party library.
+
+Round 2 (9 checks, 0 failed):
+  - live #badiDate settled to "Badíʿ date unavailable." with the documented guidance
+    ("Enable location for sunset-accurate Badíʿ date. Showing Gregorian date only.") and
+    the Gregorian date rendered -- i.e. the graceful-degradation path, by design.
+  - Root cause of the console error, established rather than assumed: the vendor script at
+    wondrous-badi.today issues an insecure XMLHttpRequest to
+    http://ipinfo.io/geo?json, which the browser blocks as mixed content on an HTTPS page.
+    It is the only failed request, it is not initiated by this repository's code, and no
+    page error came from js/quote-core.js, js/script.js or js/badi-init.js.
+  - Consequence, stated honestly: on the live HTTPS site the Badici date does NOT currently
+    resolve, so the resolved-label path cannot be exercised there. It was therefore proven
+    deterministically with a stubbed library (the technique tests/parity.mjs uses) --
+  - debt #11 shape, proven with the stub: innerHTML is exactly
+    "Day 4, Núr (light)<br>182 BE"; childNodes are exactly [text, BR, text]; textContent is
+    "Day 4, Núr (light)182 BE" -- unchanged from the pre-refactor rendering.
+
+This production defect (Badici date dead on the live site) is external and pre-existing, not
+a product of this refactor; it is queued as candidate unit C9 with its contract and gate.
