@@ -39,7 +39,7 @@ records; and `PHASE1_HANDOFF.md`'s deviation section carries an append-only clos
 ## H1.10 — on-page link to the ambient surfaces · **pending (optional, owner-visible)** · gate: human
 
 Owner decision Q1 was "document + link" for the wallpaper and widget; H1 links them from the docs only,
-because an on-page link would edit `index.html`. If the owner wants a discreet footer link, this unit adds it
+because an on-page link would edit `index.html`. If the owner wants an unobtrusive footer link, this unit adds it
 with before/after screenshot evidence and knowingly re-runs the parity hashes. This is the one sanctioned
 exception to the freeze and requires an explicit new authorization.
 
