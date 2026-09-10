@@ -198,3 +198,12 @@ rewording to "unobtrusive"** — not by an ignore list, and not by disabling the
 place in a documentation-heavy repository, and one dictionary collision is not a reason to switch it off.
 Checked first that it was the only instance in the repository, so this is a one-word change rather than the
 start of a typo sweep. (This addendum names the word only by its meaning, so the file itself stays clean.)
+
+**Second addendum (same day, appended).** The "Known limitation" paragraph above is too broad, and the run that
+disproved it is the one this change produced. Super Linter's empty-file-set behaviour was observed only on
+**v4** runs whose merge commit was created locally (`git merge --no-ff` + push). Under **v8**, the merge commit
+created by GitHub's own PR merge (run `34528829696`) linted its eight files and named them in the log. So
+"a merge-commit push lints nothing" is not a general property of merge commits, and it has not been reproduced
+on v8. The corrected statement lives in `docs/queue.md` `C3` and `docs/RUNBOOK.md` §5, which also record what
+remains unverified (the local merge + push path under v8). The original paragraph above is left as written — a
+ledger that quietly tidies its own errors is not a ledger.
