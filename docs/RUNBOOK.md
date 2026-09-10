@@ -134,9 +134,17 @@ CI is Super Linter on push/PR to `main`, at `super-linter/super-linter@v8.7.0` p
 only the files a change touches (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not gate merges
 and does not deploy. Both actions are SHA-pinned because the job runs the `zizmor` audit, which fails on
 unpinned uses; `.github/dependabot.yml` keeps those pins fresh (monthly, with a cooldown). What the categories
-mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10 — in short: markdownlint, YAML,
-secrets, spelling and workflow security are on; the natural-language style glossary and the formatters that
-would rewrite frozen product files or append-only records are off.
+mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10 and D12 — in short: markdownlint,
+YAML, secrets, spelling and workflow security are on; the natural-language style glossary, the formatters that
+would rewrite frozen product files or append-only records, and the four checks that target the served site
+(`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`) are off.
+
+**The served site is not linted — `make parity` is its check of record.** The four checks above were turned
+off on 2026-09-10 (queue `C8`, decision D12) because they run with super-linter's default config, which this
+repository has never adopted, and their only targets are frozen product files. Before that, they had never
+actually run: `VALIDATE_ALL_CODEBASE: false` lints only the changed set, and no change had ever included
+`index.html` or `js/*`, so their `pass` was vacuous until the first product-file change exposed them. Do not
+read a green lint as evidence about the site. `make parity` and `make validate` are that evidence.
 
 **Where lint coverage actually comes from — read the log, not the badge.** The job can report `success` having
 checked nothing: two Super Linter **v4** runs on `main` did exactly that — merge commits created locally with

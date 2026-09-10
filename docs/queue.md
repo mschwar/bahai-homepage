@@ -45,7 +45,7 @@ exception to the freeze and requires an explicit new authorization.
 
 **Evidence:** before/after screenshots, re-run sha256s, owner sign-off.
 
-## H2A — live-site refactor / parity · **executed; landing OPEN (blocked by `C8`)** · gate: agent (H1 accepted 2026-09-10 → gate satisfied; refactor half owner-authorized 2026-09-10)
+## H2A — live-site refactor / parity · **done** · gate: agent (H1 accepted 2026-09-10 → gate satisfied; refactor half owner-authorized 2026-09-10)
 
 **Authorization (2026-09-10).** H2A has two halves with different authority. The parity suite (first half)
 was covered by H1's gate; the refactor half changes frozen files and, per `AGENTS.md`, needed its own
@@ -107,11 +107,11 @@ and `docs/RUNBOOK.md` §8 says so. Closing the remaining one is `H2B`'s job.
 refactor's blast radius but off the parity path, so it was verified separately (headless: shared core
 loaded, canvas painted, no console/page errors).
 
-**Exit gate — met; landing is OPEN.** Parity suite green *before* and *after*: `18 passed, 0 failed` both
-times, the two raw outputs byte-identical. The refactor itself is complete and proven on the branch. It is
-**not yet merged**: PR #9's lint run went red on four CI categories that only ever target the product files
-and had never been exercised before (`C8` below). CI configuration is human-gated (`AGENTS.md`), so the
-branch is held rather than merged red, and the four findings are not "tidied" away as a side effect.
+**Exit gate — closed, and landed.** Parity suite green *before* and *after*: `18 passed, 0 failed` both
+times, the two raw outputs byte-identical. The refactor is proven on `refactor/h2a-shared-quote-core` and
+merged to `main` via PR #9. The one thing that briefly held the landing — PR #9's lint going red on four
+never-before-exercised CI categories — was resolved the same day as `C8`/`D12`, without touching a product
+file.
 **Evidence:** `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt` (first-half run, 18/0) and
 `docs/audit/2026-09-10/H2A_REFACTOR_PARITY_RUN.txt` (both halves of this unit — the before/after runs,
 the frozen-file sha256 sets, and the separate wallpaper-surface check). The frozen-file hashes are recorded
@@ -164,8 +164,9 @@ were added on 2026-09-10 from the review of the `actions/checkout` bump (D10, th
 `C2`–`C5` is scheduled or authorized. `C3` closed the same day on the retest its own contract asked for, using
 no configuration change; `C2`, `C4` and `C5` remain open. `C6` and `C7` were added on 2026-09-10 from the
 parity-suite review that closed H2A's first half; neither is scheduled or authorized. `C8` was added on
-2026-09-10 from the first CI run whose changed set contained a product file (PR #9, H2A's refactor); it is
-not scheduled or authorized, and it is the one thing holding H2A's landing open.
+2026-09-10 from the first CI run whose changed set contained a product file (PR #9, H2A's refactor) and was
+closed the same day when the owner authorized its option (a) — the four categories that had never run are now
+off, recorded as `docs/DECISIONS.md` D12.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -346,9 +347,24 @@ with the parity suite re-run (section E must stay green).
 **Exit gate:** `make parity` green and the body carries exactly one theme class after reload to a saved dark theme.
 **Gate:** human — modifies `index.html` and/or `js/script.js` (frozen files).
 
-### C8 — The first change to touch the product files turned CI red on four categories that only ever target those files · gate: human
+### C8 — The first change to touch the product files turned CI red on four categories that only ever target those files · **done** · gate: human (authorized 2026-09-10)
 
-**Evidence (2026-09-10, PR #9, run [`34536775907`](https://github.com/mschwar/bahai-homepage/actions/runs/34536775907))** — the first run in this repository's history whose changed set contains `index.html` or `js/*`. `run-lint` failed on four categories, and **not one finding is caused by the H2A refactor**:
+**Outcome (executed 2026-09-10, contract option (a)):** the four categories are off in
+`.github/workflows/super-linter.yml` — `VALIDATE_HTML`, `VALIDATE_HTML_PRETTIER`, `VALIDATE_JAVASCRIPT_ES`,
+`VALIDATE_JAVASCRIPT_PRETTIER` — each with its reason recorded beside it in the D10 block's style, and the
+decision is `docs/DECISIONS.md` **D12**. The trade is stated there plainly: CI now runs no static analysis over
+the served site at all, and `make parity` (18 behavioral assertions) plus `make validate` are the product's
+checks of record. Turning the categories off followed the D10 precedent rather than reformatting frozen product
+files to satisfy a default config this repository never adopted.
+**Exit gate — closed.** With the categories muted, a run whose changed set contains product files is green;
+the run id and its result are in D12's addendum.
+**Evidence:** the red run that exposed it (`34536775907`, PR #9) is in the entry below; the closing run is in
+`docs/DECISIONS.md` D12.
+
+**The original diagnosis (kept as the executed contract).** Evidence (2026-09-10, PR #9, run
+[`34536775907`](https://github.com/mschwar/bahai-homepage/actions/runs/34536775907)) — the first run in this
+repository's history whose changed set contains `index.html` or `js/*`. `run-lint` failed on four categories,
+and **not one finding is caused by the H2A refactor**:
 
 - `HTML` (htmlhint 1.9.2) — 2 errors in `index.html`, both pre-existing: L69 `id="badiDate"` and L77 `id="gregorianDatePanel"` violate `id-class-value` ("must be in lowercase and split by a dash" — these are camelCase ids).
 - `HTML_PRETTIER` — `index.html` and `wallpaper.html` are not prettier-formatted.

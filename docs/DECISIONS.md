@@ -280,3 +280,48 @@ replace D8's for `index.html`, `js/script.js`, `js/badi-init.js` and `js/wallpap
 `ios/widget/` files still match D8 byte for byte.
 
 *Source:* owner authorization in-session 2026-09-10; `docs/queue.md` H2A; `H2A_PARITY_REFACTOR.md` step 2.
+
+## D12 — Super Linter: the four product-file categories are off, closing `C8` · accepted 2026-09-10
+
+`VALIDATE_HTML`, `VALIDATE_HTML_PRETTIER`, `VALIDATE_JAVASCRIPT_ES` and `VALIDATE_JAVASCRIPT_PRETTIER` are now
+`false` in `.github/workflows/super-linter.yml`, each with its reason written beside it in the same style as
+the D10 block. This is option (a) of queue `C8`'s contract, chosen by the owner in-session on 2026-09-10. CI
+configuration is one of the gates `AGENTS.md` reserves for owner sign-off; that is the authorization.
+
+**Why a decision was needed.** `C8` recorded what happened the first time a change included a product file:
+PR #9 (H2A's refactor, run `34536775907`) turned `run-lint` red on those four categories, and **not one
+finding was caused by the refactor**. They were pre-existing in frozen product files and had simply never
+been seen — `VALIDATE_ALL_CODEBASE: false` means only the changed set is linted, and no earlier change in this
+repository's history had ever included `index.html` or `js/*`. So their "pass" on every previous run was
+vacuous, and the first legitimate product-file change was the first time they ran at all. That is `C1`'s
+class exactly: a check that presents as green while checking nothing.
+
+The findings, all pre-existing: htmlhint flagged two camelCase ids in `index.html` (`badiDate`,
+`gregorianDatePanel`); prettier flagged style across `index.html`, `wallpaper.html` and all four `js/*.js`;
+and eslint reported `initializeBadiCalendar` as unused (it is called from `js/script.js`, a different file)
+and `BadiDateToday` as undefined (a global set by the external Badíʿ library).
+
+**Why (a) and not the alternatives.**
+
+- Not **(b) make the files satisfy the checks.** Both checks run with super-linter's *default* config, and
+  this repository has never adopted one — no eslintrc exists, and htmlhint's id naming is a style preference
+  it does not hold. Satisfying them means a one-off prettier reformat of the served pages and scripts plus an
+  id rename: a product change, moving the frozen hashes again, in service of defaults nobody here chose. A
+  green `JAVASCRIPT_ES` produced by an unconfigured default would carry no more information than the red did.
+- Not **(c) keep them on and document red-by-design.** That is the precise state `C1` was closed to remove — a
+  branch advertising a red check that everyone has learned to ignore. Documenting it would have made the
+  training explicit rather than preventing it, and a permanently red check cannot distinguish "the known
+  four" from a real regression arriving among them.
+
+**Cost accepted, stated plainly.** After this, CI runs **no** static analysis, linting or formatting over the
+served site. The product is covered instead by `make parity` (18 behavioral assertions in headless Chromium)
+and `make validate` (corpus shape), both run locally and recorded under `docs/audit/` — the H2A refactor was
+proven that way, with a byte-identical before/after suite output. That is a deliberate trade, not an oversight:
+behavioral proof of a static page is stronger evidence than a formatter's style opinion about it. If the site
+later gains JavaScript the owner wants statically analysed, the correct fix is to adopt an eslint config and
+turn `VALIDATE_JAVASCRIPT_ES` back on — not to leave an unconfigured default running red.
+
+This entry is written before the closing run exists, so the run that proves it is appended below rather than
+cited here; `C8`'s original evidence run (`34536775907`, red) is the state this decision removes.
+
+*Source:* `docs/queue.md` `C8`; owner decision in-session 2026-09-10 (option (a) of that unit's contract).
