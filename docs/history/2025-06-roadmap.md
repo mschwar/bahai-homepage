@@ -1,3 +1,7 @@
+> **SUPERSEDED — historical only.** This file describes the abandoned multi-faith direction. Current product
+> doctrine lives in `README.md`, `docs/DECISIONS.md` (D2) and `docs/queue.md`. Do not treat anything below as
+> current intent or as a plan of record.
+
 # Bahá’í Daily Homepage – Project Roadmap  
 **Last updated:** 2025-06-07  
 **Live site:** <https://mschwar.github.io/bahai-homepage/>  
