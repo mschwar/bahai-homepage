@@ -1,0 +1,173 @@
+C9 — Badíʿ date: location downgrade (owner option (a))
+======================================================
+
+queue unit: C9 (owner chose option (a), in-session 2026-09-10)
+executor:   Hermes agent
+authority:  owner decision in-session 2026-09-10; recorded as docs/DECISIONS.md D13
+gate:       human — modifies js/badi-init.js (frozen file) and is a product change
+
+WHAT PROBLEM THIS SOLVES
+------------------------
+Not what C9 first claimed. C9 was filed as "the Badíʿ date never resolves on the live site"
+and that claim was withdrawn (see the CORRECTION section above and docs/queue.md C9). The
+date works for anyone who has granted location and for every returning visitor, because the
+vendor caches a granted location in localStorage and reuses it.
+
+The real, narrow defect: a FIRST-TIME visitor who DECLINES the browser's location prompt
+got no Badíʿ date at all. Mechanism, from the vendor source (BadiDateToday.v1.js v1.09):
+
+  - locationMethod askForUserLocation (3): navigator.geolocation.getCurrentPosition with a
+    3000 ms timeout; on failure it sets locationMethod = guessUserLocation (2) and retries
+    (vendor lines 552-561);
+  - guessUserLocation (2) requests http://ipinfo.io/geo?json (vendor line 573) -- plain
+    http, so on an HTTPS page the browser blocks it as mixed content;
+  - that XHR sets ontimeout but has NO onerror (vendor lines 575-586), so a blocked
+    request fires no handler at all and the library never continues.
+
+The vendor therefore cannot recover by itself, and the page's only rescue was our own 4 s
+guard in js/badi-init.js, which rendered "Badíʿ date unavailable.". Our guard is
+load-bearing for a vendor failure mode.
+
+THE FIX (option (a))
+--------------------
+Keep the location-accurate path, and downgrade instead of failing. If the accurate attempt
+has not answered within the 4 s guard, re-invoke the library with ignoreLocation, which uses
+the default 6:30 sunset and needs no network and no permission -- so the date always renders.
+A second call is safe: the vendor reinitialises its own localSettings per call, so a retry is
+an independent instance, and our `settled` flag means whichever attempt answers first wins
+and the other is ignored.
+
+Implementation notes worth knowing before anyone "simplifies" this file:
+  - the caller (not the library) owns the timeout, because every vendor failure path here is
+    silent -- there is nothing to listen for;
+  - the two wait windows are now named constants: BADI_ACCURATE_TIMEOUT_MS (4000, unchanged
+    value, renamed for clarity) and BADI_IGNORE_TIMEOUT_MS (2000 for the no-network retry);
+  - the early return when BadiDateToday is absent is unchanged, and remains what section F's
+    "unreachable library" test exercises.
+
+THE DOUBLE-INIT CHECK (the caveat raised before implementing)
+-------------------------------------------------------------
+Re-invoking a third-party initialiser was the one real risk, so it was verified before the
+work, not after. Against the live origin with geolocation NOT granted, once the first call
+had stalled: a second call with locationMethod 1 returned cleanly, threw nothing, fired
+onReady, and reported a valid date (bDay 4, bMonthNameAr "`Izzat", bYear 183).
+Confirmed in the source too: `var BadiDateToday = function (settings) { var localSettings = {}; ... }`
+-- each invocation gets its own closure, and only localStorage is shared.
+
+--------------------------------------------------------------------------------
+GATE 1 — parity suite BEFORE (in the fix worktree, at origin/main 10a5e01)
+--------------------------------------------------------------------------------
+command: make parity
+node: v26.0.0   playwright: 1.59.1
+=== raw output (tail) ===
+== RESULT: 18 passed, 0 failed ==
+
+--------------------------------------------------------------------------------
+GATE 2 — parity suite AFTER (js/badi-init.js + the new section F test)
+--------------------------------------------------------------------------------
+command: make parity
+=== raw output (section F and total) ===
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+      attempts=[3,1] (accurate -> default sunset); date rendered, not blank
+PASS  declined location: downgrades to the default sunset instead of rendering nothing
+
+== RESULT: 19 passed, 0 failed ==
+
+The count moved 18 -> 19 because one assertion was ADDED, not re-pinned: section F gains a
+test that models the vendor's declined-location behaviour with a stub (the accurate method
+never answers; ignoreLocation resolves at once) and asserts three things -- the accurate
+attempt is still pending before the guard elapses, the date renders after it, and the wrapper
+attempted methods [3,1] in that order. No existing assertion changed.
+
+--------------------------------------------------------------------------------
+GATE 3 — real-vendor end-to-end over TLS (nothing stubbed)
+--------------------------------------------------------------------------------
+Why TLS: the declined-location failure only exists on an HTTPS page, because the vendor's
+ipinfo request is plain http and the browser blocks it as mixed content. A local http://
+server would let that request through and prove nothing. So the worktree was served over TLS
+with a self-signed cert (Playwright ignoreHTTPSErrors), and the vendor script still loaded
+from https://wondrous-badi.today. The browser's geolocation permission was the variable:
+
+A. DECLINED location (the case the fix targets)
+   #badiDate                : "Day 4, `Izzat (might)183 B.E."
+   verdict                  : RESOLVED
+   downgrade branch ran     : true     <- the console warning emitted by js/badi-init.js itself
+   mixed-content blocks     : 1        <- the vendor really was blocked, so the fix was exercised
+   page errors (our code)   : 0
+
+B. GRANTED location (must be unchanged and accurate)
+   #badiDate                : "Day 3, `Izzat (might)183 B.E."
+   verdict                  : RESOLVED
+   downgrade branch ran     : false    <- no downgrade; the accurate path answered
+   mixed-content blocks     : 0
+   page errors (our code)   : 0
+
+C. RETURNING visitor with a cached location (must be unchanged)
+   #badiDate                : "Day 3, `Izzat (might)183 B.E."
+   verdict                  : RESOLVED
+   downgrade branch ran     : false
+   mixed-content blocks     : 0
+
+== E2E: all checks passed ==
+
+The A-vs-B day difference (4 vs 3) is the semantics working as intended, not a discrepancy:
+the downgrade uses the library's default 6:30 sunset, while B and C use a real location
+(Calgary). Same instant, different sunset, so the Badíʿ day boundary falls differently. That
+difference is itself evidence that the downgrade is a genuine fallback and not a no-op.
+
+--------------------------------------------------------------------------------
+VISUAL EVIDENCE (element screenshots of .panel-date, same declined-location state)
+--------------------------------------------------------------------------------
+C9-before-declined-location.png  -> "Badíʿ date unavailable." + "Enable location for
+                                    sunset-accurate Badíʿ date. Showing Gregorian date only."
+C9-after-declined-location.png   -> "Day 4, `Izzat (might)" / "183 B.E." on two lines, with
+                                    the guidance message cleared by the success path.
+Both confirmed by reading the images, not only their captions.
+
+--------------------------------------------------------------------------------
+FROZEN-FILE HASHES (sha256)
+--------------------------------------------------------------------------------
+Exactly one frozen file changed. Everything else is byte-identical to the D11/H2A baseline.
+
+BEFORE (origin/main 10a5e01):
+5b3d8f79f0dd24f47d814b43f92fe2026ab8967be08c354498be95d852d0d9b5  index.html
+2a08588cc93767af4a82028114bbfc505539085bfadb48b8c5a29e75ebf56de7  css/style.css
+4326866c94f784a87e403d77d759e2425e84c259d5f169bd9651aaeafaa44301  css/wallpaper.css
+73b43a3d2b0867c3bfa34b1864e9aa44150341814dabd66fb49ac28c89590167  js/script.js
+5831f0e922ce5b7b5b2d04373379d8c9abf2ed78fdbc6f2ee5cc9dc399ea65f1  js/badi-init.js
+6a0102cc735e664fa69d2be1cf43829c63b263458bbf66b1790a7f2ba6ea217a  js/quote-core.js
+a6eea8b260e8e45e0f0c7794d516a7c89946e4004204101a4080a77f6c3e354a  js/wallpaper.js
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  data/quotes_hidden_words.json
+e188eca190a74fca34e4ee042d50a9be4723be67569307809b4604b350c4aaea  ios/widget/QuoteStore.swift
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  ios/widget/quotes_hidden_words.json
+
+AFTER (this change):
+5b3d8f79f0dd24f47d814b43f92fe2026ab8967be08c354498be95d852d0d9b5  index.html
+2a08588cc93767af4a82028114bbfc505539085bfadb48b8c5a29e75ebf56de7  css/style.css
+4326866c94f784a87e403d77d759e2425e84c259d5f169bd9651aaeafaa44301  css/wallpaper.css
+73b43a3d2b0867c3bfa34b1864e9aa44150341814dabd66fb49ac28c89590167  js/script.js
+80eb5e3f455da4f55deabbfeaf58fd9d8da1d56523bdd2fcf56ce97485f30807  js/badi-init.js   <- CHANGED
+6a0102cc735e664fa69d2be1cf43829c63b263458bbf66b1790a7f2ba6ea217a  js/quote-core.js
+a6eea8b260e8e45e0f0c7794d516a7c89946e4004204101a4080a77f6c3e354a  js/wallpaper.js
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  data/quotes_hidden_words.json
+e188eca190a74fca34e4ee042d50a9be4723be67569307809b4604b350c4aaea  ios/widget/QuoteStore.swift
+fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4  ios/widget/quotes_hidden_words.json
+
+Reconciliation note, recorded rather than assumed: a separate owner-authorized workstream
+(the C6 copy-affordance + C7 theme-class + tech-debt #7 batch) also moves the frozen baseline,
+touching index.html, css/style.css, js/script.js and tests/parity.mjs. The hash set above is
+therefore authoritative only for THIS branch. Once both changes are on main, a combined
+baseline must be re-run and recorded there -- the two sets cannot both be final.
+
+--------------------------------------------------------------------------------
+NOT DONE, STATED EXPLICITLY
+--------------------------------------------------------------------------------
+- The 4 s accuracy window is unchanged. A declined-location visitor waits ~4 s before the
+  date appears. Shortening it would change behaviour for the accurate path too (a slow but
+  permitted geolocation could be cut off), so it is left alone; the guard's value is now a
+  named constant if that trade is ever revisited.
+- The vendor library itself is untouched. Its missing onerror and its plain-http ipinfo
+  fallback are upstream defects; option (a) works around them rather than fixing them, which
+  is why the fallback can never be shorter than the guard.

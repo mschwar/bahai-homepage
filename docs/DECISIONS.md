@@ -280,7 +280,6 @@ replace D8's for `index.html`, `js/script.js`, `js/badi-init.js` and `js/wallpap
 `ios/widget/` files still match D8 byte for byte.
 
 *Source:* owner authorization in-session 2026-09-10; `docs/queue.md` H2A; `H2A_PARITY_REFACTOR.md` step 2.
-
 ## D12 — Super Linter: the four product-file categories are off, closing `C8` · accepted 2026-09-10
 
 `VALIDATE_HTML`, `VALIDATE_HTML_PRETTIER`, `VALIDATE_JAVASCRIPT_ES` and `VALIDATE_JAVASCRIPT_PRETTIER` are now
@@ -342,3 +341,56 @@ Two things were checked in the log rather than trusted from the badge, because t
 So the green is a real green on a changed set that contains every file the red run failed on — not the
 empty-set green that `C3` documented. This entry closes queue `C8`, and with it the last obstacle to H2A's
 landing.
+
+## D13 — Badíʿ date: the declined-location path downgrades instead of rendering nothing · accepted 2026-09-10
+
+Closes queue unit `C9`, whose option (a) the owner chose in-session on 2026-09-10. `js/badi-init.js` now keeps
+the location-accurate path and, if it has not answered within the existing 4 s guard, re-invokes the vendor
+library with `ignoreLocation` — the default 6:30 sunset, which needs no network and no permission — so the Badíʿ
+date always renders. The authorization is the owner's decision; `js/badi-init.js` is a frozen file and this is a
+product change, both of which `AGENTS.md` puts behind sign-off.
+
+**The defect, corrected.** C9 was first filed as "the Badíʿ date never resolves on the live site", escalated to
+the owner on that basis, and **withdrawn**: the claim came from a single headless run whose browser had no
+geolocation permission, and testing the states real users are in showed the date resolving normally for anyone
+who has granted location and for every returning visitor. What is actually broken is narrow — a **first-time
+visitor who declines the location prompt** got no date at all. The vendor falls back to
+`guessUserLocation`, which requests `http://ipinfo.io/geo?json` (vendor line 573); that is plain `http`, so an
+HTTPS page blocks it as mixed content, and the XHR sets `ontimeout` but **no `onerror`** (vendor lines 575–586),
+so the block is reported to nobody and the library never continues. The only thing ending that wait was this
+repository's own 4 s guard, which rendered "unavailable". That guard is load-bearing for a vendor failure mode,
+which is why the fix routes through it rather than replacing it.
+
+**Why this shape.** The alternative was reverting to `ignoreLocation` unconditionally (`C9` option (b)), which
+renders always but gives every visitor a 6:30-sunset approximation and discards the sunset accuracy commit
+`d73b2d0` deliberately introduced. A downgrade keeps accuracy where it is available and degrades only where it
+is not.
+
+**The risk was checked before the work, not after.** Re-invoking a third-party initialiser could have doubled
+rendering or raced. It does not: the vendor's `var BadiDateToday = function (settings) { var localSettings = {}; … }`
+gives each call its own closure, sharing only `localStorage`. Verified empirically too — against the live origin
+with geolocation withheld, once the first call had stalled, a second call with `ignoreLocation` threw nothing,
+fired `onReady` and returned a valid date. Our own `settled` flag makes whichever attempt answers first the
+winner.
+
+**Evidence.** `docs/audit/2026-09-10/C9_LOCATION_DOWNGRADE_RUN.txt`. `make parity` **19 passed, 0 failed** — the
+count moved from 18 because section F gained an assertion (it now models the vendor's decline and pins the
+attempt sequence as `[3,1]`); **no existing assertion was changed**. A real-vendor end-to-end run over TLS, with
+the vendor script deliberately *not* stubbed so the mixed-content block genuinely occurs, passed all three cases:
+declined → resolves with the downgrade branch emitting its warning; granted → resolves with no downgrade; cached
+location → resolves with no downgrade. Before/after element screenshots show "Badíʿ date unavailable." becoming
+the two-line date. Exactly one frozen file moved: `js/badi-init.js` `5831f0e9…` → `80eb5e3f…`; the other nine are
+byte-identical to D11's set.
+
+**Baseline caveat, recorded so two hash sets are never both treated as final.** A separate owner-authorized
+workstream (the `C6` copy-affordance + `C7` theme-class + tech-debt `#7` batch) also moves the frozen baseline,
+touching `index.html`, `css/style.css`, `js/script.js` and `tests/parity.mjs`. The set in the run record is
+authoritative **for this branch only**; once both have landed on `main`, a combined baseline must be re-run and
+recorded there. This entry does not claim the final baseline.
+
+**Still open, stated rather than implied.** The ~4 s wait before the downgraded date appears is unchanged: the
+guard covers the accurate path too, and shortening it could cut off a slow but permitted geolocation. The guard's
+value and the downgrade window are now named constants if that trade is ever revisited. The vendor's missing
+`onerror` and its plain-`http` fallback are upstream defects that this works around rather than fixes.
+
+*Source:* owner decision in-session 2026-09-10 (`C9` option (a)); `docs/queue.md` `C9`.
