@@ -241,9 +241,9 @@ await run('D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)', [
     if (badiParsed.text !== greg.text) throw new Error('Badici-key value != today\'s Gregorian-key value (wrinkle not preserved)');
     if (badiParsed.text !== expToday.text) throw new Error('Badici-key value != oracle today');
     console.log(`      gregKey=${gregKey}  badiKey=${BADI_KEY}  both == today's verse  (wrinkle pinned)`);
-    // The wrinkle also moves lastKey to the Badici key (it is the most recent saveCachedQuote).
     const last = await page.evaluate(() => localStorage.getItem('dailyVerse:lastKey'));
     console.log(`      dailyVerse:lastKey == ${last}  (note: points at the Badici key after badi onReady)`);
+    if (last !== 'badi:182-Núr-4') throw new Error(`expected lastKey to point at the Badici key, got ${last}`);
     await ctx.close();
   }],
 ]);

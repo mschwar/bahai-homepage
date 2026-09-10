@@ -139,7 +139,8 @@ Found during the post-handoff review of `PHASE1_HANDOFF.md`, the appendix retire
 names a contract and a gate. `C1` is done; `C2` and `C3` are not scheduled and not authorized. `C4` and `C5`
 were added on 2026-09-10 from the review of the `actions/checkout` bump (D10, third addendum); none of
 `C2`–`C5` is scheduled or authorized. `C3` closed the same day on the retest its own contract asked for, using
-no configuration change; `C2`, `C4` and `C5` remain open.
+no configuration change; `C2`, `C4` and `C5` remain open. `C6` and `C7` were added on 2026-09-10 from the
+parity-suite review that closed H2A's first half; neither is scheduled or authorized.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -282,6 +283,43 @@ misconfiguration — two flags enable a summary that a third prevents from exist
 **Exit gate:** a run on `main` with no warning of this class, and each of the three choices recorded in
 `docs/DECISIONS.md`.
 **Gate:** human — CI configuration.
+
+### C6 — The designed copy affordance is invisible: `.quote-actions{display:none}` hides the copy row · gate: human
+
+**Evidence (2026-09-10, parity suite section G).** The live page has a full clipboard handler — primary
+`navigator.clipboard`, `execCommand` fallback, a `#copy-status` message — but the CSS rule
+`.quote-actions{display:none}` hides the `#copy-button` row. The parity suite's computed-style check confirms
+`display:none` on the row and a zero-size button. The only reachable copy affordance is clicking the quote
+text itself (`#quote-text` is wired to the same handler), which is not discoverable.
+
+**Why it is a defect.** The copy interaction was clearly designed (button, status, fallbacks) but ships hidden,
+so the user-facing path to a core feature ("click-to-copy" is in the product doctrine) is an invisible
+click-target. Hidden dead UI invites the "remove the dead code" reading, which would silently drop a working
+behavior the parity suite now pins.
+
+**Contract:** make the copy affordance visible and discoverable — either restore the `.quote-actions` row, or
+add an explicit visible control wired to the same copy handler — with before/after screenshot evidence and the
+parity suite re-run (section G must stay green).
+**Exit gate:** a visible, discoverable copy control plus `make parity` green.
+**Gate:** human — modifies `css/*` and/or `index.html` (frozen files).
+
+### C7 — Saved dark theme leaves the body carrying *both* theme classes · gate: human
+
+**Evidence (2026-09-10, parity suite section E).** `index.html` hardcodes `<body class="light-mode">`, while
+`js/script.js` *appends* the saved theme class on load. After a reload to a saved dark theme the body carries
+`light-mode dark-mode` together. The parity suite confirms the pair: `body ends with both
+light-mode+dark-mode after reload to a saved dark theme`. `dark-mode` wins only by CSS specificity, so the
+effective theme is currently correct, but the class list is not a single source of truth.
+
+**Why it is a defect.** Correctness depends on specificity ordering between two contradictory classes rather
+than the body carrying exactly one theme. Any future styling change that alters specificity, or any component
+that styles off `light-mode`, will be applied on top of a dark theme — a latent wrong-theme class of bug.
+
+**Contract:** reconcile so the body carries exactly one of `light-mode`/`dark-mode` after a reload to a saved
+theme (e.g. the script replaces the class instead of appending, or the hardcoded default is removed at init),
+with the parity suite re-run (section E must stay green).
+**Exit gate:** `make parity` green and the body carries exactly one theme class after reload to a saved dark theme.
+**Gate:** human — modifies `index.html` and/or `js/script.js` (frozen files).
 
 ---
 
