@@ -100,19 +100,28 @@ Observed Pages configuration (2026-09-10):
 homepage links it. Before pushing, ask whether each new file belongs on the public internet. If it must be
 retained but not served, it goes on an `archive/*` branch — **not** into a subdirectory of `main`.
 
-CI is Super Linter on push/PR to `main`, pinned at `super-linter/super-linter@v8.7.0` and linting only the
-files a change touches (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not gate merges and does
-not deploy. Two of its categories matter here, and both are configured deliberately (D10):
+CI is Super Linter on push/PR to `main`, at `super-linter/super-linter@v8.7.0` pinned by commit SHA, linting
+only the files a change touches (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not gate merges
+and does not deploy. Both actions are SHA-pinned because the job runs the `zizmor` audit, which fails on
+unpinned uses; `.github/dependabot.yml` keeps those pins fresh (monthly, with a cooldown). What the categories
+mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10 — in short: markdownlint, YAML,
+secrets, spelling and workflow security are on; the natural-language style glossary and the formatters that
+would rewrite frozen product files or append-only records are off.
 
-- **Markdown (markdownlint)** — runs, and fails the job on real findings. The rule set, including this
-  project's two overrides, lives in `.github/linters/.markdown-lint.yml`.
-- **Natural language (textlint)** — **off** (`VALIDATE_NATURAL_LANGUAGE: false`). Super Linter ships exactly
-  one rule for it, `terminology`, a general-English style glossary that rejects this repository's own
-  documented vocabulary (`repo` → "repository", `build system` → "build tool").
+**Where lint coverage actually comes from.** A **merge-commit** push to `main` lints nothing — Super Linter
+computes "changed files" from the push range, and for a merge commit that set is empty, so the job exits green
+having checked nothing (`No files were found in the GITHUB_WORKSPACE to lint!`; observed on runs `34525756201`
+and `34526018773`, 2026-09-10). Plain pushes and PR runs do lint their files. So: **land documentation through
+a PR if you want it checked** — the merge commit is not a coverage point. This gap is queue unit `C3`.
 
-A red run on `main` is a defect to fix, not noise to scroll past: between the Phase 0 audit and the H1
-handoff this job failed on three consecutive doc commits and nobody noticed, because the docs said it was
-"hygiene only". If it is red, either fix the finding or change this configuration on purpose and record why.
+A red run is a defect to fix, not noise to scroll past. Between the Phase 0 audit and the H1 handoff this job
+failed on three consecutive doc commits and nobody noticed, because the docs said it was "hygiene only". If it
+is red, either fix the finding or change this configuration on purpose and record why.
+
+**Expected noise, not a failure:** the log ends with `Failed to call GitHub API (…/issues/<n>/comments) … 403`
+and `Error while posting pull request summary`. That is the summary *comment* failing because the job
+deliberately does not hold `pull-requests: write`; every per-linter result still appears as its own status
+check on the PR.
 
 ## 6 · Rollback / recovery
 

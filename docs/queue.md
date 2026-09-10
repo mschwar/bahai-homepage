@@ -106,10 +106,22 @@ Add the verified Ruhi memorization export as a real collection; exercise the sel
 
 ## Candidate units — documented defects, not yet authorized
 
-Found during the post-handoff review of `PHASE1_HANDOFF.md` and the appendix retirement. Each names a contract
-and a gate. Neither is scheduled; neither is authorized.
+Found during the post-handoff review of `PHASE1_HANDOFF.md`, the appendix retirement and the CI repair. Each
+names a contract and a gate. `C1` is done; `C2` and `C3` are not scheduled and not authorized.
 
-### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · gate: human
+### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
+
+**Outcome (executed 2026-09-10, contract option (a)):** CI now runs `super-linter/super-linter@v8.7.0`, pinned
+by commit SHA; the natural-language category is off; markdownlint stays on and the 13 real MD040 findings are
+fixed; the formatter/duplication categories that would rewrite frozen files or append-only records are off; and
+zizmor's unpinned-action finding is fixed with SHA pins plus a Dependabot config that keeps them fresh.
+**Evidence:** PR #4, run [`34527479040`](https://github.com/mschwar/bahai-homepage/actions/runs/34527479040) —
+`success`, all sixteen categories `pass`. Full rationale, including the first attempt's six failures, is
+`docs/DECISIONS.md` D10.
+
+---
+
+**The original diagnosis (kept as the executed contract):**
 
 **Evidence (2026-09-10):** `gh run list --workflow "Lint Code Base"` returns `failure` for the HEAD commit
 (`docs: add PHASE1_HANDOFF.md with gate evidence`, run `34524938962`, 1m57s) and for both Phase 0 doc commits.
@@ -118,6 +130,11 @@ The only post-H1 success is the code-only unpublish commit. Root cause from `gh 
 `build system` → `build tool` — in `README.md`, `PHASE1_HANDOFF.md`, `docs/RUNBOOK.md` and the Phase 0 audit
 docs. Secondary: `.github/workflows/super-linter.yml` pins `github/super-linter@v4` (superseded/archived
 upstream) and the run logs `Failed to call GitHub Status API` (curl 403) noise before exiting.
+
+**Correction (added 2026-09-10, after the fix):** "the only post-H1 success" was wrong as a measure of
+coverage. Two further runs on `main` — the merge-commit pushes `d4e1d30` and `a8bf7e5` — also reported
+`success`, but they linted **nothing** (`No files were found in the GITHUB_WORKSPACE to lint!`). Only PR runs
+and plain pushes lint their changed files. See `C3`.
 
 **Why it is a defect, not cosmetics:** the default branch advertises a failing check to every cold-start agent,
 while `README.md` and `docs/RUNBOOK.md` both claim CI is "hygiene only, does not gate or deploy". A red check
@@ -152,6 +169,35 @@ which are the bootstrap that produced this phase.
 banner using the D5 mechanism. Non-destructive: nothing is deleted, and no frozen file is touched.
 **Evidence:** the classified map in `README.md` + `git ls-files '*.md'` before/after.
 **Gate:** agent — documentation only.
+
+### C3 — CI lints nothing on a merge-commit push · gate: human
+
+**Evidence (2026-09-10):** of the five `Lint Code Base` runs examined, every plain commit push and PR run found
+its files, and both merge-commit pushes to `main` found none:
+
+| Run | Head | Commit kind | Result |
+|---|---|---|---|
+| `34524824941` | `ebe5b78` | plain | linted its files, success |
+| `34524938962` | `20bfe1a` | plain | linted its files, **failure** (the C1 bug) |
+| `34525756201` | `d4e1d30` | **merge** | `No files were found … to lint!`, success |
+| `34526018773` | `a8bf7e5` | **merge** | `No files were found … to lint!`, success |
+| `34527479040` | `f67f470` | plain (PR) | linted its files, success |
+
+Super Linter computes "changed files" from the push range; for a merge commit that computation yields an empty
+set, so the job exits green having checked nothing.
+
+**Why it matters:** every unit in this repository's history has landed as a branch + merge. On that path the
+merge commit is the only thing `main` sees, and it is unchecked — so "CI is green on `main`" can be true and
+meaningless at the same time. This is the same failure mode as C1 (green/red that does not correspond to
+reality), one level down.
+
+**Contract (pick one and record it):** (a) accept it and rely on the PR run as the coverage point — already
+documented in `docs/RUNBOOK.md` §5; (b) move the trigger to `pull_request` only, so the check always has a
+diff to work from; or (c) drive the lint from a slightly different event so merges are covered too. Whichever
+is chosen, the `docs/RUNBOOK.md` §5 claim must match what the workflow actually does.
+**Exit gate:** a merged change to `main` whose lint coverage is provable (either by a run that names the files
+it linted, or by a documented, deliberate decision that the PR run is the coverage point).
+**Gate:** human — CI configuration is outside the agent autonomy boundary.
 
 ---
 

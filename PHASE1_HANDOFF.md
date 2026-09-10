@@ -331,3 +331,36 @@ Two things acceptance does **not** do, stated so no downstream executor over-rea
 **Queue state after acceptance:** H1 `done` · H1.10 `pending` (human, edits a frozen file) · H2A `pending`
 (gate satisfied; parity-suite half agent-executable) · H2B `pending` · R1 `BLOCKED` (human) · H3 `BLOCKED`
 (behind R1) · C1/C2 new candidate units, neither authorized.
+
+## 10 · CI repair (appended 2026-09-10) — queue unit C1 closed
+
+§8 recorded one live discrepancy: the Super Linter job was red on `main` at this handoff's own commit. It is
+fixed, and the fix is recorded in `docs/DECISIONS.md` D10 and `docs/queue.md` C1.
+
+**What was wrong.** Two causes, and only one of them was the documents' fault: `textlint`'s `terminology`
+glossary was rejecting the vocabulary this repository documents itself in (all 21 findings: "repo" → use
+"repository", "build system" → use "build tool"), and markdownlint had 13 genuine MD040 findings (fenced code
+blocks with no language) in `docs/DECISIONS.md`, `docs/RUNBOOK.md` and this file. **The 13 are fixed**; the
+additions are fence-language markers only — each file is byte-identical to its previous revision once fence
+languages are stripped (verified by stripping and diffing). Nothing recorded here was rewritten.
+
+**What changed.** Super Linter v4 → `super-linter/super-linter@v8.7.0`, both actions pinned by commit SHA
+(zizmor's `unpinned-uses` audit requires it, so `.github/dependabot.yml` now keeps the pins fresh); the
+natural-language category is off; markdownlint stays on with two rule overrides in
+`.github/linters/.markdown-lint.yml`; the formatter and duplicate-detection categories that would rewrite
+frozen product files or append-only records are off. Full per-category rationale: D10.
+
+**Evidence.** PR #4, run
+[`34527479040`](https://github.com/mschwar/bahai-homepage/actions/runs/34527479040) — `success`, all sixteen
+categories `pass`. Stated honestly, as §3 states it: the first upgrade attempt (`85122f7`) failed on six
+categories, and the first green attempt was then undone by one more finding (zizmor's `dependabot-cooldown`
+audit, about the Dependabot file added to satisfy the previous finding). Both intermediate failures and what
+they meant are recorded in D10.
+
+**One more thing found while fixing CI (queue `C3`, not fixed).** A merge-commit push to `main` lints
+**nothing**: Super Linter's changed-file detection returns an empty set for a merge commit, so the job reports
+`success` having checked nothing (observed on runs `34525756201` and `34526018773`). Plain pushes and PR runs do
+lint their files. Since every unit in this repository has landed as a branch + merge, "CI is green on `main`"
+was, on that path, both true and meaningless — the same failure mode §8 recorded for this unit, one level down.
+`docs/RUNBOOK.md` §5 now says so plainly and names the PR run as the coverage point; changing the trigger is a
+human decision, so it is `C3`.
