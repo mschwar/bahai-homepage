@@ -56,7 +56,7 @@ so the ~10 MB dead-provenance payload leaves the public surface with nothing des
 
 **Restoration command (one line, from `main`):**
 
-```
+```bash
 git checkout archive/legacy-multifaith -- \
   data/quotes_kjv_bible.json data/quotes_dhammapada.json data/quotes_gita_arnold.json data/quotes.json \
   scripts/scrape_kjv_bible_pg.py scripts/scrape_dhammapada_pg.py scripts/scrape_gita_arnold_pg.py
@@ -122,3 +122,79 @@ time either copy was edited.
 
 *Source:* `OWNER_DECISIONS.md` Q5 and D7. This entry closes D7's fallback clause additively; D7's own text is
 not edited (append-only ledger).
+
+## D10 — CI: super-linter v8.7.0, scoped to this repository's invariants · accepted 2026-09-10
+
+Closes queue unit `C1` (CI red on `main` since the Phase 0 audit commit). Three things were true at once: the
+job was red, the docs called it "hygiene only" so nobody looked, and most of what it failed on was a linter
+being wrong about this project.
+
+**1 · Version.** `github/super-linter@v4` → `super-linter/super-linter@v8.7.0`. v4 has been EOL/archived since
+v5, and the `Failed to call GitHub API … 403` noise in every v4 log came from an undeclared permission; the job
+now declares `permissions: contents: read, statuses: write`. `actions/checkout` v4 → v6 with
+`persist-credentials: false`.
+
+**2 · Natural language (textlint) — off.** Super Linter ships exactly one rule for that category,
+`textlint-rule-terminology`, a general-English style glossary whose word list rejects the vocabulary this
+repository documents itself in: "repo" → use "repository", "build system" → use "build tool". All 21 of its
+findings on `main` were that class. Adopting the glossary instead would have meant rewriting `AGENTS.md`,
+`README.md`, the handoff record and this ledger to satisfy a linter's word list.
+
+**3 · Markdown (markdownlint) — stays on, and fails the job on real findings.** The 13 genuine MD040 findings
+(fenced code blocks with no language) are fixed in the live docs: `docs/DECISIONS.md` ×1, `docs/RUNBOOK.md` ×3,
+`PHASE1_HANDOFF.md` ×9. The additions are fence-language markers only, verified by stripping fence languages
+and confirming each file is byte-identical to its previous revision. `bootstrap/*`, `docs/audit/*` and
+`docs/history/*` carry findings of the same class and were left byte-unchanged — they are the immutable packet
+and historical records, and they are never linted because the job lints only changed files.
+The v8 upgrade bundles markdownlint-cli 0.49 (was 0.33) and its new default rules are answered in
+`.github/linters/.markdown-lint.yml` (Super Linter's template plus two additions, so its own relaxations are
+preserved):
+
+- `MD041: false` — `docs/history/*` must lead with the SUPERSEDED banner, not an H1 (D5). Multi-H1 is still
+  caught by MD025.
+- `MD060: {style: leading_and_trailing}` — new in 0.49: it infers "compact" from the `|---|---|` separator row
+  and then flags all 58 padded table rows in the repository. The style is pinned; the rule is not disabled.
+
+**4 · Formatter and duplication categories — off, because their only targets here are frozen.** v8 enables six
+categories v4 did not have, and five failed (the sixth, `YAML_PRETTIER`, was kept and satisfied):
+
+- `BIOME_FORMAT`, `BIOME_LINT` — biome's scope in this repository is `css/*` and `js/*`, frozen byte-identical
+  by contract (D8); its "fix" would be a product change.
+- `MARKDOWN_PRETTIER` — prettier would rewrite `PHASE1_HANDOFF.md` and this file, both append-only records that
+  must stay byte-for-byte as written. markdownlint is the markdown checker of record, and upstream documents
+  markdownlint and prettier as a conflicting pair.
+- `JSCPD` — scans the whole tree regardless of `VALIDATE_ALL_CODEBASE`, and flagged prose repetition inside
+  those same records, plus the byte-identical corpus copy in `ios/widget/` that is already tracked debt for
+  `H2B`. Neither is a smell this repository can or should fix.
+- `YAML_PRETTIER` — **fixed instead of disabled**: prettier's only opinions about the YAML here were bracket
+  spacing and one scalar/comment layout, so the files were made prettier-clean.
+
+**5 · `GITHUB_ACTIONS_ZIZMOR` — fixed, not disabled.** Its `unpinned-uses` audit flagged both action references
+(2 high). Both actions are now pinned to full commit SHAs with a trailing version comment, and because pinned
+SHAs rot without an update path — and this repository had no Dependabot configuration — `.github/dependabot.yml`
+now covers the `github-actions` ecosystem monthly, with `cooldown: default-days: 7` (zizmor's
+`dependabot-cooldown` audit requires a cooldown).
+
+**Evidence.** PR #4, run
+[`34527479040`](https://github.com/mschwar/bahai-homepage/actions/runs/34527479040): `success`, all sixteen
+categories `pass` (MARKDOWN, YAML, YAML_PRETTIER, GITHUB_ACTIONS, GITHUB_ACTIONS_ZIZMOR, GITLEAKS, CHECKOV,
+TRIVY, SPELL_CODESPELL, PRE_COMMIT, GIT_MERGE_CONFLICT_MARKERS, `.github/dependabot.yml`). Recorded honestly:
+the first upgrade attempt (`85122f7`) failed on six categories — this entry describes what each failure turned
+out to mean, not only the final state.
+
+**Known limitation — recorded, not fixed (queue `C3`).** Super Linter's changed-file detection returns an empty
+set for a **merge-commit** push, so a merge to `main` lints nothing and reports success (runs `34525756201` and
+`34526018773` both logged `No files were found in the GITHUB_WORKSPACE to lint!`). Plain pushes and PR runs do
+lint their changed files. Practical consequence: land documentation through a PR if you want it checked — the
+merge commit is not itself a coverage point.
+
+*Source:* `docs/queue.md` `C1`, and the run logs cited above.
+
+**Addendum (same day, appended — not a rewrite).** One more finding appeared after this entry was first
+written: the docs commit `b96ad72` failed `SPELL_CODESPELL` on `docs/queue.md` — the adjective used there for
+"unobtrusive" is read by codespell's dictionary as a misspelling of "discrete". That adjective was the intended
+word and the sentence was correct, so the finding was a dictionary collision, not a typo. **Resolved by
+rewording to "unobtrusive"** — not by an ignore list, and not by disabling the checker: codespell earns its
+place in a documentation-heavy repository, and one dictionary collision is not a reason to switch it off.
+Checked first that it was the only instance in the repository, so this is a one-word change rather than the
+start of a typo sweep. (This addendum names the word only by its meaning, so the file itself stays clean.)

@@ -48,12 +48,12 @@ data-contract documentation, and the owner-approved unpublish of ~10 MB of publi
 
 ### Gate 1 — Parity, frozen files · **PASS**
 
-```
+```console
 $ git diff --stat 3a30b2b..HEAD -- index.html css js data/quotes_hidden_words.json ios/
 (no output — empty)
 ```
 
-```
+```console
 $ shasum -a 256 index.html css/style.css js/script.js js/badi-init.js data/quotes_hidden_words.json
 0d1a6f0ff7b8b3ff1f715da90e998d3a1949814f7c271814dd5aa69acb0b36c5  index.html
 2a08588cc93767af4a82028114bbfc505539085bfadb48b8c5a29e75ebf56de7  css/style.css
@@ -68,7 +68,7 @@ All five match the packet's recorded baseline exactly (`index.html 0d1a6f0f…b3
 
 ### Gate 2 — Parity, live site · **PASS**
 
-```
+```console
 $ curl -s -o /tmp/live_index.html -L .../index.html && shasum -a 256 /tmp/live_index.html
 http=200 size=4701
 0d1a6f0ff7b8b3ff1f715da90e998d3a1949814f7c271814dd5aa69acb0b36c5  /tmp/live_index.html
@@ -96,7 +96,7 @@ convention), with a one-time manual step to create the file.
 
 ### Gate 4 — No live doc lies · **PASS on substance; literal grep deviation (see §4)**
 
-```
+```console
 $ git ls-files 'PROJECT_ROADMAP.md' 'Updates.md'
 (no output — both gone from the root)
 
@@ -139,7 +139,7 @@ edited — the ledger is append-only).
 
 ### Gate 7 — Validation is real · **PASS**
 
-```
+```console
 $ make validate
 python3 scripts/validate_quotes.py
 Quotes checked: 153
@@ -175,7 +175,7 @@ widget cannot be built or tested in-repo (`find ios -name '*.xcodeproj' -o -name
 `main` pushed at `20:10:58Z`; Pages reported `status: built` and every orphaned endpoint was **404** at
 `20:11:33Z` — 35 seconds after the push, far inside the 15-minute allowance:
 
-```
+```console
 $ for p in data/quotes_kjv_bible.json data/quotes_dhammapada.json data/quotes_gita_arnold.json data/quotes.json; do
     curl -s -o /dev/null -w "%{http_code} $p\n" -L "https://mschwar.github.io/bahai-homepage/$p?v=$TS"; done
 404 data/quotes_kjv_bible.json
@@ -186,7 +186,7 @@ $ for p in data/quotes_kjv_bible.json data/quotes_dhammapada.json data/quotes_gi
 
 Retention proven **before** removal — the same 7 paths read back from the pushed branch:
 
-```
+```console
 $ git show origin/archive/legacy-multifaith:<path> | shasum -a 256
 35f1ea99452af12bdd7b0a4a2889ab84d7483a0e44229aebeb2c2ad86fcd8483  data/quotes_kjv_bible.json
 9782888f9a742e5d5fdee96410451d9d3916d9ce128a3f193a36f66316be7a28  data/quotes_dhammapada.json
@@ -214,7 +214,7 @@ deferred list; all H1/H1C commits are pushed to `main`; work stopped.
 `AGENTS.md`, and a `printf` probe during the packet's own baseline check (and re-run by this executor) returned
 exit 0 — but the agent runtime's tool policy **refused** the write:
 
-```
+```text
 BLOCKED: write to protected agent-instruction file(s) (AGENTS.md) approval prompt timed out
 without a user response. Silence is not consent. ... Do NOT retry it or attempt the same edit
 via another path (terminal, execute_code, etc.).
@@ -287,7 +287,7 @@ untouched (the ledger is append-only).
 
 **Gates 1, 2 and 7 re-verified at closure** — the freeze is intact and the site is unchanged:
 
-```
+```console
 $ shasum -a 256 index.html css/style.css js/script.js js/badi-init.js data/quotes_hidden_words.json
 0d1a6f0f…b36c5  index.html          2a08588c…f56de7  css/style.css
 11f88eb2…9c8c8  js/script.js        3bfd2054…2509a  js/badi-init.js
@@ -331,3 +331,36 @@ Two things acceptance does **not** do, stated so no downstream executor over-rea
 **Queue state after acceptance:** H1 `done` · H1.10 `pending` (human, edits a frozen file) · H2A `pending`
 (gate satisfied; parity-suite half agent-executable) · H2B `pending` · R1 `BLOCKED` (human) · H3 `BLOCKED`
 (behind R1) · C1/C2 new candidate units, neither authorized.
+
+## 10 · CI repair (appended 2026-09-10) — queue unit C1 closed
+
+§8 recorded one live discrepancy: the Super Linter job was red on `main` at this handoff's own commit. It is
+fixed, and the fix is recorded in `docs/DECISIONS.md` D10 and `docs/queue.md` C1.
+
+**What was wrong.** Two causes, and only one of them was the documents' fault: `textlint`'s `terminology`
+glossary was rejecting the vocabulary this repository documents itself in (all 21 findings: "repo" → use
+"repository", "build system" → use "build tool"), and markdownlint had 13 genuine MD040 findings (fenced code
+blocks with no language) in `docs/DECISIONS.md`, `docs/RUNBOOK.md` and this file. **The 13 are fixed**; the
+additions are fence-language markers only — each file is byte-identical to its previous revision once fence
+languages are stripped (verified by stripping and diffing). Nothing recorded here was rewritten.
+
+**What changed.** Super Linter v4 → `super-linter/super-linter@v8.7.0`, both actions pinned by commit SHA
+(zizmor's `unpinned-uses` audit requires it, so `.github/dependabot.yml` now keeps the pins fresh); the
+natural-language category is off; markdownlint stays on with two rule overrides in
+`.github/linters/.markdown-lint.yml`; the formatter and duplicate-detection categories that would rewrite
+frozen product files or append-only records are off. Full per-category rationale: D10.
+
+**Evidence.** PR #4, run
+[`34527479040`](https://github.com/mschwar/bahai-homepage/actions/runs/34527479040) — `success`, all sixteen
+categories `pass`. Stated honestly, as §3 states it: the first upgrade attempt (`85122f7`) failed on six
+categories, and the first green attempt was then undone by one more finding (zizmor's `dependabot-cooldown`
+audit, about the Dependabot file added to satisfy the previous finding). Both intermediate failures and what
+they meant are recorded in D10.
+
+**One more thing found while fixing CI (queue `C3`, not fixed).** A merge-commit push to `main` lints
+**nothing**: Super Linter's changed-file detection returns an empty set for a merge commit, so the job reports
+`success` having checked nothing (observed on runs `34525756201` and `34526018773`). Plain pushes and PR runs do
+lint their files. Since every unit in this repository has landed as a branch + merge, "CI is green on `main`"
+was, on that path, both true and meaningless — the same failure mode §8 recorded for this unit, one level down.
+`docs/RUNBOOK.md` §5 now says so plainly and names the PR run as the coverage point; changing the trigger is a
+human decision, so it is `C3`.
