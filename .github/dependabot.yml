@@ -1,0 +1,14 @@
+# Keeps the commit-SHA pins in .github/workflows/super-linter.yml fresh.
+#
+# The workflow pins both actions to a full commit SHA because the super-linter
+# job runs the `zizmor` audit, which fails the build on unpinned uses. Without an
+# automated update path those pins would silently rot, so this file exists to
+# give them one. See docs/DECISIONS.md (D10).
+
+version: 2
+updates:
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "monthly"
+    open-pull-requests-limit: 3

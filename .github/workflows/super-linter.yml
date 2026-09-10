@@ -4,42 +4,58 @@
 # You can adjust the behavior by modifying this file.
 # For more information, see:
 # https://github.com/super-linter/super-linter
+#
+# Scope note: this repository checks prose (markdownlint), YAML, secrets and workflow security. It does NOT
+# run super-linter's formatters over the served site, because the files they target are either frozen product
+# files or append-only evidence records. Full rationale: docs/DECISIONS.md (D10).
 name: Lint Code Base
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read # to clone the repository
-  statuses: write # to report the GitHub Actions status check
+  statuses: write # to report the per-linter status checks
 
 jobs:
   run-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v6
+        uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
           persist-credentials: false
 
       - name: Lint Code Base
-        uses: super-linter/super-linter@v8.7.0
+        uses: super-linter/super-linter@4ce20838b8ab83717e78138c5b3a1407148e0918 # v8.7.0
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           # Lint only the files a change actually touches.
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
-          # Natural language is textlint, which ships exactly one rule:
-          # `terminology`, a general-English style glossary. It rejects the
-          # vocabulary this repository documents itself with -- "repo" is
-          # reported as "use repository instead", "build system" as "use build
-          # tool instead" -- and every one of its findings on this repository
-          # was that class of false positive. Markdown formatting (markdownlint)
-          # stays on and is configured in .github/linters/.markdown-lint.yml.
-          # Rationale: docs/DECISIONS.md (D10).
+          # ---- Categories this repository turns off on purpose (D10) ----
+          # textlint is the whole natural-language category, and it ships exactly
+          # one rule: `terminology`, a general-English style glossary that rejects
+          # this repository's own documented vocabulary ("repo" -> "repository",
+          # "build system" -> "build tool"). Every finding it ever produced here
+          # was that class of false positive.
           VALIDATE_NATURAL_LANGUAGE: false
+          # Biome would reformat css/* and js/*, which are frozen byte-identical
+          # by contract (D8). The formatter's "fix" would be a product change.
+          VALIDATE_BIOME_FORMAT: false
+          VALIDATE_BIOME_LINT: false
+          # Prettier-on-markdown would rewrite PHASE1_HANDOFF.md and
+          # docs/DECISIONS.md -- append-only records that must stay byte-for-byte
+          # as written. markdownlint below is the markdown checker of record, and
+          # upstream lists markdownlint and prettier as a conflicting pair.
+          VALIDATE_MARKDOWN_PRETTIER: false
+          # jscpd scans the whole tree (it ignores VALIDATE_ALL_CODEBASE) and
+          # flags prose repetition in those same records, plus the byte-identical
+          # corpus copy in ios/widget/ that is tracked debt for H2B. Neither is a
+          # code smell to fix here.
+          VALIDATE_JSCPD: false
