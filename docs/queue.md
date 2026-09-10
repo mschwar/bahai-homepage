@@ -166,7 +166,9 @@ no configuration change; `C2`, `C4` and `C5` remain open. `C6` and `C7` were add
 parity-suite review that closed H2A's first half; neither is scheduled or authorized. `C8` was added on
 2026-09-10 from the first CI run whose changed set contained a product file (PR #9, H2A's refactor) and was
 closed the same day when the owner authorized its option (a) — the four categories that had never run are now
-off, recorded as `docs/DECISIONS.md` D12.
+off, recorded as `docs/DECISIONS.md` D12. `C9` was added on 2026-09-10 during the post-deploy live verification
+of H2A: a genuine production defect (the Badíʿ date never resolves on the live site) that the parity suite
+cannot see by design, and it is not schedulable without a decision about the vendor library.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -397,6 +399,45 @@ code" `AGENTS.md` forbids as a side effect. Neither is H2A's to take.
 (c) keep the four categories on, accept that every product-file PR is red, and record that in `docs/RUNBOOK.md` §5 as the intended state.
 **Exit gate:** a run whose changed set includes a product file is green, with each of the four categories either passing or explicitly off for a recorded reason.
 **Gate:** human — CI configuration; option (b) additionally modifies frozen files.
+
+### C9 — The Badíʿ date never resolves on the live site: the vendor library's geolocation call is blocked as mixed content · gate: human
+
+**Evidence (2026-09-10, live post-deploy verification of H2A;
+`docs/audit/2026-09-10/H2A_REFACTOR_PARITY_RUN.txt`, "POST-DEPLOY LIVE VERIFICATION").** Against
+`https://mschwar.github.io/bahai-homepage/` in headless Chromium, `#badiDate` settles to `Badíʿ date
+unavailable.` with the guidance "Enable location for sunset-accurate Badíʿ date. Showing Gregorian date
+only." — the documented fallback — rather than the two-line date label. The cause appears in both the console
+and the failed-request log, and it is the only failure of either kind:
+
+```text
+Mixed Content: The page at 'https://mschwar.github.io/bahai-homepage/' was loaded over HTTPS,
+but requested an insecure XMLHttpRequest endpoint 'http://ipinfo.io/geo?json'.
+This request has been blocked; the content must be served over HTTPS.
+```
+
+The request is issued by the **third-party** library at `wondrous-badi.today`, not by this repository's code:
+no `pageerror` and no failed request originates from `js/quote-core.js`, `js/script.js`, `js/badi-init.js` or
+any asset served here.
+
+**Why it is a defect.** The Badíʿ date is half of the product doctrine (D1: "one Hidden Words passage per
+Gregorian day-of-year, Badíʿ date, …"). In production that half renders only its fallback, so a headline
+feature is dark on the live HTTPS site — and nothing recorded it, because `tests/parity.mjs` blocks the vendor
+library for determinism (section F) and therefore cannot observe the live failure. The suite's
+`F. renders the Badici date when the lib resolves` proves the *page's* handling of a resolved date; it does
+not and cannot prove the vendor resolves one.
+
+**Why it is out of H2A's scope.** H2A is a behavior-preserving refactor and this behavior is unchanged by it —
+the failing request is the vendor's, and the pre-refactor code path is identical. Every possible fix sits
+outside that authorization: changing how the page loads or falls back modifies `js/badi-init.js` /
+`index.html` (frozen files, and a product change), while "the vendor library is broken" may admit no in-repo
+fix at all.
+
+**Contract:** first establish the effective cause — is this the vendor's own `http`/`https` scheme choice (fixable only upstream), or does the library accept a configuration that avoids the geolocation call entirely (a `locationMethod` the page already passes, or a documented offline mode)? Then pick exactly one and record it in `docs/DECISIONS.md` —
+(a) if the library offers a scheme-safe or location-free configuration, adopt it in `js/badi-init.js`, keeping the existing fallback intact;
+(b) if it does not, stop relying on the vendor for a date the page could compute — the Badíʿ calendar is arithmetic — and record that as a deliberate replacement, not a patch;
+(c) keep the vendor and the fallback as-is, accepting that the Badíʿ date is Gregorian-only in production, and record that in `README.md`'s status prose so the docs stop implying a feature that does not render.
+**Exit gate:** the live HTTPS page either shows a resolved Badíʿ date, or the docs record that it will not and why — with the live check re-run and its output recorded.
+**Gate:** human — options (a) and (b) modify frozen files (`js/badi-init.js`, `index.html`) and (b) is a product change; option (c) touches product doctrine.
 
 ---
 
