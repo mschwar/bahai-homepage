@@ -1,3 +1,10 @@
-DO NOT RUN UNTIL THE PHASE 0 AUDIT HAS BEEN REVIEWED.
+SUPERSEDED — DO NOT RUN THIS FILE.
 
-Intended future task: use the accepted archaeology outputs to perform the smallest justified agent-first repo retrofit, preserve live behavior, establish canonical docs/validation/queue/agent contract, and prepare the two product work streams. Regenerate the exact Phase 1 prompt after human review rather than blindly using a pre-audit plan.
+This placeholder was written before the Phase 0 audit existed and deliberately said nothing concrete.
+The audit is now accepted and its open questions are answered, so the real Phase 1 execution packet has been
+generated at:
+
+    bootstrap/packets/2026-09-10-phase1-agent-first-retrofit/
+
+Run `01_PROMPT.txt` from that packet (it covers H1 — agent-first repo retrofit — plus the owner-approved H1C
+orphaned-data unpublish). Keep this file only as a record that the pre-audit plan was intentionally hollow.

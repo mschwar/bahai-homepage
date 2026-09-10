@@ -1,0 +1,52 @@
+You are executing Phase 1 · H1 — the agent-first repo retrofit for the existing `bahai-homepage` repository.
+
+This is NOT a greenfield project and NOT a modernization sprint. The Phase 0 archaeology audit has been
+accepted by the human owner, its open questions have been answered, and this request is the only authorized
+work. The live product must not change.
+
+READ FIRST, in this order:
+  1. START_HOMEPAGE_RETROFIT.md
+  2. HANDOFF.md  (the Phase 0 handoff)
+  3. bootstrap/packets/2026-09-10-phase1-agent-first-retrofit/  — all of it, starting with PACKET.md,
+     then OWNER_DECISIONS.md, SCOPE_AND_GATES.md, QUEUE_SEED.md, RECOVERY.md, and every file under workunits/
+  4. docs/audit/2026-09-10/  — all twelve documents; these are now the canonical orientation set
+  5. bootstrap/seed/2026-09-10-homepage-retrofit/  — the original seed, as historical input only
+     (its prompts/02_PHASE1_* file is a superseded placeholder; do not follow it)
+
+THEN VERIFY THE BASELINE YOURSELF before changing anything: confirm `git status` is clean, record the current
+sha256 of `index.html`, `css/style.css`, `js/script.js`, `js/badi-init.js` and `data/quotes_hidden_words.json`,
+curl the live site for `index.html` and `data/quotes_hidden_words.json` and confirm the served bytes still match
+the repo, and confirm `python3 scripts/validate_quotes.py data/quotes_hidden_words.json` passes. If the live
+site does not match the repo `main`, STOP and report — that is a deployment finding, not something to fix here.
+
+EXECUTE `workunits/H1_AGENT_FIRST_RETROFIT.md` (units H1.1–H1.9) and then
+`workunits/H1C_ORPHAN_UNPUBLISH.md`, in that order, one work unit per commit, conventional commit prefixes
+(`docs:`, `chore:`) with a "what + why" body. Execute `SCOPE_AND_GATES.md` exactly.
+
+HONOR `OWNER_DECISIONS.md` as binding. In particular: keep the wallpaper and the iOS widget as documented
+experimental surfaces (do not modify `index.html` to link them — that is a separate later unit); unpublish the
+orphaned multi-faith payload by removing it from `main` while retaining it on a pushed, never-merged
+`archive/legacy-multifaith` branch (a directory move inside the repo would NOT unpublish anything — Pages serves
+the whole branch); archive the stale roadmap and Updates notes to `docs/history/` as superseded rather than
+rewriting them in place; keep the Ruhi Book 1 task BLOCKED with no timeline; and create a real root `AGENTS.md`
+(writing it works in this repo — verified; if a runtime ever blocks it, fall back to the README appendix plus a
+manual step and say so explicitly in the handoff).
+
+FORBIDDEN in this task: any edit to production behavior or assets — `index.html`, `css/*`, `js/*`,
+`data/quotes_hidden_words.json`, `ios/widget/*`; any dependency that the served site needs at runtime; any
+build system, framework, bundler, or test harness; any CI/deploy change; any implementation of a collection /
+data-loader / selector; any Ruhi extraction, curation, or publication; resurrecting multi-faith integration;
+deleting any file the owner's decisions did not name for removal; and any change to `apply`-irrelevant things
+such as font/CDN pins. Documentation, the queue/decisions ledger, non-runtime dev tooling, and the
+owner-approved unpublish are the only sanctioned surfaces.
+
+PROVE it, do not assert it. Every gate in `SCOPE_AND_GATES.md` must be closed with command output in the
+handoff: byte-identical sha256 of the five frozen files after the push, live homepage still HTTP 200 and
+byte-identical, `make validate` now green on this host, the orphaned endpoint now 404 on the live site while
+still recoverable from the archive branch (if it is still 200 fifteen minutes after the push, the unit is NOT
+done — report it, do not claim success), and the docs/queue/ledger present and internally consistent.
+
+FINISH with `PHASE1_HANDOFF.md` at the repo root, structured like `HANDOFF.md`: what changed, why, the exact
+evidence for each gate, the state of the queue, any deviation from this packet (deviations must be explicit,
+never silent), and what remains deferred. Commit the docs and push `main`. Then STOP — do not begin H2A, H2B,
+R1, or H3 even if the next steps look obvious. They are gated behind separate authorization.
