@@ -343,6 +343,7 @@ empty-set green that `C3` documented. This entry closes queue `C8`, and with it 
 landing.
 
 
+
 ## D13 — Badíʿ date: the declined-location path downgrades instead of rendering nothing · accepted 2026-09-10
 
 Closes queue unit `C9`, whose option (a) the owner chose in-session on 2026-09-10. `js/badi-init.js` now keeps
@@ -450,4 +451,67 @@ Reconciled in the same change: `docs/queue.md`'s candidate-list preamble now nam
 listed, and carries a new **Priority order** section listing the open units in execution order with their gates.
 
 *Source:* owner decisions in-session 2026-09-10; `docs/queue.md` `C2`, `H1.10` and *Priority order*; D1, D3, D5.
+
+## D15 — Live-mode parity target: production behavior is now observable · accepted 2026-09-10
+
+`make parity` is hermetic **by design**: `tests/parity.mjs` aborts every external host
+(`wondrous-badi.today`, `fonts.googleapis.com`, `fonts.gstatic.com`) so day-of-year selection and cache keys
+are reproducible. That determinism is correct and is kept exactly as it is. Its cost is that the **deployed**
+path — real HTTPS, the real vendor Badíʿ library, the real CDN, the browser's real security and
+mixed-content rules — had no automated coverage at all, which is precisely why the production defect that
+`docs/queue.md` records as candidate unit `C9` (the Badíʿ date element falling back to "unavailable" on the
+live HTTPS site) was invisible to the suite: section `F` of the suite proves the *page's* handling of a
+resolved date, and it cannot prove the vendor resolves one.
+
+**What was added.** A new dev-only check `tests/parity-live.mjs` plus a separate `make parity-live` target,
+and a §3.1 subsection in `docs/RUNBOOK.md`. It drives the deployed origin
+`https://mschwar.github.io/bahai-homepage/`, observing the real network, and it asserts only outcomes that
+are unambiguous regardless of how `C9` is resolved: the homepage reaches a settled state (`#quote-text`
+leaves its loading placeholder); the rendered verse equals the selection oracle computed from the **local**
+corpus for the **real current date**; `window.QuoteCore` exists and exposes all eleven expected exports; and
+no uncaught page error occurred. It **reports** rather than asserts whether `#badiDate` settled to
+`RESOLVED` or `FALLBACK` with the reason it observed, the resolved label's exact `innerHTML` when one
+exists, the `#location-message` text, and every console error and failed request with its URL — so a
+mixed-content, vendor or CDN failure is visible in the output instead of silent.
+`docs/DECISIONS.md` D12 already accepted that CI runs no static analysis over the served site and that
+behavioral proof is the substitute; this entry extends that acceptance one step outward, from the hermetic
+page to the deployed one.
+
+**Why it is a separate, non-blocking target and NOT part of `parity`.** `parity-live` talks to the public
+internet, so a Pages rebuild, a CDN hiccup or this host being offline makes it red although the product is
+sound. Folding it into `parity` would make the behavioral proof of record intermittently red and would train
+readers to ignore a red parity run — the exact failure mode `C1` and `C8` were closed to remove. So the
+hermetic suite is unchanged in behavior (its 18 assertions, its blocking of external hosts, its oracle and
+its fixtures are untouched; another workstream can still re-pin its assertions safely), and the live suite is
+run deliberately, after a deploy.
+
+**Why the Badíʿ outcome is reported, not asserted.** `C9` is OPEN and the diagnosis is being adjudicated; a
+test asserting "the Badíʿ date resolves" would be red today for a reason nobody has yet decided how to fix,
+and a test asserting "it falls back" would enshrine a defect as the contract. The check therefore captures
+the **distinction** — `RESOLVED` vs `FALLBACK` — with the reason observed, and exits non-zero only on page
+error, oracle mismatch, missing core, or an unreachable origin.
+
+**First run — what it observed (reported, not concluded).** Against the live origin on 2026-09-10, as a
+visitor with no geolocation permission, `#badiDate` settled to `Badíʿ date unavailable.` with
+`#location-message` = "Enable location for sunset-accurate Badíʿ date. Showing Gregorian date only.", one
+console error ("Mixed Content: … insecure XMLHttpRequest endpoint to `ipinfo.io` … blocked")
+attributed to `https://wondrous-badi.today/scripts/BadiDateToday.v1.js`, one failed request
+(`ipinfo.io` — `mixed-content`), and a console warning `Badíʿ date unavailable: timeout` from
+`js/script.js`; zero page errors. With geolocation **granted at a fixed coordinate**
+(`context.grantPermissions(['geolocation'])` + `context.setGeolocation`), the element settled to
+`RESOLVED` with childNodes `[#text, BR, #text]` (the two-line shape intact) and innerHTML exactly:
+
+```text
+Day 4, `Izzat (might)<br>183 B.E.
+```
+
+Both the mixed-content console error and the failed request disappeared entirely. A third mode — permission
+granted with **no** coordinate supplied — reproduced the first result exactly (fallback, mixed-content
+error, failed request, zero page errors). Read together, these three observations say that permission alone
+is not what changes the outcome: the ipinfo request is issued whenever no position is available from
+`navigator.geolocation`, and supplying a position avoids it. They are recorded here as observations for
+`C9`'s adjudication; this entry draws no further conclusion and prescribes no fix.
+
+*Source:* `docs/queue.md` `C9` (OPEN); the live run outputs quoted verbatim in the pull request for this
+change.
 

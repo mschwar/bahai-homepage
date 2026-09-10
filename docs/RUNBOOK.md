@@ -94,6 +94,34 @@ node: <version>
 Record the run as produced — do not tidy, trim or re-wrap it. The `== RESULT` line is the evidence; a run
 recorded without it proves nothing.
 
+#### `make parity-live` — the deployed path
+
+`make parity` is hermetic by construction: it blocks `wondrous-badi.today`, `fonts.googleapis.com` and
+`fonts.gstatic.com` so selection and cache keys are reproducible. The cost of that determinism is that the
+**deployed** path — real HTTPS, the real vendor library, the real CDN, the browser's real security rules —
+had no automated coverage, which is why queue candidate `C9` (the Badíʿ date falling back on the live site)
+was invisible to the suite.
+
+```bash
+make parity-live            # alias: node tests/parity-live.mjs
+```
+
+It drives `https://mschwar.github.io/bahai-homepage/` and asserts only the unambiguous things: the homepage
+reaches a settled state, the rendered verse equals the selection oracle computed from the **local** corpus
+for the **real current date**, `window.QuoteCore` exposes its expected exports, and no uncaught page error
+occurred. It **reports** — never asserts — whether `#badiDate` settled to `RESOLVED` or `FALLBACK` with the
+reason observed, the resolved label's exact `innerHTML` when there is one, and every console error and
+failed request with its URL. The Badíʿ outcome is **environment-dependent** — it turns on whether the browser
+was granted geolocation — so this target deliberately does not assert it. (`C9` is closed: a visitor who
+declines the prompt now gets the default-sunset date instead of nothing, so a `FALLBACK` report here means the
+downgrade did not run, not that the site is broken.)
+
+Expected shape of a healthy run: `== RESULT: 4 passed, 0 failed, 3 reported ==`. **Network-dependent:** it
+is expected to be flaky-on-outage, and it is deliberately **not** part of `make parity`, so a live failure
+can never make the hermetic suite intermittently red. **Run it after any deploy.** Two further modes exist
+to help adjudicate `C9`: `node tests/parity-live.mjs --geolocation` (grant geolocation at a fixed
+coordinate) and the same command with `--no-coords` (permission granted, no position supplied).
+
 ## 4 · Regenerate the corpus (dev-only)
 
 ```bash
