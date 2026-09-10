@@ -74,9 +74,10 @@ in-flight intent, building them out would be unjustified churn. Adding an on-pag
 
 | Path | What it is |
 |---|---|
-| `docs/history/*` | Superseded docs, kept for the record (`PROJECT_ROADMAP.md`, `Updates.md`) |
+| `docs/history/*` | Superseded docs behind a SUPERSEDED banner, kept for the record (`2025-06-roadmap.md`, `2025-06-updates.md`, `AUDIT_NOTES.md`, `HANDOFF.md`, `PHASE1_HANDOFF.md`) — see *Where the truth lives* |
 | `docs/audit/2026-09-10/*` | The Phase 0 archaeology audit |
 | `bootstrap/*` | The immutable retrofit seed + the Phase 1 execution packet |
+| `START_HOMEPAGE_RETROFIT.md` | The bootstrap entry pointer (spent) — classified in *Where the truth lives* |
 
 ---
 
@@ -130,10 +131,32 @@ subdirectory of `main`.
 
 - `docs/audit/2026-09-10/` — **canonical orientation: the reconstructed state of the repo as of 2026-09-10.**
   Historical, evidence-backed, and *not a live spec* — read it to understand how the product got here.
-- `docs/queue.md` — the forward work queue (states, gates, evidence fields).
-- `docs/DECISIONS.md` — the decision ledger.
+- `docs/queue.md` — the forward work queue (states, gates, evidence fields), including the open units in
+  execution order.
+- `docs/DECISIONS.md` — the decision ledger (append-only).
 - `docs/RUNBOOK.md` — run / validate / deploy / recovery operational runbook.
 - `AGENTS.md` — the agent contract (invariants, commands, data contract, autonomy boundary, forbidden list).
+- `docs/history/` — superseded records behind a SUPERSEDED banner. Historical only; never guidance.
+
+### The root markdown map — every root `.md` has exactly one status
+
+Eight `.md` files sit at the repository root, and each is one of **live**, **bootstrap** or **historical** (queue
+unit `C2`, decision `D14`). Nothing at the root is undeclared. The three historical files were moved with
+`git mv` behind a SUPERSEDED banner (the D5 mechanism): nothing was deleted, and no frozen file was touched.
+
+| File (current path) | Status | Why it sits where it does |
+|---|---|---|
+| `README.md` | **live** | Product doctrine — the first thing to read. |
+| `AGENTS.md` | **live** | The agent contract; the README's binding counterpart. |
+| `CONTRIBUTING.md` | **live** | GitHub reads `CONTRIBUTING.md` **only** at the repository root, so moving it would silently disable the contributing prompt. |
+| `SECURITY.md` | **live** | The same root-only rule governs GitHub's security-policy discovery. |
+| `START_HOMEPAGE_RETROFIT.md` | **bootstrap** | The retrofit seed's entry pointer. Its "first authorized task" is the executed Phase 0 archaeology prompt, so it is spent — it stays at the root as the bootstrap chain's first read, not as guidance. |
+| `docs/history/AUDIT_NOTES.md` | **historical** | The 2026-01-31 reliability/a11y audit record, superseded by `docs/audit/2026-09-10/`. |
+| `docs/history/HANDOFF.md` | **historical** | The Phase 0 repo-archaeology closeout; its §8 owner questions were answered in `OWNER_DECISIONS.md`. |
+| `docs/history/PHASE1_HANDOFF.md` | **historical** | The Phase 1 / H1 closeout and its per-gate evidence — a record of a closed phase, not a live spec. |
+
+`bootstrap/*` and `docs/audit/2026-09-10/*` are the immutable packet and the dated snapshot: historical by
+construction, and never rewritten in place.
 
 ## Deferred
 

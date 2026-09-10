@@ -1,3 +1,8 @@
+> **SUPERSEDED — historical only (a record, not a spec).** This is the Phase 1 / H1 closeout (2026-09-10): the
+> per-gate evidence for a phase that is closed. Its forward plan is superseded by `docs/queue.md` and its H1
+> frozen-file hash baseline by `docs/DECISIONS.md` **D11**. Current doctrine: `README.md` + `AGENTS.md`. Do not
+> treat anything below as current intent.
+
 # PHASE1_HANDOFF — Phase 1 · H1 Agent-First Repo Retrofit (`bahai-homepage`)
 
 **Date:** 2026-09-10 · **Executor:** Hermes home-steward agent (CLI) · **Branch:** `main`

@@ -1,3 +1,8 @@
+> **SUPERSEDED — historical only.** This is the Phase 0 repo-archaeology closeout (2026-09-10). Its §8 open
+> questions were answered in `bootstrap/packets/2026-09-10-phase1-agent-first-retrofit/OWNER_DECISIONS.md`, and
+> the audit it reports on is canonical at `docs/audit/2026-09-10/`. Current doctrine: `README.md` + `AGENTS.md`.
+> Forward plan: `docs/queue.md`. Do not treat anything below as current intent.
+
 # HANDOFF — Phase 0 Repo Archaeology (Bahá'í Homepage)
 
 **Date:** 2026-09-10 · **Agent:** home-steward (Hermes) · **Branch:** `main` @ `6e09218` + audit docs

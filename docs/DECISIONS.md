@@ -342,6 +342,7 @@ So the green is a real green on a changed set that contains every file the red r
 empty-set green that `C3` documented. This entry closes queue `C8`, and with it the last obstacle to H2A's
 landing.
 
+
 ## D13 — Badíʿ date: the declined-location path downgrades instead of rendering nothing · accepted 2026-09-10
 
 Closes queue unit `C9`, whose option (a) the owner chose in-session on 2026-09-10. `js/badi-init.js` now keeps
@@ -394,3 +395,59 @@ value and the downgrade window are now named constants if that trade is ever rev
 `onerror` and its plain-`http` fallback are upstream defects that this works around rather than fixes.
 
 *Source:* owner decision in-session 2026-09-10 (`C9` option (a)); `docs/queue.md` `C9`.
+## D14 — Root documentation map, H1.10 closed, and the roadmap/governance decision · accepted 2026-09-10
+
+Three documentation-only decisions, accepted by the owner in-session on 2026-09-10. None touches a product file
+or a CI file.
+
+**1 · The root documentation map (closes queue `C2`).** All eight root `.md` files now carry exactly one declared
+status in `README.md` ("Where the truth lives"):
+
+- **live** (stay at the root): `README.md` (product doctrine), `AGENTS.md` (the agent contract),
+  `CONTRIBUTING.md` and `SECURITY.md`. The last two are live *because* moving them would break GitHub: GitHub
+  discovers a contributing guide and a security policy **only** at the repository root, so copies under
+  `docs/history/` would silently stop being recognised. A directory move is not a neutral act for those names.
+- **bootstrap** (stays at the root, spent): `START_HOMEPAGE_RETROFIT.md`, the retrofit seed's entry pointer. Its
+  "first authorized task" — the Phase 0 archaeology prompt — has been executed, so it is spent; it stays because
+  it is the bootstrap chain's first read, and `README.md` now says so.
+- **historical** (moved to `docs/history/` behind a SUPERSEDED banner by the D5 mechanism, with `git mv`):
+  `AUDIT_NOTES.md` (the 2026-01-31 reliability/a11y audit record, superseded by `docs/audit/2026-09-10/`),
+  `HANDOFF.md` (the Phase 0 closeout, whose §8 questions were answered in `OWNER_DECISIONS.md`) and
+  `PHASE1_HANDOFF.md` (the Phase 1 / H1 closeout — a record of a closed phase, whose forward plan is superseded by
+  `docs/queue.md` and whose H1 hash baseline is superseded by D11).
+
+Nothing was deleted: `git status` reports each move as a rename. Filenames were kept rather than date-prefixed (as
+D5 did for the 2025-06 files) so that mentions in the append-only ledger and in immutable records stay resolvable.
+
+*Why a classification and not just a README sentence:* the defect was that a cold-start agent could not tell live
+docs from spent residue from bootstrap. A status is useful only if it is exclusive, so each file gets exactly one,
+and the three historical files are physically separated from the live root rather than merely annotated there.
+
+**References deliberately left as written.** Ledger entries above (this ledger is append-only), the
+`.github/workflows/super-linter.yml` comment that names `PHASE1_HANDOFF.md` (CI-owned, not documentation), one
+verbatim commit subject quoted inside `docs/queue.md` `C1` (`docs: add PHASE1_HANDOFF.md with gate evidence` — a
+historical fact, not a pointer), every file under `bootstrap/` (the immutable packet) and every file under
+`docs/audit/2026-09-10/` (the dated snapshot, which must keep describing the repository as it stood on that date).
+What changed is every pointer in a live document: `README.md`, `docs/queue.md` and `docs/RUNBOOK.md` now name the
+moved paths, and `docs/history/README.md` lists all five files it holds.
+
+**2 · `H1.10` is CLOSED as option (b): no on-page link.** The wallpaper and the iOS widget stay reachable by URL
+and documented in `README.md` / `AGENTS.md`, and are deliberately **not** linked from `index.html`.
+
+*Why:* the product doctrine is "one passage, not a feed" — an on-page link to a second surface pulls directly
+against it, and D3 already covers discoverability by documenting both surfaces rather than dangling them off the
+product. Choosing (b) also means the one sanctioned exception to the freeze is not taken: no frozen file changes,
+so no parity re-run is owed.
+
+**3 · Roadmap governance: no `docs/ROADMAP.md`.** A new roadmap document will not be created. D5 retired
+`PROJECT_ROADMAP.md` on the explicit ground that "a second roadmap alongside a queue would be duplicate
+authority"; that ground applies unchanged to a fresh roadmap, and `docs/queue.md` already carries the states,
+gates, contracts and evidence fields a roadmap would restate. A second plan of record would re-create exactly the
+ambiguity D5 removed.
+
+Reconciled in the same change: `docs/queue.md`'s candidate-list preamble now names the open units (`C4`, `C5`,
+`C6`, `C7`, `C9`) and marks `C2` done, treats a unit named by a concurrent workstream as pending until it is
+listed, and carries a new **Priority order** section listing the open units in execution order with their gates.
+
+*Source:* owner decisions in-session 2026-09-10; `docs/queue.md` `C2`, `H1.10` and *Priority order*; D1, D3, D5.
+
