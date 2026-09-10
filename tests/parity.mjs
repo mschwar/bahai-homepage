@@ -313,6 +313,42 @@ await run('F. Badici fallback / graceful degradation', [
     if (!badi.includes('182 BE')) throw new Error(`expected 182 BE, got: ${badi}`);
     await ctx.close();
   }],
+  ['declined location: downgrades to the default sunset instead of rendering nothing', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await blockExternal(page);
+    await page.addInitScript(() => {
+      window.BadiDateLocationChoice = { ignoreLocation: 1, guessUserLocation: 2, askForUserLocation: 3 };
+      window.__badiLocationMethods = [];
+      window.BadiDateToday = (opts) => {
+        window.__badiLocationMethods.push(opts.locationMethod);
+        // Model the vendor's declined-location behaviour faithfully: the accurate path
+        // never answers (it falls through to an HTTP ipinfo request that HTTPS blocks and
+        // that its XHR reports as neither success, timeout nor error), while the
+        // ignoreLocation path resolves at once from the default 6:30 sunset.
+        if (opts.locationMethod === 3) return;
+        if (typeof opts.onReady === 'function') {
+          opts.onReady({ bDay: 4, bMonthMeaning: 'Light', bMonthNameAr: 'Núr', bYear: 182, bEraAbbrev: 'BE' });
+        }
+      };
+    });
+    await fixClock(page);
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+    await page.waitForFunction(() => document.getElementById('quote-text').textContent !== 'Loading Sacred Verse…');
+    const pending = await txt(page, '#badiDate');
+    if (!pending.includes('Loading')) throw new Error(`expected the accurate attempt to still be pending, got: ${pending}`);
+    // Let the accuracy window elapse; the wrapper must then downgrade rather than give up.
+    await page.clock.runFor(5000);
+    const badi = (await txt(page, '#badiDate')).trim();
+    if (!badi.includes('Day 4, Núr (light)')) throw new Error(`expected the downgraded date, got: ${badi}`);
+    if (!badi.includes('182 BE')) throw new Error(`expected 182 BE after downgrade, got: ${badi}`);
+    const methods = await page.evaluate(() => window.__badiLocationMethods);
+    if (methods.length !== 2 || methods[0] !== 3 || methods[1] !== 1) {
+      throw new Error(`expected attempts [3,1] (accurate, then default sunset), got ${JSON.stringify(methods)}`);
+    }
+    console.log(`      attempts=${JSON.stringify(methods)} (accurate -> default sunset); date rendered, not blank`);
+    await ctx.close();
+  }],
 ]);
 
 await run('G. Clipboard copy', [

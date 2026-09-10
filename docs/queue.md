@@ -171,7 +171,8 @@ of H2A and **corrected the same day**: it was first filed as "the Badíʿ date n
 which the owner disputed and which re-testing disproved — the date resolves for any user who has granted
 location and for every returning visitor, because the vendor caches the granted location in `localStorage`. The
 real and much narrower defect is that a first-time visitor who *declines* the location prompt gets no date. The
-withdrawn claim is kept in the entry so the error stays auditable.
+withdrawn claim is kept in the entry so the error stays auditable. C9 was then **executed the same day** once
+the owner chose its option (a), and the downgrade it adds is recorded as `docs/DECISIONS.md` D13.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -403,7 +404,31 @@ code" `AGENTS.md` forbids as a side effect. Neither is H2A's to take.
 **Exit gate:** a run whose changed set includes a product file is green, with each of the four categories either passing or explicitly off for a recorded reason.
 **Gate:** human — CI configuration; option (b) additionally modifies frozen files.
 
-### C9 — CORRECTED: the Badíʿ date works in production; only the *declined-location* fallback is dead on HTTPS · gate: human
+### C9 — Badíʿ date: the *declined-location* path rendered nothing · **done** · gate: human (authorized 2026-09-10)
+
+**Outcome (executed 2026-09-10, contract option (a)):** `js/badi-init.js` now keeps the
+location-accurate path and, if it has not answered within the 4 s guard, **downgrades** — it
+re-invokes the library with `ignoreLocation`, which uses the default 6:30 sunset and needs no
+network and no permission, so the date always renders. A first-time visitor who declines the
+location prompt now gets a Badíʿ date instead of "unavailable", while a permitted or returning
+visitor still gets the sunset-accurate one. Decision: `docs/DECISIONS.md` **D13**; full evidence,
+both hash sets, the three-case TLS run and the before/after screenshots are in
+`docs/audit/2026-09-10/C9_LOCATION_DOWNGRADE_RUN.txt`.
+**Evidence:** `make parity` **19 passed, 0 failed** (one assertion *added* — section F now pins
+the downgrade as `attempts=[3,1]` — not re-pinned); real-vendor end-to-end over TLS with
+nothing stubbed (declined → resolves; granted → resolves, no downgrade; cached → resolves, no
+downgrade); exactly one frozen file moved (`js/badi-init.js` `5831f0e9…` → `80eb5e3f…`).
+**Caveat reconciled in the run record:** the C6/C7/debt-#7 workstream also moves the frozen
+baseline, so this set is authoritative for this branch only and a combined baseline must be
+recorded on `main` once both have landed.
+
+**The corrected diagnosis this fix addresses.** C9 was first filed as "the Badíʿ date never
+resolves on the live site" and that claim was WITHDRAWN (see below). What is real and narrow: a
+first-time visitor who *declines* the location prompt gets no Badíʿ date, because the vendor's
+no-location fallback requests `http://ipinfo.io/geo?json` (blocked as mixed content on HTTPS) and
+its XHR sets `ontimeout` but **no `onerror`**, so it never reports the block and never continues.
+Our own 4 s guard was the only thing ending that wait, and it rendered "unavailable" — the guard
+remains load-bearing, which is why the fix routes through it rather than around it.
 
 **Correction (2026-09-10, appended — the original claim below is WITHDRAWN, not tidied away).** This unit was
 first filed as "the Badíʿ date never resolves on the live site" and was escalated to the owner on that basis.
