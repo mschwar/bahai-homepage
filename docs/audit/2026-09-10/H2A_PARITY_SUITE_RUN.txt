@@ -1,0 +1,49 @@
+command: make parity
+cwd: /Users/mschwar/Developer/bahai-homepage
+date: 2026-09-10T21:40:17Z
+playwright: 1.59.1
+node: v26.0.0
+=== raw output ===
+node tests/parity.mjs
+
+## A. Deterministic day-of-year selection over the <=75-word subset
+      dayOfYear=166 shortSubsetLen=128 idx=38
+PASS  selects the expected verse for "today"
+PASS  selection is stable across reloads (same fixed day)
+      yesterday idx=37
+PASS  today is distinct from yesterday when dayOfYear differs
+
+## B. Today / yesterday relationship
+PASS  yesterday button reveals the yesterday section with yesterday's verse
+
+## C. Cache-by-date (Gregorian key)
+PASS  boots from cache when the quote fetch fails (offline cache-boot)
+PASS  after a fresh load, today's verse is cached under dailyVerse:<todayKey> and lastKey is set
+
+## D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
+      gregKey=dailyVerse:2026-06-15  badiKey=dailyVerse:badi:182-Núr-4  both == today's verse  (wrinkle pinned)
+      dailyVerse:lastKey == badi:182-Núr-4  (note: points at the Badici key after badi onReady)
+PASS  today's quote is ALSO written under the Badici-day key (the wrinkle)
+
+## E. Theme persistence
+PASS  applies saved dark-mode on load
+PASS  defaults to light-mode when no saved theme
+      (parity note) body ends with both light-mode+dark-mode after reload to a saved dark theme
+PASS  toggle flips the class and persists to localStorage
+
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+
+## G. Clipboard copy
+PASS  copy via clicking today's quote text writes "<text>\n— <author>" to navigator.clipboard
+      .quote-actions display=none (row hidden); button not visible; copy reachable via #quote-text click
+PASS  parity: the copy action row is hidden by CSS (.quote-actions{display:none})
+PASS  falls back to execCommand copy when navigator.clipboard rejects
+PASS  reports "Copy failed." when both paths fail
+
+## H. Reduced-motion scroll behavior
+PASS  uses behavior auto (instant) when prefers-reduced-motion: reduce
+PASS  uses behavior smooth when reduced-motion is not preferred
+
+== RESULT: 18 passed, 0 failed ==

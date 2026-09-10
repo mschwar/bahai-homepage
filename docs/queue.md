@@ -45,25 +45,54 @@ exception to the freeze and requires an explicit new authorization.
 
 **Evidence:** before/after screenshots, re-run sha256s, owner sign-off.
 
-## H2A — live-site refactor / parity · **pending** · gate: agent (H1 accepted 2026-09-10 → gate satisfied)
+## H2A — live-site refactor / parity · **in-progress (first half done)** · gate: agent (H1 accepted 2026-09-10 → gate satisfied)
 
-**Gate satisfied, still not started.** Owner acceptance of H1 (`PHASE1_HANDOFF.md` §9) removes H2A's
-precondition. As written, H2A has two halves with **different authority**: writing the parity suite is
-agent-executable, but the refactor it enables changes frozen files (`AGENTS.md`: a frozen-file change "needs an
-owner decision and parity evidence") and therefore needs its own explicit authorization. Executors must not
-treat the satisfied gate as covering both halves.
+**Gate satisfied, refactor still NOT authorized.** Owner acceptance of H1 (`PHASE1_HANDOFF.md` §9) removes
+H2A's precondition. As written, H2A has two halves with **different authority**: the parity suite is now
+written and passing (first half complete), but the refactor it enables changes frozen files (`AGENTS.md`: a
+frozen-file change "needs an owner decision and parity evidence") and therefore needs its own explicit
+authorization. Executors must not treat the satisfied gate as covering both halves — the refactor half is
+**not covered** by H1's gate and remains unexecuted pending that authorization.
 
 Contract: **write behavioral parity tests first, change implementation second.** The parity set must cover
 deterministic day-of-year selection, today/yesterday match, cache-by-date **including the Badíʿ-day-cache
 wrinkle** (`TECH_DEBT_AND_RISKS.md` #7 — today's quote is written under the Badíʿ-day key), theme
 persistence, the Badíʿ fallback path, clipboard copy, and reduced-motion.
 
+**First half — parity suite written and green (2026-09-10).** `tests/parity.mjs` drives the *live* page
+(`index.html` + `js/script.js` + `js/badi-init.js`) in headless Chromium via Playwright 1.59.1 (global
+install, bundled Chromium; no new manifest — the file self-hosts a static server so `fetch()` works under a
+real origin). Run: `make parity` (alias `node tests/parity.mjs`). Result: **18 passed, 0 failed**. Raw output
+recorded verbatim in `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt`. Coverage:
+
+- A. deterministic `dayOfYear % len` selection over the ≤75-word subset (oracle reimplemented in the test);
+- B. today/yesterday relationship + the "Yesterday" reveal (aria-expanded + hidden toggle);
+- C. cache-by-date (Gregorian `dailyVerse:YYYY-MM-DD`): offline cache-boot on fetch failure + write-through +
+  `lastKey`;
+- D. **the #7 wrinkle, pinned**: `saveCachedQuote(pendingBadiKey, todayObj)` writes today's verse under the
+  Badíʿ-day key `dailyVerse:badi:<y>-<m>-<d>` (prefix is applied by `saveCachedQuote`), and `lastKey` then
+  points at the Badíʿ key — confirming the latent correctness smell is present in the current implementation;
+- E. theme persistence (saved `theme` applied on load, default light-mode, toggle flips + persists across
+  reload). Parity note: `index.html` hardcodes `<body class="light-mode">`, so after reload to a saved dark
+  theme the body carries *both* classes (dark-mode wins via specificity);
+- F. Badíʿ graceful degradation (unreachable lib → "unavailable" + "Enable location" guidance; happy path
+  renders "Day 4, Núr (light) / 182 BE");
+- G. clipboard copy (primary `navigator.clipboard` payload `<text>\n— <author>`, execCommand fallback,
+  all-fail → "Copy failed."). Parity note: `.quote-actions{display:none}` hides the copy row, so the
+  reachable copy affordance is a click on the quote text itself (wired to the same handler);
+- H. reduced-motion scroll (`behavior: auto` under `prefers-reduced-motion: reduce`, `smooth` otherwise).
+
+**No frozen file was modified.** `tests/parity.mjs`, the `parity` Makefile target, and the run log are the
+only additions. The **refactor half is NOT started and NOT authorized** — it remains pending its own owner
+authorization as this unit's second half.
+
 Only then consider safe refactors: extract the selection/collection logic into a shared module (currently
 duplicated across `js/script.js`, `js/wallpaper.js`, `ios/widget/QuoteStore.swift`), normalize run docs, and
 convert the `innerHTML` Badíʿ string to text nodes (#11). **No framework adoption.**
 
 **Exit gate:** parity suite green *before* and *after* the refactor.
-**Evidence:** parity suite output, before and after; frozen-file hashes.
+**Evidence:** `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt` (first-half run, 18/0), parity suite output
+before/after any future refactor; frozen-file hashes.
 
 ## H2B — collection / source abstraction · **pending** · gate: agent (after the data contract is written)
 
