@@ -16,23 +16,25 @@ Canonical forward plan for `bahai-homepage`. Supersedes `PROJECT_ROADMAP.md` and
 
 ---
 
-## H1 — agent-first repo retrofit · **in-progress** · gate: agent
+## H1 — agent-first repo retrofit · **done** · gate: agent · accepted 2026-09-10
 
 Units H1.1–H1.9 (`bootstrap/packets/2026-09-10-phase1-agent-first-retrofit/workunits/H1_AGENT_FIRST_RETROFIT.md`)
 plus H1C (`…/H1C_ORPHAN_UNPUBLISH.md`).
 
 **Exit gate:** the ten gates in `SCOPE_AND_GATES.md` closed with pasted command output, then owner review of
-`PHASE1_HANDOFF.md`.
+`PHASE1_HANDOFF.md`. **Closed:** the owner accepted H1 on 2026-09-10 (in-session, recorded in
+`PHASE1_HANDOFF.md` §9). Gate 3's deviation D-A was closed before acceptance by delivering the root `AGENTS.md`
+(§8), so all ten gates stand as recorded.
 
-**Evidence:** `PHASE1_HANDOFF.md` (per-gate command output).
+**Evidence:** `PHASE1_HANDOFF.md` (per-gate command output, plus §8 closure note and §9 acceptance record).
+`H1.2` is complete; `H1.10` is not part of H1 and remains a separate owner-gated unit below.
 
 **H1.2 closure — 2026-09-10, post-handoff (deviation D-A closed).** The root `AGENTS.md` now exists, with
 content byte-identical to the retired `README.md` Appendix A, and the appendix is gone. Alongside it: the three
 `README.md` pointer references and `docs/RUNBOOK.md`'s header now name `AGENTS.md`; `CONTRIBUTING.md`'s broken
 commands were fixed (`python` → `python3`; unpinned `pip install requests beautifulsoup4 lxml` →
 `pip install -r requirements-dev.txt`) because bare `python` is the pyenv failure mode `RUNBOOK.md` §7 already
-records; and `PHASE1_HANDOFF.md`'s deviation section carries an append-only closure note. H1 stays
-`in-progress` — the remaining exit gate is the owner's recorded acceptance of `PHASE1_HANDOFF.md`.
+records; and `PHASE1_HANDOFF.md`'s deviation section carries an append-only closure note.
 
 ## H1.10 — on-page link to the ambient surfaces · **pending (optional, owner-visible)** · gate: human
 
@@ -43,7 +45,13 @@ exception to the freeze and requires an explicit new authorization.
 
 **Evidence:** before/after screenshots, re-run sha256s, owner sign-off.
 
-## H2A — live-site refactor / parity · **pending** · gate: agent (after H1 accepted)
+## H2A — live-site refactor / parity · **pending** · gate: agent (H1 accepted 2026-09-10 → gate satisfied)
+
+**Gate satisfied, still not started.** Owner acceptance of H1 (`PHASE1_HANDOFF.md` §9) removes H2A's
+precondition. As written, H2A has two halves with **different authority**: writing the parity suite is
+agent-executable, but the refactor it enables changes frozen files (`AGENTS.md`: a frozen-file change "needs an
+owner decision and parity evidence") and therefore needs its own explicit authorization. Executors must not
+treat the satisfied gate as covering both halves.
 
 Contract: **write behavioral parity tests first, change implementation second.** The parity set must cover
 deterministic day-of-year selection, today/yesterday match, cache-by-date **including the Badíʿ-day-cache
