@@ -16,34 +16,64 @@ Canonical forward plan for `bahai-homepage`. Supersedes `PROJECT_ROADMAP.md` and
 
 ---
 
+## Priority order
+
+Open units in execution order; closed units are listed in their own sections. Every unit below is
+**owner-gated** except `H2B`, whose gate is `agent` once the data contract is written.
+
+| # | Unit | What it is | Gate |
+|---|---|---|---|
+| 1 | `C4` | Dependabot has no stated policy for major-version bumps | human — CI configuration |
+| 2 | `C5` | Three super-linter settings announce checks that do not run | human — CI configuration |
+| 3 | `C7` | Saved dark theme leaves the body carrying *both* theme classes | human — frozen `index.html` / `js/script.js` |
+| 4 | `C6` | The designed copy affordance is invisible (`.quote-actions{display:none}`) | human — frozen `css/*` / `index.html` |
+| 5 | `C9` | The Badíʿ date never resolves on the live site (the vendor library's mixed-content call) | human — frozen files and/or product doctrine |
+| 6 | `H2B` | Collection / source abstraction | agent, after the data contract is written |
+
+`R1` is BLOCKED (human) behind `H2B` + a rights/provenance review; `H3` is BLOCKED behind `R1`. Ordering
+rationale: the two CI-configuration units are first because neither changes a product file and `C4` guards a live
+update path; the two frozen-file units follow as a pair, each needing `make parity` before and after; `C9` is the
+last of the defects because every one of its options is a product change; `H2B` is last because it must wait for a
+contract that does not exist yet.
+
+Closed: `H1`, `H2A`, `C1`, `C2`, `C3`, `C8`.
+
+---
+
 ## H1 — agent-first repo retrofit · **done** · gate: agent · accepted 2026-09-10
 
 Units H1.1–H1.9 (`bootstrap/packets/2026-09-10-phase1-agent-first-retrofit/workunits/H1_AGENT_FIRST_RETROFIT.md`)
 plus H1C (`…/H1C_ORPHAN_UNPUBLISH.md`).
 
 **Exit gate:** the ten gates in `SCOPE_AND_GATES.md` closed with pasted command output, then owner review of
-`PHASE1_HANDOFF.md`. **Closed:** the owner accepted H1 on 2026-09-10 (in-session, recorded in
-`PHASE1_HANDOFF.md` §9). Gate 3's deviation D-A was closed before acceptance by delivering the root `AGENTS.md`
-(§8), so all ten gates stand as recorded.
+`docs/history/PHASE1_HANDOFF.md`. **Closed:** the owner accepted H1 on 2026-09-10 (in-session, recorded in
+`docs/history/PHASE1_HANDOFF.md` §9). Gate 3's deviation D-A was closed before acceptance by delivering the root
+`AGENTS.md` (§8), so all ten gates stand as recorded.
 
-**Evidence:** `PHASE1_HANDOFF.md` (per-gate command output, plus §8 closure note and §9 acceptance record).
-`H1.2` is complete; `H1.10` is not part of H1 and remains a separate owner-gated unit below.
+**Evidence:** `docs/history/PHASE1_HANDOFF.md` (per-gate command output, plus §8 closure note and §9 acceptance
+record) — moved to `docs/history/` by `C2` (D14). `H1.2` is complete; `H1.10` was a separate owner-gated unit
+below, closed 2026-09-10 as option (b) (D14).
 
 **H1.2 closure — 2026-09-10, post-handoff (deviation D-A closed).** The root `AGENTS.md` now exists, with
 content byte-identical to the retired `README.md` Appendix A, and the appendix is gone. Alongside it: the three
 `README.md` pointer references and `docs/RUNBOOK.md`'s header now name `AGENTS.md`; `CONTRIBUTING.md`'s broken
 commands were fixed (`python` → `python3`; unpinned `pip install requests beautifulsoup4 lxml` →
 `pip install -r requirements-dev.txt`) because bare `python` is the pyenv failure mode `RUNBOOK.md` §7 already
-records; and `PHASE1_HANDOFF.md`'s deviation section carries an append-only closure note.
+records; and `docs/history/PHASE1_HANDOFF.md`'s deviation section carries an append-only closure note.
 
-## H1.10 — on-page link to the ambient surfaces · **pending (optional, owner-visible)** · gate: human
+## H1.10 — on-page link to the ambient surfaces · **done (option (b): no link)** · gate: human · decided 2026-09-10
 
 Owner decision Q1 was "document + link" for the wallpaper and widget; H1 links them from the docs only,
-because an on-page link would edit `index.html`. If the owner wants an unobtrusive footer link, this unit adds it
-with before/after screenshot evidence and knowingly re-runs the parity hashes. This is the one sanctioned
-exception to the freeze and requires an explicit new authorization.
+because an on-page link would edit `index.html`. The owner closed this unit on 2026-09-10 by taking **option (b):
+no on-page link**. The wallpaper and the iOS widget stay reachable by URL and documented in `README.md` /
+`AGENTS.md`, and are deliberately **not** linked from `index.html`.
 
-**Evidence:** before/after screenshots, re-run sha256s, owner sign-off.
+*Why:* the product doctrine is "one passage, not a feed" (D1) — an on-page link to a second surface pulls
+directly against it, and D3 already covers discoverability by documenting both surfaces. Option (b) needs no
+product-file change, so the one sanctioned exception to the freeze is not taken.
+
+**Evidence:** owner decision in-session 2026-09-10, recorded as `docs/DECISIONS.md` **D14**. No frozen file was
+modified, so the unit's own before/after screenshots and re-run sha256s do not apply.
 
 ## H2A — live-site refactor / parity · **done** · gate: agent (H1 accepted 2026-09-10 → gate satisfied; refactor half owner-authorized 2026-09-10)
 
@@ -156,23 +186,24 @@ Add the verified Ruhi memorization export as a real collection; exercise the sel
 
 ---
 
-## Candidate units — documented defects, not yet authorized
+## Candidate units — documented defects
 
-Found during the post-handoff review of `PHASE1_HANDOFF.md`, the appendix retirement and the CI repair. Each
-names a contract and a gate. `C1` is done; `C2` and `C3` are not scheduled and not authorized. `C4` and `C5`
-were added on 2026-09-10 from the review of the `actions/checkout` bump (D10, third addendum); none of
-`C2`–`C5` is scheduled or authorized. `C3` closed the same day on the retest its own contract asked for, using
-no configuration change; `C2`, `C4` and `C5` remain open. `C6` and `C7` were added on 2026-09-10 from the
-parity-suite review that closed H2A's first half; neither is scheduled or authorized. `C8` was added on
-2026-09-10 from the first CI run whose changed set contained a product file (PR #9, H2A's refactor) and was
-closed the same day when the owner authorized its option (a) — the four categories that had never run are now
-off, recorded as `docs/DECISIONS.md` D12. `C9` was added on 2026-09-10 during the post-deploy live verification
-of H2A and **corrected the same day**: it was first filed as "the Badíʿ date never resolves on the live site",
-which the owner disputed and which re-testing disproved — the date resolves for any user who has granted
-location and for every returning visitor, because the vendor caches the granted location in `localStorage`. The
-real and much narrower defect is that a first-time visitor who *declines* the location prompt gets no date. The
-withdrawn claim is kept in the entry so the error stays auditable. C9 was then **executed the same day** once
-the owner chose its option (a), and the downgrade it adds is recorded as `docs/DECISIONS.md` D13.
+Found during the post-handoff review of `docs/history/PHASE1_HANDOFF.md`, the appendix retirement and the CI
+repair. Each names a contract and a gate. Units arrive here as workstreams find them; a unit named by another
+workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
+are written into this section.
+
+**Open now:** `C4`, `C5`, `C6`, `C7` — all owner-gated.
+**Closed:** `C1` (D10), `C2` (D14), `C3`, `C8` (D12), `C9` (D13).
+
+Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
+`C4` and `C5` from the review of the `actions/checkout` bump (D10, third addendum); `C6` and `C7` from the
+parity-suite review that closed H2A's first half; `C8` from the first CI run whose changed set contained a
+product file (PR #9, H2A's refactor), closed the same day on the owner's option (a) and recorded as D12;
+`C9` from the post-deploy live verification of H2A and **corrected the same day** — first filed as "the Badíʿ
+date never resolves on the live site", which the owner disputed and re-testing disproved, then executed on the
+owner's option (a) and recorded as D13.
+
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -192,7 +223,7 @@ zizmor's unpinned-action finding is fixed with SHA pins plus a Dependabot config
 (`docs: add PHASE1_HANDOFF.md with gate evidence`, run `34524938962`, 1m57s) and for both Phase 0 doc commits.
 The only post-H1 success is the code-only unpublish commit. Root cause from `gh run view --log-failed`: the
 `textlint` terminology rule rejects the words this project documents itself with — `repo` → `repository`,
-`build system` → `build tool` — in `README.md`, `PHASE1_HANDOFF.md`, `docs/RUNBOOK.md` and the Phase 0 audit
+`build system` → `build tool` — in `README.md`, `docs/history/PHASE1_HANDOFF.md`, `docs/RUNBOOK.md` and the Phase 0 audit
 docs. Secondary: `.github/workflows/super-linter.yml` pins `github/super-linter@v4` (superseded/archived
 upstream) and the run logs `Failed to call GitHub Status API` (curl 403) noise before exiting.
 
@@ -216,7 +247,27 @@ prohibitions in `AGENTS.md` / `DECISIONS.md` are explicitly not acceptable colla
 **Gate:** human — CI configuration is outside the agent autonomy boundary (`AGENTS.md`: "Do not add CI/deploy
 changes … as a side effect").
 
-### C2 — Root docs are unmapped: live docs, spent residue, and history are indistinguishable · gate: agent
+### C2 — Root docs are unmapped: live docs, spent residue, and history are indistinguishable · **done** · gate: agent
+
+**Outcome (executed 2026-09-10).** All eight root `.md` files now carry exactly one status in `README.md`
+("Where the truth lives"; decision `D14`):
+
+- **live** (stay at the root): `README.md`, `AGENTS.md`, `CONTRIBUTING.md`, `SECURITY.md`.
+- **bootstrap** (stays at the root, spent): `START_HOMEPAGE_RETROFIT.md`.
+- **historical** (moved with `git mv` to `docs/history/` behind a SUPERSEDED banner, the D5 mechanism):
+  `AUDIT_NOTES.md`, `HANDOFF.md`, `PHASE1_HANDOFF.md`.
+
+`CONTRIBUTING.md` and `SECURITY.md` stay at the root deliberately: GitHub recognises those names **only** at the
+repository root, so moving them would silently disable its contributing and security-policy features. Nothing was
+deleted, and no frozen file was touched. Filenames were kept rather than date-prefixed (as D5 did) so that
+references in the append-only ledger and in immutable records stay resolvable by their historical names.
+
+**Evidence:** the classified map in `README.md`; `git ls-files '*.md'` before/after and `git status` in the PR
+body, showing the three moves as renames.
+
+---
+
+**The original diagnosis (kept as the executed contract):**
 
 **Evidence:** `README.md`'s "Where the truth lives" list and its three status bands do not name
 `AUDIT_NOTES.md`, `CONTRIBUTING.md`, `HANDOFF.md`, `PHASE1_HANDOFF.md`, `START_HOMEPAGE_RETROFIT.md` or

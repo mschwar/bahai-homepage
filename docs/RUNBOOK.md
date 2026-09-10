@@ -169,7 +169,7 @@ check on the PR.
 
 - **Bad doc or tooling commit:** `git revert <sha>` and push. Docs-only changes cannot break the site.
 - **Bad change to a frozen file:** `git checkout <last-good-sha> -- index.html css js data/quotes_hidden_words.json`
-  then push. The frozen-file sha256s live in `PHASE1_HANDOFF.md` (H1 baseline) and `docs/DECISIONS.md`
+  then push. The frozen-file sha256s live in `docs/history/PHASE1_HANDOFF.md` (H1 baseline) and `docs/DECISIONS.md`
   (**D8** for the H1 baseline, **D11** for the H2A refactor baseline and the authority that superseded it).
 - **Accidentally published a payload:** delete it from `main` (a subdirectory move unpublishes nothing),
   confirm the live URL 404s with a cache-buster, and keep the bytes on an `archive/*` branch. This is exactly

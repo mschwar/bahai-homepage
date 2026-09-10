@@ -1,3 +1,8 @@
+> **SUPERSEDED — historical only.** This is the 2026-01-31 reliability/a11y audit record, kept because it is an
+> accurate archive of that audit, not because it is current. The audit of record is `docs/audit/2026-09-10/`;
+> current doctrine is `README.md` + `AGENTS.md`, and the forward plan is `docs/queue.md`. Do not treat anything
+> below as a task list.
+
 # Audit Notes (2026-01-31)
 
 ## Baseline findings
