@@ -84,3 +84,28 @@ jobs:
           VALIDATE_JAVASCRIPT_ES: false
           # Prettier-over-JS: targets are the frozen js/*.js.
           VALIDATE_JAVASCRIPT_PRETTIER: false
+          # ---- Checks that announced themselves but did not run (D15, queue C5) ----
+          # commitlint announced itself as enabled while having no config, and
+          # this repository's commit discipline lives in its append-only
+          # decision ledger (docs/DECISIONS.md), not in a linter -- so it is
+          # turned off explicitly rather than left to warn-and-disable itself
+          # on every run.
+          VALIDATE_GIT_COMMITLINT: false
+          # The summary pair was a misconfiguration: two flags enabled a summary
+          # that a third (SAVE_SUPER_LINTER_SUMMARY, default false) prevented,
+          # and this job deliberately does not hold `pull-requests: write`, so a
+          # PR summary comment could never post anyway. The owner chose to turn
+          # the summary OFF (D15): both enable flags are now explicitly false,
+          # making the set consistent so the warning cannot occur.
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: false
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          # Python (D15): Ruff is the Python linter of record and runs for real
+          # on scripts/*.py. Black is off because it is a formatter this
+          # repository has not adopted -- the same policy as the D10 formatter
+          # block -- and because super-linter's own validation warns that Black
+          # conflicts with Ruff's formatter. Ruff's formatter is likewise an
+          # unadopted formatter (it would rewrite working scripts without a
+          # config); what "genuinely run" means here is Ruff's linter, below.
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_RUFF_FORMAT: false
+          VALIDATE_PYTHON_RUFF: true

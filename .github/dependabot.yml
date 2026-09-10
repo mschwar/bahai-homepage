@@ -8,6 +8,12 @@
 # `cooldown` is set because zizmor's dependabot-cooldown audit requires it: a
 # freshly published action release should not be adopted the moment it appears.
 # See docs/DECISIONS.md (D10).
+#
+# Update policy (D15, queue C4): patch and minor updates are grouped into a
+# single PR and auto-merged by .github/workflows/dependabot-automerge.yml, while
+# semver-major updates are ignored below so a major bump is always a deliberate,
+# owner-gated change performed by hand. See docs/DECISIONS.md D15 and
+# docs/RUNBOOK.md §5.
 
 version: 2
 updates:
@@ -18,3 +24,19 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 3
+    ignore:
+      # Never open a PR for a semver-major bump: a major action upgrade is a
+      # decision, not routine maintenance, and the diff cannot be trusted to
+      # look like one (D15/C4). Majors are performed deliberately by the owner.
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    groups:
+      # With majors ignored, everything Dependabot still offers is patch or
+      # minor, so a single grouped PR keeps the SHA pins fresh without the noise
+      # of one PR per action. These grouped PRs are what the auto-merge
+      # workflow merges.
+      actions-patch-minor:
+        applies-to: version-updates
+        update-types:
+          - "patch"
+          - "minor"

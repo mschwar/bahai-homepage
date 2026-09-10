@@ -101,7 +101,7 @@ def parse_hidden_words(html_content):
     if not content_wrapper:
         print("DEBUG: Error finding content_wrapper (sibling of nav_and_title_wrapper).")
         return all_quotes
-    print(f"DEBUG: content_wrapper found. Let's list its direct 'div' children that will be sections:")
+    print("DEBUG: content_wrapper found. Let's list its direct 'div' children that will be sections:")
     
     section_div_candidates = content_wrapper.find_all('div', recursive=False)
     
@@ -127,14 +127,14 @@ def parse_hidden_words(html_content):
         
         ic_div = actual_part_content_holder.find('div', class_='ic') 
         if not ic_div:
-            print(f"DEBUG: No div.ic found in this actual_part_content_holder. Skipping.")
+            print("DEBUG: No div.ic found in this actual_part_content_holder. Skipping.")
             continue 
         
         h2_header = ic_div.find('h2', class_='g')
         h3_lang_header = ic_div.find('h3', class_='j')
 
         if not h2_header or not h3_lang_header:
-            print(f"DEBUG: Missing H2 or H3 within ic_div for this part. Skipping.")
+            print("DEBUG: Missing H2 or H3 within ic_div for this part. Skipping.")
             continue
 
         part_text_h2 = h2_header.get_text(strip=True)

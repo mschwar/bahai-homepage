@@ -342,3 +342,66 @@ Two things were checked in the log rather than trusted from the badge, because t
 So the green is a real green on a changed set that contains every file the red run failed on — not the
 empty-set green that `C3` documented. This entry closes queue `C8`, and with it the last obstacle to H2A's
 landing.
+
+## D15 — CI policy: Dependabot majors gated, three phantom checks resolved · accepted 2026-09-10
+
+Closes queue units `C4` and `C5`. Both carry the **gate: human — CI configuration**, which `AGENTS.md`
+reserves for owner sign-off; the owner accepted every option below **in-session on 2026-09-10**. That
+authorization is what permits this change and is recorded here. Nothing else in this PR alters a human-gated
+boundary.
+
+### C4 — Dependabot update policy: option (c) AND option (a)
+
+The owner chose **both**: allow auto-merge for patch/minor updates only, **and** ignore semver-major updates
+so majors are performed deliberately by hand. `.github/dependabot.yml` now:
+
+- **`ignore` semver-major (option a)** — no Dependabot PR is ever opened for a major bump. A major action
+  upgrade is a decision, not routine maintenance, and PR #5 proved its diff is indistinguishable from a patch
+  (one line, every check green). A human reading the diff is no longer the only gate.
+- **`groups` patch/minor (option c), plus a new auto-merge workflow.** Patch and minor updates are grouped
+  into a single PR, and `.github/workflows/dependabot-automerge.yml` marks those PRs for auto-merge with
+  `gh pr merge --auto --squash`. Because majors are ignored, every Dependabot PR this workflow can see is
+  patch or minor — auto-merging them *is* "patch and minor only". The workflow is zizmor-safe: no third-party
+  action, the `gh` CLI that ships with the runner, and the PR URL passed via `env` rather than interpolated
+  into the shell.
+- The existing `cooldown: default-days: 7` (zizmor's dependabot-cooldown requirement) and the SHA-pin update
+  path that stops the pins rotting (D10 §5) are both untouched.
+
+**OPEN gate, stated plainly.** Auto-merge takes effect only once the repository setting **Settings → General →
+Allow auto-merge** is enabled, and it merges when the repository's required checks pass. Those are repo
+settings, not file configuration, and cannot be set from a pull request; they are not part of this PR. If the
+super-linter job is not a *required* check under branch protection, an auto-merge can complete before lint
+runs — the workflow header calls that out.
+
+### C5 — three super-linter settings that announced checks that do not run
+
+Owner decision: **option (b) for commitlint and for the summary pair, option (a) for Black/Ruff.** Each
+recorded in `.github/workflows/super-linter.yml` with its reason beside it, in the style of the D10/D12 blocks.
+
+- **commitlint — off (option b), explicitly.** `VALIDATE_GIT_COMMITLINT: false`. This repository's commit
+  discipline lives in its append-only decision ledger, not in a linter. commitlint had no config and was only
+  ever warn-and-disabling itself on every run.
+- **Summary pair — off (option b), consistently.** `ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: false` and
+  `ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false`. Verified against super-linter's README before writing:
+  setting either flag `true` *implies* `SAVE_SUPER_LINTER_SUMMARY: true`, which is `false` (the default) here
+  — so the prior state was a three-flag contradiction — and this job lacks `pull-requests: write`, so the PR
+  summary comment could never post anyway. The owner chose to turn the summary **off**, not on; both enable
+  flags are now explicitly `false`, making the set consistent so the warning cannot occur.
+- **Black/Ruff — option (a): Ruff lint genuinely runs.** `VALIDATE_PYTHON_RUFF: true`;
+  `VALIDATE_PYTHON_BLACK: false`; `VALIDATE_PYTHON_RUFF_FORMAT: false`. Read from super-linter's
+  `lib/functions/validation.sh`: the "Black and Ruff … conflict" warning fires when `VALIDATE_PYTHON_BLACK`
+  and `VALIDATE_PYTHON_RUFF_FORMAT` are both `true` — the conflict is Black vs Ruff's *formatter*, not the
+  linter. Ruff is the Python linter of record and runs for real on `scripts/*.py`. Turning it on surfaced
+  three genuine `F541` (f-string-without-placeholder) findings in `scripts/scrape_hidden_words.py`, which this
+  change fixes (three one-token edits, verified `ruff check` → clean). Black and Ruff's formatter are unadopted
+  formatters turned off under the same D10 policy as biome and prettier-over-markdown. No check was disabled
+  purely to silence a warning: the chosen linter genuinely runs and passes.
+
+The resulting policy, in plain language, is now stated in `docs/RUNBOOK.md §5`.
+
+*Source:* `docs/queue.md` C4 and C5; owner decision in-session 2026-09-10 (C4 option (c) then (a); C5 option (b)
+for commitlint and the summary pair, option (a) for Black/Ruff).
+
+**Addendum (same day, appended — not a rewrite).** The closing run exists: PR #?? run `?????` — `run-lint`
+**pass**, with the three `C5`-class warnings absent from the log, and the new `Dependabot auto-merge` job
+present. Quoted before/after, raw `gh pr checks`, the prettier check and `make validate` are in the PR body.

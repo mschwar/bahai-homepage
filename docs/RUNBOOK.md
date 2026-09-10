@@ -163,7 +163,20 @@ is red, either fix the finding or change this configuration on purpose and recor
 **Expected noise, not a failure:** the log ends with `Failed to call GitHub API (…/issues/<n>/comments) … 403`
 and `Error while posting pull request summary`. That is the summary *comment* failing because the job
 deliberately does not hold `pull-requests: write`; every per-linter result still appears as its own status
-check on the PR.
+check on the PR. (Since D15 that failure no longer happens: the summary flags are explicitly off.)
+
+**CI policy as of D15 (2026-09-10) — what runs and why.** On: markdownlint, YAML, secrets, spelling,
+workflow security (actionlint + zizmor), and **Ruff Python lint** (`scripts/*.py`). Off: the natural-language
+style glossary, all unadopted formatters (prettier-over-markdown/html/js, biome, Black, Ruff's formatter),
+and the four served-site checks (`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`).
+**commitlint is off**: this repository's commit discipline is its append-only decision ledger, not a linter.
+The GitHub-actions **step summary and PR summary comment are off**: they were a contradictory three-flag
+misconfiguration and this job lacks `pull-requests: write` anyway. **Dependabot**: patch and minor action
+updates are grouped into one PR and auto-merged by `.github/workflows/dependabot-automerge.yml`; **a
+semver-major bump is owner-gated** — Dependabot ignores majors entirely, so a major upgrade is always a
+deliberate, hand-made decision (D15/C4). The auto-merge job itself only takes effect once the repository's
+"Allow auto-merge" setting is enabled and, ideally, once the lint job is a required check — both repo
+settings, outside this file (D15).
 
 ## 6 · Rollback / recovery
 

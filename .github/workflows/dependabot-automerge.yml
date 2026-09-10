@@ -1,0 +1,33 @@
+# (D15, queue C4) Auto-merges Dependabot's own pull requests once checks pass.
+#
+# This is safe because .github/dependabot.yml ignores semver-major updates
+# (option (a) of unit C4), so the only Dependabot PRs this job can ever see are
+# patch and minor — the owner-gated major bumps never arrive here; they are
+# performed deliberately by hand. The policy is recorded in docs/DECISIONS.md
+# D15 and docs/RUNBOOK.md §5.
+#
+# OPEN (repo setting, cannot be set from a pull request): this takes effect only
+# once "Settings > General > Allow auto-merge" is enabled on the repository, and
+# it merges as soon as the repository's required checks pass. If the super-linter
+# job is not a *required* check under branch protection, an auto-merge can
+# complete before lint runs — make lint required, or accept that these PRs are
+# not gated on it, before relying on this job. See D15.
+name: Dependabot auto-merge
+
+on:
+  pull_request:
+
+permissions:
+  contents: write # to merge Dependabot's PR
+  pull-requests: write # to mark the PR for auto-merge
+
+jobs:
+  dependabot:
+    runs-on: ubuntu-latest
+    if: github.actor == 'dependabot[bot]'
+    steps:
+      - name: Enable auto-merge for the Dependabot PR
+        run: gh pr merge --auto --squash "$PR_URL"
+        env:
+          PR_URL: ${{ github.event.pull_request.html_url }}
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
