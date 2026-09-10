@@ -312,3 +312,22 @@ the H1/H1C commits are pushed, but not green. Evidence, cause and a proposed con
 was authorized by this packet, so neither was touched.
 
 **Still deferred, unchanged from §6:** H1.2 is now complete; H1.10, H2A, H2B, R1, H3 and the never-list stand.
+
+## 9 · Owner acceptance (appended 2026-09-10) — H1 closed
+
+The owner reviewed this handoff and **accepted H1** on 2026-09-10, in session. That closes §5's H1 exit gate and
+this packet's stop condition, so H1 is `done` in `docs/queue.md` (its ten gates stand as recorded in §3, with
+§4 D-A closed by §8 before acceptance and D-B/D-C/D-D recorded as deviations, not failures).
+
+Two things acceptance does **not** do, stated so no downstream executor over-reads it:
+
+- **It does not authorize the frozen-file half of `H2A`.** Acceptance satisfies H2A's documented precondition
+  ("after H1 accepted"), which makes the *parity-suite* half executable. The refactor that suite would justify
+  changes frozen files (`index.html`, `css/*`, `js/*`), and `AGENTS.md` requires an owner decision plus parity
+  evidence for that. A satisfied precondition is not a frozen-file authorization.
+- **It does not authorize `C1`.** CI stays red on `main` (see §8) until the owner rules on one of C1's three
+  contracts in `docs/queue.md`.
+
+**Queue state after acceptance:** H1 `done` · H1.10 `pending` (human, edits a frozen file) · H2A `pending`
+(gate satisfied; parity-suite half agent-executable) · H2B `pending` · R1 `BLOCKED` (human) · H3 `BLOCKED`
+(behind R1) · C1/C2 new candidate units, neither authorized.
