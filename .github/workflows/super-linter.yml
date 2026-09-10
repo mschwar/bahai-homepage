@@ -6,8 +6,9 @@
 # https://github.com/super-linter/super-linter
 #
 # Scope note: this repository checks prose (markdownlint), YAML, secrets and workflow security. It does NOT
-# run super-linter's formatters over the served site, because the files they target are either frozen product
-# files or append-only evidence records. Full rationale: docs/DECISIONS.md (D10).
+# lint, format or statically analyse the served site: index.html, wallpaper.html and js/* are frozen product
+# files, and the checks that target them run without a config this repository has adopted. Full rationale:
+# docs/DECISIONS.md (D10, D12).
 name: Lint Code Base
 
 on:
@@ -59,3 +60,27 @@ jobs:
           # corpus copy in ios/widget/ that is tracked debt for H2B. Neither is a
           # code smell to fix here.
           VALIDATE_JSCPD: false
+          # ---- Product-file checks this repository turns off on purpose (D12) ----
+          # These four had never run before 2026-09-10: super-linter lints only the
+          # changed set, and no earlier change had ever included index.html or
+          # js/*. Their long "pass" was vacuous, and the first legitimate
+          # product-file change (queue H2A) surfaced only findings that predate it.
+          # Same class as the D10 block above: a check whose only targets here are
+          # frozen product files, running without a config this repository adopted.
+          # htmlhint runs with super-linter's default config, which we never
+          # adopted. Its targets are index.html and wallpaper.html only, and its
+          # findings were two camelCase ids (badiDate, gregorianDatePanel) --
+          # htmlhint's preferred naming is a style preference we do not hold.
+          VALIDATE_HTML: false
+          # Prettier-over-HTML: targets are the two frozen product pages.
+          VALIDATE_HTML_PRETTIER: false
+          # eslint also runs with its default config, and this repository has never
+          # had an eslintrc. The served scripts are classic cross-file scripts, so
+          # the defaults report false positives: a function defined in
+          # js/badi-init.js and called from js/script.js reads as "unused", and the
+          # external BadiDateToday global (set by the Badíʿ date library) reads as
+          # "undefined". Without a config, a green result here means less than the
+          # noise it costs.
+          VALIDATE_JAVASCRIPT_ES: false
+          # Prettier-over-JS: targets are the frozen js/*.js.
+          VALIDATE_JAVASCRIPT_PRETTIER: false

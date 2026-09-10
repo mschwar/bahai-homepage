@@ -45,14 +45,14 @@ exception to the freeze and requires an explicit new authorization.
 
 **Evidence:** before/after screenshots, re-run sha256s, owner sign-off.
 
-## H2A — live-site refactor / parity · **in-progress (first half done)** · gate: agent (H1 accepted 2026-09-10 → gate satisfied)
+## H2A — live-site refactor / parity · **done** · gate: agent (H1 accepted 2026-09-10 → gate satisfied; refactor half owner-authorized 2026-09-10)
 
-**Gate satisfied, refactor still NOT authorized.** Owner acceptance of H1 (`PHASE1_HANDOFF.md` §9) removes
-H2A's precondition. As written, H2A has two halves with **different authority**: the parity suite is now
-written and passing (first half complete), but the refactor it enables changes frozen files (`AGENTS.md`: a
-frozen-file change "needs an owner decision and parity evidence") and therefore needs its own explicit
-authorization. Executors must not treat the satisfied gate as covering both halves — the refactor half is
-**not covered** by H1's gate and remains unexecuted pending that authorization.
+**Authorization (2026-09-10).** H2A has two halves with different authority. The parity suite (first half)
+was covered by H1's gate; the refactor half changes frozen files and, per `AGENTS.md`, needed its own
+"owner decision and parity evidence". The owner granted that authorization in-session on 2026-09-10, and the
+decision is recorded as **D11** — which supersedes D8's byte-identical freeze for exactly the files H2A
+touched. An executor reading this later must not infer authority from the satisfied gate alone: D11 is the
+authority, and it is scoped to this refactor.
 
 Contract: **write behavioral parity tests first, change implementation second.** The parity set must cover
 deterministic day-of-year selection, today/yesterday match, cache-by-date **including the Badíʿ-day-cache
@@ -82,17 +82,40 @@ recorded verbatim in `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt`. Coverage:
   reachable copy affordance is a click on the quote text itself (wired to the same handler);
 - H. reduced-motion scroll (`behavior: auto` under `prefers-reduced-motion: reduce`, `smooth` otherwise).
 
-**No frozen file was modified.** `tests/parity.mjs`, the `parity` Makefile target, and the run log are the
-only additions. The **refactor half is NOT started and NOT authorized** — it remains pending its own owner
-authorization as this unit's second half.
+**First half carried no frozen-file change.** `tests/parity.mjs`, the `parity` Makefile target, and the run
+log were the only additions.
 
-Only then consider safe refactors: extract the selection/collection logic into a shared module (currently
-duplicated across `js/script.js`, `js/wallpaper.js`, `ios/widget/QuoteStore.swift`), normalize run docs, and
-convert the `innerHTML` Badíʿ string to text nodes (#11). **No framework adoption.**
+**Second half — the refactor · executed 2026-09-10** (branch `refactor/h2a-shared-quote-core`)
 
-**Exit gate:** parity suite green *before* and *after* the refactor.
-**Evidence:** `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt` (first-half run, 18/0), parity suite output
-before/after any future refactor; frozen-file hashes.
+Executed as the packet ordered, behavior-preserving, no framework/bundler/build step:
+
+- **Selection/collection logic extracted** into `js/quote-core.js` (new) — the single JavaScript source of
+  truth for `MAX_QUOTE_WORDS`, `QUOTES_PATH`, the word-count filter, day-of-year selection, the date and
+  cache-key helpers, the corpus fetch, and a `createQuoteCache(prefix[, lastKeyKey])` factory.
+  `js/script.js` and `js/wallpaper.js` consume it; each keeps its own cache namespace (`dailyVerse:` /
+  `dailyWallpaper:`) and only `script.js` records a `lastKey`, so both caches behave exactly as before.
+- **Debt `#11` closed** — `js/badi-init.js` builds the two-line Badíʿ label from text nodes + `<br>` instead
+  of `el.innerHTML`. Same rendering, no HTML parsing of the value.
+- **Run docs normalized** — `docs/RUNBOOK.md` §§1, 3, 6, 8, including a run-record format the new log follows.
+
+**Not done, deliberately:** `ios/widget/QuoteStore.swift` is unchanged. The packet forbids unifying the
+Swift reimplementation in H2A and defers it to `H2B`; a JS module cannot be shared with Swift in any case.
+Debt `#1`'s "three places" is therefore now **two** (`js/quote-core.js`, `ios/widget/QuoteStore.swift`),
+and `docs/RUNBOOK.md` §8 says so. Closing the remaining one is `H2B`'s job.
+
+**No framework adoption**, no new runtime dependency, no new manifest. The wallpaper surface is on the
+refactor's blast radius but off the parity path, so it was verified separately (headless: shared core
+loaded, canvas painted, no console/page errors).
+
+**Exit gate — closed, and landed.** Parity suite green *before* and *after*: `18 passed, 0 failed` both
+times, the two raw outputs byte-identical. The refactor is proven on `refactor/h2a-shared-quote-core` and
+merged to `main` via PR #9. The one thing that briefly held the landing — PR #9's lint going red on four
+never-before-exercised CI categories — was resolved the same day as `C8`/`D12`, without touching a product
+file.
+**Evidence:** `docs/audit/2026-09-10/H2A_PARITY_SUITE_RUN.txt` (first-half run, 18/0) and
+`docs/audit/2026-09-10/H2A_REFACTOR_PARITY_RUN.txt` (both halves of this unit — the before/after runs,
+the frozen-file sha256 sets, and the separate wallpaper-surface check). The frozen-file hashes are recorded
+in that second file and in `docs/DECISIONS.md` **D11**.
 
 ## H2B — collection / source abstraction · **pending** · gate: agent (after the data contract is written)
 
@@ -140,7 +163,10 @@ names a contract and a gate. `C1` is done; `C2` and `C3` are not scheduled and n
 were added on 2026-09-10 from the review of the `actions/checkout` bump (D10, third addendum); none of
 `C2`–`C5` is scheduled or authorized. `C3` closed the same day on the retest its own contract asked for, using
 no configuration change; `C2`, `C4` and `C5` remain open. `C6` and `C7` were added on 2026-09-10 from the
-parity-suite review that closed H2A's first half; neither is scheduled or authorized.
+parity-suite review that closed H2A's first half; neither is scheduled or authorized. `C8` was added on
+2026-09-10 from the first CI run whose changed set contained a product file (PR #9, H2A's refactor) and was
+closed the same day when the owner authorized its option (a) — the four categories that had never run are now
+off, recorded as `docs/DECISIONS.md` D12.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -320,6 +346,57 @@ theme (e.g. the script replaces the class instead of appending, or the hardcoded
 with the parity suite re-run (section E must stay green).
 **Exit gate:** `make parity` green and the body carries exactly one theme class after reload to a saved dark theme.
 **Gate:** human — modifies `index.html` and/or `js/script.js` (frozen files).
+
+### C8 — The first change to touch the product files turned CI red on four categories that only ever target those files · **done** · gate: human (authorized 2026-09-10)
+
+**Outcome (executed 2026-09-10, contract option (a)):** the four categories are off in
+`.github/workflows/super-linter.yml` — `VALIDATE_HTML`, `VALIDATE_HTML_PRETTIER`, `VALIDATE_JAVASCRIPT_ES`,
+`VALIDATE_JAVASCRIPT_PRETTIER` — each with its reason recorded beside it in the D10 block's style, and the
+decision is `docs/DECISIONS.md` **D12**. The trade is stated there plainly: CI now runs no static analysis over
+the served site at all, and `make parity` (18 behavioral assertions) plus `make validate` are the product's
+checks of record. Turning the categories off followed the D10 precedent rather than reformatting frozen product
+files to satisfy a default config this repository never adopted.
+**Exit gate — closed.** With the categories muted, the run whose changed set contains every product file is
+green: PR #9 run [`34538252976`](https://github.com/mschwar/bahai-homepage/actions/runs/34538252976),
+`run-lint` **pass**, all eleven remaining categories `pass`. The log was read rather than the badge — the four
+flags arrive as `false`, and the job's file set names `index.html`, `wallpaper.html` and all four `js/*.js`, so
+it is not the empty-set green of `C3`. Recorded in `docs/DECISIONS.md` D12's addendum.
+**Evidence:** the red run that exposed it (`34536775907`, PR #9) is in the diagnosis below; the closing run is
+`34538252976`.
+
+**The original diagnosis (kept as the executed contract).** Evidence (2026-09-10, PR #9, run
+[`34536775907`](https://github.com/mschwar/bahai-homepage/actions/runs/34536775907)) — the first run in this
+repository's history whose changed set contains `index.html` or `js/*`. `run-lint` failed on four categories,
+and **not one finding is caused by the H2A refactor**:
+
+- `HTML` (htmlhint 1.9.2) — 2 errors in `index.html`, both pre-existing: L69 `id="badiDate"` and L77 `id="gregorianDatePanel"` violate `id-class-value` ("must be in lowercase and split by a dash" — these are camelCase ids).
+- `HTML_PRETTIER` — `index.html` and `wallpaper.html` are not prettier-formatted.
+- `JAVASCRIPT_ES` (eslint 9.39.4 on its default config) — `js/badi-init.js`: `initializeBadiCalendar`
+  reported unused (it is called from `js/script.js`), `BadiDateToday` and `BadiDateLocationChoice`
+  reported undefined (the former is the external library, the latter a global the library sets), plus an
+  unused catch binding.
+- `JAVASCRIPT_PRETTIER` — all four `js/*.js` files are not prettier-formatted.
+
+**Why it is a defect, not cosmetics.** This is `C1`'s class exactly. `docs/DECISIONS.md` D10 turned off the
+categories whose only targets here are frozen files (`BIOME_FORMAT`, `BIOME_LINT`, `MARKDOWN_PRETTIER`,
+`JSCPD`) — but the four above were left on, because until now no change had ever included a product file, so
+they were **never exercised** and their "pass" on every previous run was vacuous. The first legitimate
+product-file change therefore lands as a red check on `main`, with sixteen green categories beside four red
+ones whose findings predate the change and would be dismissed by any reader as noise. That is precisely the
+state C1 existed to remove.
+
+**Why it is not fixable inside H2A.** The two available fixes are both outside the refactor's authorization:
+silencing the categories is a CI configuration change, which `AGENTS.md` puts behind owner sign-off (and
+forbids "as a side effect"); making the files satisfy them means either a prettier reformat of all four
+`js/*` files plus both HTML files, or adding an eslint config, either of which is the "tidying of working
+code" `AGENTS.md` forbids as a side effect. Neither is H2A's to take.
+
+**Contract:** pick exactly one and record it in `docs/DECISIONS.md` —
+(a) turn the four categories off for this repository, following the D10 precedent and recording why per category (HTML/ESLint have no config here; prettier's targets are frozen product files) — the cheapest fix, and consistent with what D10 already did to four sibling categories;
+(b) make the product files satisfy them — a one-off reformat pass over `index.html`, `wallpaper.html` and `js/*` plus an `id-class-value` fix, accepted knowingly as a product-file change because the frozen hashes would move again; or
+(c) keep the four categories on, accept that every product-file PR is red, and record that in `docs/RUNBOOK.md` §5 as the intended state.
+**Exit gate:** a run whose changed set includes a product file is green, with each of the four categories either passing or explicitly off for a recorded reason.
+**Gate:** human — CI configuration; option (b) additionally modifies frozen files.
 
 ---
 

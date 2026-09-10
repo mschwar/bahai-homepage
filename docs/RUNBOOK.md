@@ -9,10 +9,11 @@ There is no server-side runtime. Everything happens in the browser:
 
 ```text
 browser ──index.html──▶ data/quotes_hidden_words.json          (fetch, no-store)
-   │                    js/script.js  (selection + cache + copy + theme + yesterday)
+   │                    js/quote-core.js (selection + caching, shared)
+   │                    js/script.js  (render + copy + theme + yesterday)
    ├──▶ https://wondrous-badi.today/scripts/BadiDateToday.v1.js  (Badíʿ date library)
    ├──▶ https://fonts.googleapis.com/... (Source Sans Pro / Source Serif Pro)
-   └── (experimental, unlinked) /wallpaper.html ─▶ React 18 UMD (unpkg) ─▶ same corpus
+   └── (experimental, unlinked) /wallpaper.html ─▶ React 18 UMD (unpkg) ─▶ js/quote-core.js ─▶ same corpus
 ```
 
 | External dependency | Used by | Failure mode |
@@ -61,8 +62,37 @@ Duplicate texts: 0
 ```
 
 `validate_quotes.py` checks only the data shape: list-of-objects, non-empty `text` and `source`, `author`
-as a warning, and duplicate texts. **There is no behavioral/UI test yet** — that is the first step of queue
-unit `H2A`, and until it exists any JS change is unverified by construction.
+as a warning, and duplicate texts. It says nothing about behavior.
+
+### 3.1 · Parity (behavioral) check — `make parity`
+
+The behavioral proof of record. It drives the **real** page in headless Chromium (Playwright) and pins
+selection, today/yesterday, caching, theme, the Badíʿ fallback, clipboard copy and reduced-motion. A JS
+change is unverified by construction until this is green.
+
+```bash
+make parity                 # alias: node tests/parity.mjs
+```
+
+Expected: `== RESULT: 18 passed, 0 failed ==` and exit code 0. Dev-only: needs the global `playwright` +
+its bundled Chromium (`npx playwright install chromium`); it adds no manifest and touches no frozen file.
+**Any change to `js/*`, `index.html` or the corpus must show this green *before* and *after*.**
+
+**Run-record format.** A recorded run is a plain-text file under `docs/audit/<date>/` with this exact header
+block, followed by the verbatim command output:
+
+```text
+command: <the command run>
+cwd: <absolute working directory>
+date: <ISO-8601 UTC timestamp>
+playwright: <version>
+node: <version>
+=== raw output ===
+<verbatim stdout, including the == RESULT line ==>
+```
+
+Record the run as produced — do not tidy, trim or re-wrap it. The `== RESULT` line is the evidence; a run
+recorded without it proves nothing.
 
 ## 4 · Regenerate the corpus (dev-only)
 
@@ -104,9 +134,17 @@ CI is Super Linter on push/PR to `main`, at `super-linter/super-linter@v8.7.0` p
 only the files a change touches (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not gate merges
 and does not deploy. Both actions are SHA-pinned because the job runs the `zizmor` audit, which fails on
 unpinned uses; `.github/dependabot.yml` keeps those pins fresh (monthly, with a cooldown). What the categories
-mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10 — in short: markdownlint, YAML,
-secrets, spelling and workflow security are on; the natural-language style glossary and the formatters that
-would rewrite frozen product files or append-only records are off.
+mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10 and D12 — in short: markdownlint,
+YAML, secrets, spelling and workflow security are on; the natural-language style glossary, the formatters that
+would rewrite frozen product files or append-only records, and the four checks that target the served site
+(`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`) are off.
+
+**The served site is not linted — `make parity` is its check of record.** The four checks above were turned
+off on 2026-09-10 (queue `C8`, decision D12) because they run with super-linter's default config, which this
+repository has never adopted, and their only targets are frozen product files. Before that, they had never
+actually run: `VALIDATE_ALL_CODEBASE: false` lints only the changed set, and no change had ever included
+`index.html` or `js/*`, so their `pass` was vacuous until the first product-file change exposed them. Do not
+read a green lint as evidence about the site. `make parity` and `make validate` are that evidence.
 
 **Where lint coverage actually comes from — read the log, not the badge.** The job can report `success` having
 checked nothing: two Super Linter **v4** runs on `main` did exactly that — merge commits created locally with
@@ -131,7 +169,8 @@ check on the PR.
 
 - **Bad doc or tooling commit:** `git revert <sha>` and push. Docs-only changes cannot break the site.
 - **Bad change to a frozen file:** `git checkout <last-good-sha> -- index.html css js data/quotes_hidden_words.json`
-  then push. The frozen-file sha256s live in `PHASE1_HANDOFF.md` and `docs/DECISIONS.md` (D8).
+  then push. The frozen-file sha256s live in `PHASE1_HANDOFF.md` (H1 baseline) and `docs/DECISIONS.md`
+  (**D8** for the H1 baseline, **D11** for the H2A refactor baseline and the authority that superseded it).
 - **Accidentally published a payload:** delete it from `main` (a subdirectory move unpublishes nothing),
   confirm the live URL 404s with a cache-buster, and keep the bytes on an `archive/*` branch. This is exactly
   what D4/H1C did for the orphaned multi-faith data; the restore command is in `docs/DECISIONS.md` (D4).
@@ -154,7 +193,8 @@ check on the PR.
 ## 8 · Data contract reality (until `H2B` lands)
 
 One corpus, `data/quotes_hidden_words.json` (153 records, `{text, source, author}`). The path and the
-`MAX_QUOTE_WORDS = 75` cap are hard-coded in **three** places — `js/script.js`, `js/wallpaper.js`,
-`ios/widget/QuoteStore.swift` — and each reimplements the same selection/caching logic. No schema version, no
-provenance record. Changing the corpus today means changing all three copies. This is honest debt, not a
+`MAX_QUOTE_WORDS = 75` cap now live in **two** places: `js/quote-core.js` (the single JS source of truth
+shared by `index.html` and `wallpaper.html` after H2A) and `ios/widget/QuoteStore.swift` (a Swift
+reimplementation, deliberately not unified — see queue `H2A`/`H2B`). No schema version, no provenance
+record. Changing the corpus today means changing the JS core and the Swift copy. This is honest debt, not a
 contract; do not document it as one.

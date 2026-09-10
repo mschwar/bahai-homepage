@@ -1,8 +1,17 @@
 // js/script.js – integrated
 
 /* -------------------------  CONSTANTS  -------------------------- */
-const MAX_QUOTE_WORDS = 75;
-const QUOTES_PATH = 'data/quotes_hidden_words.json';
+// Selection + caching come from the shared core (js/quote-core.js), loaded
+// before this file. Only page-specific values are declared here.
+const {
+  DEFAULT_AUTHOR,
+  filterShort,
+  selectForDate,
+  getLocalDateKey,
+  fetchQuotes,
+  createQuoteCache
+} = window.QuoteCore;
+
 const CACHE_PREFIX = 'dailyVerse:';
 const CACHE_LAST_KEY = 'dailyVerse:lastKey';
 const COPY_STATUS_TIMEOUT_MS = 1600;
@@ -48,46 +57,11 @@ dom.themeToggleBtn?.addEventListener('click', () => {
   );
 });
 
-/* --------------------  QUOTE FETCH / PREP  ---------------------- */
-async function fetchQuotes(path = QUOTES_PATH) {
-  const res = await fetch(path, { cache: 'no-store' });
-  if (!res.ok) {
-    throw new Error(`Quote fetch failed: ${res.status} ${res.statusText}`);
-  }
-  const data = await res.json();
-  if (!Array.isArray(data)) {
-    throw new Error('Quote payload is not an array.');
-  }
-  return data;
-}
-
-const countWords = (t) => (t || '').trim().split(/\s+/).filter(Boolean).length;
-const filterShort = (list) => list.filter(q => countWords(q.text) <= MAX_QUOTE_WORDS);
-const dayOfYear = d => Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 8.64e7);
-
-/* ----------------------  CACHE HELPERS  ------------------------- */
-function getLocalDateKey(date) {
-  const y = date.getFullYear();
-  const m = String(date.getMonth() + 1).padStart(2, '0');
-  const d = String(date.getDate()).padStart(2, '0');
-  return `${y}-${m}-${d}`;
-}
-
-function readCachedQuote(key) {
-  const raw = localStorage.getItem(`${CACHE_PREFIX}${key}`);
-  if (!raw) return null;
-  try {
-    return JSON.parse(raw);
-  } catch {
-    return null;
-  }
-}
-
-function saveCachedQuote(key, quote) {
-  if (!key || !quote) return;
-  localStorage.setItem(`${CACHE_PREFIX}${key}`, JSON.stringify(quote));
-  localStorage.setItem(CACHE_LAST_KEY, key);
-}
+/* ----------------------  CACHE (shared core)  ------------------- */
+// Namespace-narrowed view of the shared cache: reads/writes `dailyVerse:<key>`
+// and records `dailyVerse:lastKey`, exactly as the inline implementation did.
+const { read: readCachedQuote, save: saveCachedQuote } =
+  createQuoteCache(CACHE_PREFIX, CACHE_LAST_KEY);
 
 /* ----------------------  RENDER HELPERS  ------------------------ */
 function renderQuote(obj, suffix = '') {
@@ -107,7 +81,7 @@ function renderQuote(obj, suffix = '') {
   }
 
   txt.textContent = obj.text;
-  auth.textContent = obj.author || 'Bahá’u’lláh';
+  auth.textContent = obj.author || DEFAULT_AUTHOR;
   if (src) src.textContent = obj.source || 'The Hidden Words';
 }
 
@@ -183,8 +157,8 @@ async function initPage() {
     quotes = filterShort(all);
     if (!quotes.length) throw new Error('No quotes remain after filtering.');
 
-    todayObj = quotes[dayOfYear(today) % quotes.length];
-    yestObj = quotes[dayOfYear(yest) % quotes.length];
+    todayObj = selectForDate(quotes, today);
+    yestObj = selectForDate(quotes, yest);
 
     renderQuote(todayObj, '');
     renderQuote(yestObj, '-yesterday');
@@ -228,7 +202,7 @@ function startBadiCalendar() {
 /* --------------------  COPY TO CLIPBOARD  ----------------------- */
 async function copyQuote(quote, statusEl) {
   if (!quote) return;
-  const author = quote.author || 'Bahá’u’lláh';
+  const author = quote.author || DEFAULT_AUTHOR;
   const text = `${quote.text}\n— ${author}`;
 
   try {
