@@ -116,7 +116,8 @@ subdirectory of `main`.
 
 ## Where the truth lives
 
-- `docs/audit/2026-09-10/` — the Phase 0 archaeology audit (orientation).
+- `docs/audit/2026-09-10/` — **canonical orientation: the reconstructed state of the repo as of 2026-09-10.**
+  Historical, evidence-backed, and *not a live spec* — read it to understand how the product got here.
 - `docs/queue.md` — the forward work queue (states, gates, evidence fields).
 - `docs/DECISIONS.md` — the decision ledger.
 - `docs/RUNBOOK.md` — run / validate / deploy / recovery operational runbook.
@@ -183,6 +184,9 @@ persistent theme. Static, client-side, GitHub Pages. Read `README.md` first for 
 
 1. `README.md` → 2. `docs/audit/2026-09-10/` → 3. `docs/queue.md` → 4. `docs/DECISIONS.md` →
 5. `docs/RUNBOOK.md`
+
+`docs/audit/2026-09-10/` is the **canonical orientation**: the reconstructed state of the repo as of
+2026-09-10. Historical, evidence-backed, and *not a live spec*.
 
 ## Commands
 
