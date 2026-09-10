@@ -1,13 +1,15 @@
 // tests/parity-live.mjs
-// LIVE-mode behavioral check for the DEPLOYED bahai-homepage site (queue candidate C9).
+// LIVE-mode behavioral check for the DEPLOYED bahai-homepage site (queue unit C9, now closed).
 //
 // WHY THIS EXISTS. `tests/parity.mjs` is hermetic by design: it blocks every external host
 // (wondrous-badi.today, fonts.googleapis.com, fonts.gstatic.com) so day-of-year selection and
 // cache keys are reproducible. That is correct for the suite, and it means the DEPLOYED path —
 // real HTTPS, real CDN, real vendor library, real browser security rules — had NO automated
-// coverage at all. A hand-written live check first found that on the live HTTPS site the Badíʿ
-// date element falls back to "unavailable" while the vendor library requests an insecure
-// http://ipinfo.io endpoint that the browser blocks as mixed content. That diagnosis is OPEN.
+// coverage at all. A hand-written live check first surfaced the Badíʿ date element falling back
+// to "unavailable" while the vendor library requests an insecure http://ipinfo.io endpoint that
+// the browser blocks as mixed content. That finding was filed as C9, escalated, corrected, and
+// closed with a fix: a declined-location visitor now downgrades to the default sunset. The
+// mixed-content block is still observable here, by design — see the REPORT lines below.
 //
 // NON-BLOCKING BY DESIGN. `make parity-live` is deliberately a SEPARATE target from `make
 // parity`. It talks to the public internet, so it is expected to be flaky during an outage or a
@@ -21,8 +23,9 @@
 //   3. the shared core loaded (window.QuoteCore exists and exposes its expected exports);
 //   4. no page error (an uncaught exception in the page).
 //
-// WHAT IT ONLY REPORTS (never fatal — the outcome is OPEN and asserting it would be red today
-// for an unresolved reason):
+// WHAT IT ONLY REPORTS (never fatal). The Badici outcome is environment-dependent — it depends on
+// whether the browser was granted geolocation — so asserting one outcome here would make this
+// target red for a reason that has nothing to do with the deployed code. It reports instead:
 //   * the Badíʿ element's settled state: RESOLVED vs FALLBACK, with the reason observed, the
 //     #location-message text, and — when it DOES resolve — the element's exact innerHTML and
 //     childNode shape, so a regression in the two-line label is visible;
@@ -226,7 +229,7 @@ if (reachable) {
       `reason observed: ${reason}\n` +
       `#location-message == ${JSON.stringify(badi.locationMessage)}\n` +
       `#gregorianDatePanel == ${JSON.stringify(badi.gregorian)}\n` +
-      'NOTE: this outcome is OPEN (queue C9); this target deliberately does not assert it.');
+      'NOTE: this target deliberately does not assert the outcome (it is environment-dependent); C9 is closed.');
   } else {
     const shapeOk = badi.childNodeTypes.join(',') === '#text,BR,#text';
     report('Badíʿ element state: RESOLVED',
@@ -264,7 +267,8 @@ await browser.close();
 
 console.log('');
 console.log(`== RESULT: ${passed} passed, ${failed} failed, ${reports.length} reported ==`);
-console.log('   (REPORT lines are observations, not assertions — the Badíʿ outcome is OPEN, queue C9.)');
+console.log('   (REPORT lines are observations, not assertions: the Badíʿ outcome depends on the');
+console.log('    geolocation permission, and C9 is closed — a declined visitor now gets the default sunset.)');
 if (failed > 0) {
   for (const f of failures) console.log(`  - ${f.name}: ${f.e.message}`);
   process.exit(1);

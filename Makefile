@@ -21,7 +21,8 @@ parity:
 # this host being offline will make it red even though the product is fine. That is exactly
 # why it is a SEPARATE target and NOT part of `parity`: a live failure must never make the
 # hermetic behavioral proof of record intermittently red. It also reports (never asserts)
-# whether the Badíʿ element resolved or fell back, because that outcome is OPEN in C9.
+# whether the Badíʿ element resolved or fell back, because that outcome depends on the geolocation
+# permission and is therefore not assertable (C9 closed; a declined visitor gets the default sunset).
 # Run it after any deploy — see docs/RUNBOOK.md §3.1.
 parity-live:
 	$(NODE) tests/parity-live.mjs

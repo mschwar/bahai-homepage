@@ -111,8 +111,10 @@ reaches a settled state, the rendered verse equals the selection oracle computed
 for the **real current date**, `window.QuoteCore` exposes its expected exports, and no uncaught page error
 occurred. It **reports** — never asserts — whether `#badiDate` settled to `RESOLVED` or `FALLBACK` with the
 reason observed, the resolved label's exact `innerHTML` when there is one, and every console error and
-failed request with its URL. `C9` is OPEN, so asserting the resolved outcome would leave this red for a
-reason nobody has adjudicated yet.
+failed request with its URL. The Badíʿ outcome is **environment-dependent** — it turns on whether the browser
+was granted geolocation — so this target deliberately does not assert it. (`C9` is closed: a visitor who
+declines the prompt now gets the default-sunset date instead of nothing, so a `FALLBACK` report here means the
+downgrade did not run, not that the site is broken.)
 
 Expected shape of a healthy run: `== RESULT: 4 passed, 0 failed, 3 reported ==`. **Network-dependent:** it
 is expected to be flaky-on-outage, and it is deliberately **not** part of `make parity`, so a live failure
