@@ -7,7 +7,7 @@ this host on 2026-09-10; the output recorded here is the output they produced.
 
 There is no server-side runtime. Everything happens in the browser:
 
-```
+```text
 browser ──index.html──▶ data/quotes_hidden_words.json          (fetch, no-store)
    │                    js/script.js  (selection + cache + copy + theme + yesterday)
    ├──▶ https://wondrous-badi.today/scripts/BadiDateToday.v1.js  (Badíʿ date library)
@@ -23,7 +23,7 @@ browser ──index.html──▶ data/quotes_hidden_words.json          (fetch,
 
 Reachability spot-check (2026-09-10):
 
-```
+```text
 fonts.googleapis.com css                        http=200
 BadiDateToday.v1.js                             http=200
 unpkg react@18 umd                              http=200
@@ -53,7 +53,7 @@ python3 scripts/validate_quotes.py data/quotes_hidden_words.json
 
 Expected and observed output:
 
-```
+```text
 Quotes checked: 153
 Errors: 0
 Warnings: 0
@@ -100,8 +100,19 @@ Observed Pages configuration (2026-09-10):
 homepage links it. Before pushing, ask whether each new file belongs on the public internet. If it must be
 retained but not served, it goes on an `archive/*` branch — **not** into a subdirectory of `main`.
 
-CI is Super Linter v4 on push/PR to `main` (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not
-gate merges and does not deploy.
+CI is Super Linter on push/PR to `main`, pinned at `super-linter/super-linter@v8.7.0` and linting only the
+files a change touches (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not gate merges and does
+not deploy. Two of its categories matter here, and both are configured deliberately (D10):
+
+- **Markdown (markdownlint)** — runs, and fails the job on real findings. The rule set, including this
+  project's two overrides, lives in `.github/linters/.markdown-lint.yml`.
+- **Natural language (textlint)** — **off** (`VALIDATE_NATURAL_LANGUAGE: false`). Super Linter ships exactly
+  one rule for it, `terminology`, a general-English style glossary that rejects this repository's own
+  documented vocabulary (`repo` → "repository", `build system` → "build tool").
+
+A red run on `main` is a defect to fix, not noise to scroll past: between the Phase 0 audit and the H1
+handoff this job failed on three consecutive doc commits and nobody noticed, because the docs said it was
+"hygiene only". If it is red, either fix the finding or change this configuration on purpose and record why.
 
 ## 6 · Rollback / recovery
 
@@ -125,6 +136,7 @@ gate merges and does not deploy.
 | Scraper `ImportError` | dev deps not installed | `pip install -r requirements-dev.txt` in an activated venv |
 | Wallpaper page blank | React CDN unreachable | experimental surface; not a product incident |
 | iOS widget "won't build" | there is no `.xcodeproj` in the repo | expected — it is source-only (`README.md`, D3) |
+| CI fails on "Incorrect usage of the term: repo → repository" | `VALIDATE_NATURAL_LANGUAGE` was turned back on; textlint's `terminology` glossary disagrees with this repo's vocabulary | turn it off again — it is off on purpose (D10) |
 
 ## 8 · Data contract reality (until `H2B` lands)
 

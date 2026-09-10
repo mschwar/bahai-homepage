@@ -56,7 +56,7 @@ so the ~10 MB dead-provenance payload leaves the public surface with nothing des
 
 **Restoration command (one line, from `main`):**
 
-```
+```bash
 git checkout archive/legacy-multifaith -- \
   data/quotes_kjv_bible.json data/quotes_dhammapada.json data/quotes_gita_arnold.json data/quotes.json \
   scripts/scrape_kjv_bible_pg.py scripts/scrape_dhammapada_pg.py scripts/scrape_gita_arnold_pg.py

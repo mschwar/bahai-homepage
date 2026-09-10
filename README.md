@@ -47,7 +47,7 @@ read-first order, commands, data-contract reality, autonomy boundary, and the fo
 | `data/quotes_hidden_words.json` | The live corpus — 153 passages, `{text, source, author}` |
 | `scripts/validate_quotes.py` | Data-shape validator (the only automated check today) |
 | `scripts/scrape_hidden_words.py` | Regenerates the corpus from bahai.org (dev-only tool) |
-| `.github/workflows/super-linter.yml` | Super Linter v4 on push/PR to `main` — hygiene only, does not gate or deploy |
+| `.github/workflows/super-linter.yml` + `.github/linters/.markdown-lint.yml` | Super Linter on push/PR to `main` — hygiene only, does not gate or deploy (D10) |
 | `.nojekyll` | Required so Pages serves the raw JSON/JS without Jekyll processing |
 
 ### Experimental ambient surfaces (unlinked, off the parity path)

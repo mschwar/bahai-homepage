@@ -3,7 +3,7 @@
 #
 # You can adjust the behavior by modifying this file.
 # For more information, see:
-# https://github.com/github/super-linter
+# https://github.com/super-linter/super-linter
 name: Lint Code Base
 
 on:
@@ -11,19 +11,35 @@ on:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
+permissions:
+  contents: read # to clone the repository
+  statuses: write # to report the GitHub Actions status check
+
 jobs:
   run-lint:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           # Full git history is needed to get a proper list of changed files within `super-linter`
           fetch-depth: 0
+          persist-credentials: false
 
       - name: Lint Code Base
-        uses: github/super-linter@v4
+        uses: super-linter/super-linter@v8.7.0
         env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Lint only the files a change actually touches.
           VALIDATE_ALL_CODEBASE: false
           DEFAULT_BRANCH: "main"
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          # Natural language is textlint, which ships exactly one rule:
+          # `terminology`, a general-English style glossary. It rejects the
+          # vocabulary this repository documents itself with -- "repo" is
+          # reported as "use repository instead", "build system" as "use build
+          # tool instead" -- and every one of its findings on this repository
+          # was that class of false positive. Markdown formatting (markdownlint)
+          # stays on and is configured in .github/linters/.markdown-lint.yml.
+          # Rationale: docs/DECISIONS.md (D10).
+          VALIDATE_NATURAL_LANGUAGE: false
