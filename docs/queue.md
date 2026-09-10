@@ -356,10 +356,13 @@ decision is `docs/DECISIONS.md` **D12**. The trade is stated there plainly: CI n
 the served site at all, and `make parity` (18 behavioral assertions) plus `make validate` are the product's
 checks of record. Turning the categories off followed the D10 precedent rather than reformatting frozen product
 files to satisfy a default config this repository never adopted.
-**Exit gate — closed.** With the categories muted, a run whose changed set contains product files is green;
-the run id and its result are in D12's addendum.
-**Evidence:** the red run that exposed it (`34536775907`, PR #9) is in the entry below; the closing run is in
-`docs/DECISIONS.md` D12.
+**Exit gate — closed.** With the categories muted, the run whose changed set contains every product file is
+green: PR #9 run [`34538252976`](https://github.com/mschwar/bahai-homepage/actions/runs/34538252976),
+`run-lint` **pass**, all eleven remaining categories `pass`. The log was read rather than the badge — the four
+flags arrive as `false`, and the job's file set names `index.html`, `wallpaper.html` and all four `js/*.js`, so
+it is not the empty-set green of `C3`. Recorded in `docs/DECISIONS.md` D12's addendum.
+**Evidence:** the red run that exposed it (`34536775907`, PR #9) is in the diagnosis below; the closing run is
+`34538252976`.
 
 **The original diagnosis (kept as the executed contract).** Evidence (2026-09-10, PR #9, run
 [`34536775907`](https://github.com/mschwar/bahai-homepage/actions/runs/34536775907)) — the first run in this

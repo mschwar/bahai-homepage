@@ -325,3 +325,20 @@ This entry is written before the closing run exists, so the run that proves it i
 cited here; `C8`'s original evidence run (`34536775907`, red) is the state this decision removes.
 
 *Source:* `docs/queue.md` `C8`; owner decision in-session 2026-09-10 (option (a) of that unit's contract).
+
+**Addendum (same day, appended — not a rewrite).** The closing run exists: PR #9 run
+[`34538252976`](https://github.com/mschwar/bahai-homepage/actions/runs/34538252976) — `run-lint` **pass**
+(2m9s), all eleven remaining categories `pass`, no warning of the `C5` class beyond the three already queued.
+Two things were checked in the log rather than trusted from the badge, because that is how `C1` hid:
+
+1. **The four flags were actually off** — the runner received `VALIDATE_HTML`, `VALIDATE_HTML_PRETTIER`,
+   `VALIDATE_JAVASCRIPT_ES` and `VALIDATE_JAVASCRIPT_PRETTIER` all as `false`, and none of the four reports a
+   status check.
+2. **The run read the product files** — the job's file set was non-empty and named them:
+   `.github/workflows/super-linter.yml`, `AGENTS.md`, `docs/DECISIONS.md`, `docs/RUNBOOK.md`,
+   `docs/audit/2026-09-10/H2A_REFACTOR_PARITY_RUN.txt`, `docs/queue.md`, `index.html`, `wallpaper.html`,
+   `js/badi-init.js`, `js/quote-core.js`, `js/script.js`, `js/wallpaper.js`.
+
+So the green is a real green on a changed set that contains every file the red run failed on — not the
+empty-set green that `C3` documented. This entry closes queue `C8`, and with it the last obstacle to H2A's
+landing.
