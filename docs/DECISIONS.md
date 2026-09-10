@@ -191,9 +191,10 @@ merge commit is not itself a coverage point.
 *Source:* `docs/queue.md` `C1`, and the run logs cited above.
 
 **Addendum (same day, appended — not a rewrite).** One more finding appeared after this entry was first
-written: the docs commit `b96ad72` failed `SPELL_CODESPELL` on `docs/queue.md` — `discreet ==> discrete`.
-`discreet` (unobtrusive) was the intended word and the text was correct; codespell's dictionary treats it as a
-misspelling of `discrete`. **Resolved by rewording to "unobtrusive", not by an ignore list or by disabling the
-checker**: codespell is genuinely useful for a documentation-heavy repository, and one style glossary's false
-positive is not a reason to switch it off. Verified first that this was the only instance in the repository, so
-the rewording is a one-word change and not the start of a typo sweep.
+written: the docs commit `b96ad72` failed `SPELL_CODESPELL` on `docs/queue.md` — the adjective used there for
+"unobtrusive" is read by codespell's dictionary as a misspelling of "discrete". That adjective was the intended
+word and the sentence was correct, so the finding was a dictionary collision, not a typo. **Resolved by
+rewording to "unobtrusive"** — not by an ignore list, and not by disabling the checker: codespell earns its
+place in a documentation-heavy repository, and one dictionary collision is not a reason to switch it off.
+Checked first that it was the only instance in the repository, so this is a one-word change rather than the
+start of a typo sweep. (This addendum names the word only by its meaning, so the file itself stays clean.)
