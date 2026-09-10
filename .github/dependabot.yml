@@ -3,7 +3,11 @@
 # The workflow pins both actions to a full commit SHA because the super-linter
 # job runs the `zizmor` audit, which fails the build on unpinned uses. Without an
 # automated update path those pins would silently rot, so this file exists to
-# give them one. See docs/DECISIONS.md (D10).
+# give them one.
+#
+# `cooldown` is set because zizmor's dependabot-cooldown audit requires it: a
+# freshly published action release should not be adopted the moment it appears.
+# See docs/DECISIONS.md (D10).
 
 version: 2
 updates:
@@ -11,4 +15,6 @@ updates:
     directory: "/"
     schedule:
       interval: "monthly"
+    cooldown:
+      default-days: 7
     open-pull-requests-limit: 3
