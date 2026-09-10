@@ -1,0 +1,17 @@
+You are performing the Phase 0 archaeology/state-of-system audit for the existing `bahai-homepage` repository.
+
+This is NOT a greenfield project. Do not treat old docs as automatically canonical and do not modernize code yet.
+
+First read `START_HOMEPAGE_RETROFIT.md` and then every file under `bootstrap/seed/2026-09-10-homepage-retrofit/`. Then independently inspect the repository, documentation, current source/data, Git history, and — if accessible — live deployment. Use history to reconstruct why important artifacts exist and distinguish what was built from what was merely planned.
+
+Execute exactly `AUDIT_SCOPE.md`. For each meaningful subsystem/artifact, determine what it is, why it exists, whether anything depends on it, its current status (production/current, support tooling, experimental, stale/abandoned, or unknown), and the evidence for that conclusion.
+
+Reconstruct the product from first principles. Explicitly test the hypothesis in `PRODUCT_DOCTRINE_SEED.md`; correct it where evidence disagrees. Pay special attention to the relationship among the core homepage, old multi-faith datasets/scrapers, wallpaper, iOS widget, Badíʿ date code, caching/reliability work, and roadmap residue.
+
+Create only the additive documentation outputs specified in `AUDIT_SCOPE.md` plus root `HANDOFF.md`. Do NOT edit production HTML/CSS/JS/data, add dependencies, move/delete/rename files, change CI/deployment, implement the collection/source selector, or begin Ruhi Book 1 research.
+
+`RECOMMENDED_RETROFIT_SEQUENCE.md` should propose the smallest high-leverage changes needed to make this a 2026 agent-first repo. Avoid framework churn. `QUEUE_PROPOSAL.md` must preserve two future work streams — live-site refactor/parity and collection/source abstraction — and keep the Ruhi memorization collection explicitly blocked behind the collection contract and provenance/rights review.
+
+`HANDOFF.md` must include: concise model of the repo’s intent; current production surface; important historical/experimental artifacts; contradictions/staleness found in docs; risks; validation performed; files created; unresolved questions; and the exact bounded Phase 1 retrofit you recommend.
+
+STOP after the audit. Do not continue into modernization even if the next steps seem obvious.

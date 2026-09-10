@@ -1,0 +1,3 @@
+DO NOT RUN UNTIL THE PHASE 0 AUDIT HAS BEEN REVIEWED.
+
+Intended future task: use the accepted archaeology outputs to perform the smallest justified agent-first repo retrofit, preserve live behavior, establish canonical docs/validation/queue/agent contract, and prepare the two product work streams. Regenerate the exact Phase 1 prompt after human review rather than blindly using a pre-audit plan.
