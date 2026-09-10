@@ -167,8 +167,11 @@ parity-suite review that closed H2A's first half; neither is scheduled or author
 2026-09-10 from the first CI run whose changed set contained a product file (PR #9, H2A's refactor) and was
 closed the same day when the owner authorized its option (a) — the four categories that had never run are now
 off, recorded as `docs/DECISIONS.md` D12. `C9` was added on 2026-09-10 during the post-deploy live verification
-of H2A: a genuine production defect (the Badíʿ date never resolves on the live site) that the parity suite
-cannot see by design, and it is not schedulable without a decision about the vendor library.
+of H2A and **corrected the same day**: it was first filed as "the Badíʿ date never resolves on the live site",
+which the owner disputed and which re-testing disproved — the date resolves for any user who has granted
+location and for every returning visitor, because the vendor caches the granted location in `localStorage`. The
+real and much narrower defect is that a first-time visitor who *declines* the location prompt gets no date. The
+withdrawn claim is kept in the entry so the error stays auditable.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -400,44 +403,64 @@ code" `AGENTS.md` forbids as a side effect. Neither is H2A's to take.
 **Exit gate:** a run whose changed set includes a product file is green, with each of the four categories either passing or explicitly off for a recorded reason.
 **Gate:** human — CI configuration; option (b) additionally modifies frozen files.
 
-### C9 — The Badíʿ date never resolves on the live site: the vendor library's geolocation call is blocked as mixed content · gate: human
+### C9 — CORRECTED: the Badíʿ date works in production; only the *declined-location* fallback is dead on HTTPS · gate: human
 
-**Evidence (2026-09-10, live post-deploy verification of H2A;
-`docs/audit/2026-09-10/H2A_REFACTOR_PARITY_RUN.txt`, "POST-DEPLOY LIVE VERIFICATION").** Against
-`https://mschwar.github.io/bahai-homepage/` in headless Chromium, `#badiDate` settles to `Badíʿ date
-unavailable.` with the guidance "Enable location for sunset-accurate Badíʿ date. Showing Gregorian date
-only." — the documented fallback — rather than the two-line date label. The cause appears in both the console
-and the failed-request log, and it is the only failure of either kind:
+**Correction (2026-09-10, appended — the original claim below is WITHDRAWN, not tidied away).** This unit was
+first filed as "the Badíʿ date never resolves on the live site" and was escalated to the owner on that basis.
+That claim was wrong. The owner disputed it; re-testing with the browser's location permission granted shows the
+date resolving normally:
 
-```text
-Mixed Content: The page at 'https://mschwar.github.io/bahai-homepage/' was loaded over HTTPS,
-but requested an insecure XMLHttpRequest endpoint 'http://ipinfo.io/geo?json'.
-This request has been blocked; the content must be served over HTTPS.
-```
+| Live-origin test (headless Chromium) | `#badiDate` | Verdict |
+|---|---|---|
+| A. geolocation granted | ``Day 3, `Izzat (might)183 B.E.`` | RESOLVED, ~0 ms |
+| B. returning visitor, location already in `localStorage` | same | RESOLVED, ~0 ms, no prompt |
+| C. geolocation denied **and** no cached location | `Badíʿ date unavailable.` | FALLBACK, ~3500 ms |
 
-The request is issued by the **third-party** library at `wondrous-badi.today`, not by this repository's code:
-no `pageerror` and no failed request originates from `js/quote-core.js`, `js/script.js`, `js/badi-init.js` or
-any asset served here.
+Case C is what the first test did — a headless browser with no geolocation permission — and the original entry
+generalised from that one case to production. The generalisation was unwarranted. **Case B is why the feature
+has worked for over a year**: the vendor library caches a granted location in `localStorage` (`lat`/`long`) and
+reuses it on every later visit (vendor source `BadiDateToday.v1.js` v1.09, lines 541–548), so any user who has
+ever allowed the prompt — and the owner certainly has — never touches the broken path again.
 
-**Why it is a defect.** The Badíʿ date is half of the product doctrine (D1: "one Hidden Words passage per
-Gregorian day-of-year, Badíʿ date, …"). In production that half renders only its fallback, so a headline
-feature is dark on the live HTTPS site — and nothing recorded it, because `tests/parity.mjs` blocks the vendor
-library for determinism (section F) and therefore cannot observe the live failure. The suite's
-`F. renders the Badici date when the lib resolves` proves the *page's* handling of a resolved date; it does
-not and cannot prove the vendor resolves one.
+**What is actually broken (narrow, and real).** A first-time visitor who *declines* the location prompt — and
+only that visitor — gets no Badíʿ date. Two distinct causes, both in the interaction between our wrapper and the
+vendor library:
 
-**Why it is out of H2A's scope.** H2A is a behavior-preserving refactor and this behavior is unchanged by it —
-the failing request is the vendor's, and the pre-refactor code path is identical. Every possible fix sits
-outside that authorization: changing how the page loads or falls back modifies `js/badi-init.js` /
-`index.html` (frozen files, and a product change), while "the vendor library is broken" may admit no in-repo
-fix at all.
+1. **The vendor's no-location fallback is HTTPS-dead.** With no cached location it falls back to
+   `guessUserLocation`, which requests `http://ipinfo.io/geo?json` (vendor line 573) — blocked as mixed content
+   on an HTTPS page.
+2. **The vendor never recovers from that block.** The request sets `ontimeout` but has **no `onerror`** (vendor
+   lines 575–586), so a blocked request fires neither, and the library never continues. What actually rescues
+   the page is *our* wrapper: `js/badi-init.js` carries its own 4 s guard, which is why the fallback appears at
+   ~3.5 s. Without that guard the element would hang on "Loading Badíʿ Date…" indefinitely. Our guard is
+   load-bearing for a vendor failure mode, which is worth knowing before anyone "simplifies" it.
 
-**Contract:** first establish the effective cause — is this the vendor's own `http`/`https` scheme choice (fixable only upstream), or does the library accept a configuration that avoids the geolocation call entirely (a `locationMethod` the page already passes, or a documented offline mode)? Then pick exactly one and record it in `docs/DECISIONS.md` —
-(a) if the library offers a scheme-safe or location-free configuration, adopt it in `js/badi-init.js`, keeping the existing fallback intact;
-(b) if it does not, stop relying on the vendor for a date the page could compute — the Badíʿ calendar is arithmetic — and record that as a deliberate replacement, not a patch;
-(c) keep the vendor and the fallback as-is, accepting that the Badíʿ date is Gregorian-only in production, and record that in `README.md`'s status prose so the docs stop implying a feature that does not render.
-**Exit gate:** the live HTTPS page either shows a resolved Badíʿ date, or the docs record that it will not and why — with the live check re-run and its output recorded.
-**Gate:** human — options (a) and (b) modify frozen files (`js/badi-init.js`, `index.html`) and (b) is a product change; option (c) touches product doctrine.
+**History that makes this a traded-away behaviour, not a new breakage.** The repo has been here before: commit
+`9d3df3c` (2025-06-03) is titled "Fix: Resolve mixed content error by setting BadiDateToday locationMethod" and
+set `locationMethod` to `BadiDateLocationChoice.ignoreLocation` precisely to avoid the ipinfo request. Commit
+`d73b2d0` (same day) changed it to `askForUserLocation` for sunset accuracy. So the current state knowingly
+traded a working no-location path for accuracy, and the denied path has been broken since — a trade nobody
+re-examined. **H2A did not cause it, and no user who has ever granted location is affected.**
+
+**Contract (superseding the withdrawn one).** Pick exactly one and record it in `docs/DECISIONS.md` —
+(a) keep `askForUserLocation`, and add a graceful downgrade: if geolocation fails or the wrapper's guard fires,
+re-invoke with `ignoreLocation` so the date falls back to the library's default 6:30 sunset instead of
+"unavailable". Accurate when permitted, a sane date when not, never dark;
+(b) revert to `ignoreLocation` unconditionally — always renders, no network, no permission prompt, but every
+user gets a 6:30-sunset approximation, losing the accuracy `d73b2d0` was after;
+(c) keep the current behaviour, accept that a first-time visitor who declines sees the Gregorian date only, and
+record the trade (plus the reliance on our own 4 s guard) so it is a decision rather than an accident.
+**Exit gate:** whichever option, the live check is re-run and its output recorded; if the behaviour changes,
+`tests/parity.mjs` section F is re-checked (it blocks the vendor entirely, so it should stay green) and the
+frozen-file hashes move again.
+**Gate:** human — (a) and (b) modify frozen files (`js/badi-init.js`, `index.html`) and are product changes;
+(c) touches product doctrine.
+
+**The original diagnosis (WITHDRAWN — kept only so the error is auditable).** Asserted that the Badíʿ date
+never resolves on the live site, on the strength of a single headless run whose browser had no geolocation
+permission. The mixed-content console error and the failed `http://ipinfo.io/geo?json` request it quoted are
+real and reproducible — but they are observations of case C, the declined-location path, not of production. No
+page error and no failed request originates from this repository's own code, which was correct and remains so.
 
 ---
 

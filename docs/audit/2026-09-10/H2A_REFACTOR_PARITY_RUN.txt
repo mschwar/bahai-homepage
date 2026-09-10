@@ -228,3 +228,47 @@ Round 2 (9 checks, 0 failed):
 
 This production defect (Badici date dead on the live site) is external and pre-existing, not
 a product of this refactor; it is queued as candidate unit C9 with its contract and gate.
+
+--------------------------------------------------------------------------------
+CORRECTION (2026-09-10) — the Badici finding above is WITHDRAWN
+--------------------------------------------------------------------------------
+The section above asserted a production defect: that the Badici date never resolves on
+the live site. That was WRONG, and it was wrong in a specific and avoidable way.
+
+The claim rested on a single headless run whose browser had no geolocation permission. In
+that state the vendor library (BadiDateToday.v1.js v1.09) fails its geolocation request,
+falls back to guessUserLocation, and requests http://ipinfo.io/geo?json -- which HTTPS
+blocks as mixed content. The vendor's XHR sets ontimeout but has NO onerror, so the block
+fires neither handler and the library never continues; what ends the wait is this
+repository's own 4-second guard in js/badi-init.js. The two observations above (the
+mixed-content console error, the failed ipinfo request) are real and reproducible -- but
+they are the behaviour of the DECLINED-LOCATION path, not of production. Generalising from
+that one case to "the live site is broken" was unwarranted.
+
+Re-test with the location permission granted (three cases, live origin, headless Chromium):
+
+  A. geolocation granted          -> #badiDate "Day 3, `Izzat (might)183 B.E."  RESOLVED ~0ms
+  B. returning visitor, location
+     already in localStorage      -> same                                     RESOLVED ~0ms, no prompt
+  C. denied + no cached location  -> "Badici date unavailable."               FALLBACK ~3500ms
+
+The owner disputed the finding on the grounds that the feature has worked for over a year,
+and case B explains it: the vendor caches a granted location in localStorage (lat/long) and
+reuses it on every subsequent visit (vendor source lines 541-548). Any user who has ever
+allowed the prompt never touches the broken path again.
+
+What survives, correctly scoped: a FIRST-TIME visitor who DECLINES the location prompt gets
+no Badici date. That is a real but narrow defect, and it is a traded-away behaviour rather
+than a new breakage -- commit 9d3df3c (2025-06-03) set locationMethod to ignoreLocation
+precisely to avoid this ipinfo request, and commit d73b2d0 (same day) changed it to
+askForUserLocation for sunset accuracy. H2A did not cause it, and the served code of this
+repository never failed: no page error and no failed request originated from its own scripts.
+
+The withdrawn claim and this correction both stay in the record. docs/queue.md C9 was
+rewritten in place with the correction and the withdrawn text kept beneath it, in the same
+spirit as the C1 and C3 corrections and D10's second addendum.
+
+LESSON, recorded because it is the actual failure here: a hermetic test environment is not
+production, and a fallback path is not the product's happy path. Before escalating a
+"production defect", reproduce it in the state a real user is in -- here, permission
+granted -- and state which state was tested. The first run never asked that question.
