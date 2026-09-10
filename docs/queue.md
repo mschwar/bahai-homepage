@@ -107,7 +107,9 @@ Add the verified Ruhi memorization export as a real collection; exercise the sel
 ## Candidate units — documented defects, not yet authorized
 
 Found during the post-handoff review of `PHASE1_HANDOFF.md`, the appendix retirement and the CI repair. Each
-names a contract and a gate. `C1` is done; `C2` and `C3` are not scheduled and not authorized.
+names a contract and a gate. `C1` is done; `C2` and `C3` are not scheduled and not authorized. `C4` and `C5`
+were added on 2026-09-10 from the review of the `actions/checkout` bump (D10, third addendum); none of
+`C2`–`C5` is scheduled or authorized.
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
 
@@ -204,6 +206,52 @@ simplest) or document the no-op as accepted — and make `docs/RUNBOOK.md` §5 s
 **Exit gate:** a run log that either names the files it linted on that path, or a recorded decision that the
 path is deliberately uncovered.
 **Gate:** human — CI configuration is outside the agent autonomy boundary.
+
+### C4 — Dependabot has no stated policy for major-version bumps · gate: human
+
+**Evidence.** `.github/dependabot.yml` declares one ecosystem (`github-actions`), a monthly schedule, a
+seven-day cooldown and `open-pull-requests-limit: 3`. It says nothing about which update types this repository
+wants. PR #5 raised `actions/checkout` from v6 to v7.0.1 — a semver-major — and looked exactly like a patch
+bump: one line, every check green, nothing in the title or the checks marking it as a decision. It was merged
+only after owner authorization (D10, third addendum), which is correct, but the entire gate rested on a human
+reading the diff closely enough to notice the word "major".
+
+**Why it is a defect, not cosmetics.** The care in this repository is concentrated in the SHA pin. The update
+path added to keep that pin from rotting (D10 §5) is unsupervised in precisely the case that can break a
+workflow, and its output is indistinguishable from routine maintenance.
+
+**Contract:** pick exactly one and record it in `docs/DECISIONS.md` —
+(a) `ignore` semver-major updates for actions in `.github/dependabot.yml`, so majors are performed deliberately;
+(b) keep majors in the PR stream and state in `docs/RUNBOOK.md` §5 that a major Dependabot bump is owner-gated,
+so whoever reads the PR can see the rule; or
+(c) allow auto-merge for patch and minor updates only.
+**Exit gate:** the chosen policy is recorded, and the next Dependabot PR is handled consistently with it.
+**Gate:** human — CI configuration.
+
+### C5 — Three super-linter settings announce checks that do not run · gate: human
+
+**Evidence (2026-09-10).** Identical warnings in v8's first run (`34527479040`, 20:38–20:39Z) and in the
+post-merge run for the checkout bump (`34531219266`):
+
+```text
+[WARN] Git commit message validation with commitlint is enabled, but no commitlint configuration file is
+       available. Disabling commitlint.
+[WARN] ENABLE_GITHUB_ACTIONS_STEP_SUMMARY is set to true, ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT is set
+       to true, but SAVE_SUPER_LINTER_SUMMARY is set to false.
+[WARN] Black and Ruff are both enabled, and might conflict with each other.
+```
+
+**Why it is a defect.** This is `C1`'s class one notch quieter: a check that presents itself as active while
+doing nothing, and a set of defaults that contradict each other. Commit messages are load-bearing evidence in
+this repository, so "commitlint is on" is a claim a reader may rely on. The summary pair is a plain
+misconfiguration — two flags enable a summary that a third prevents from existing.
+
+**Contract:** for each of the three, either configure it to run for real or turn it off explicitly in
+`.github/workflows/super-linter.yml`, with the reason written beside it in the style of the existing
+`VALIDATE_*: false` block. Disabling a check purely to silence a warning is not an acceptable outcome.
+**Exit gate:** a run on `main` with no warning of this class, and each of the three choices recorded in
+`docs/DECISIONS.md`.
+**Gate:** human — CI configuration.
 
 ---
 

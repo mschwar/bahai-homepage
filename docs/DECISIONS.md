@@ -207,3 +207,29 @@ created by GitHub's own PR merge (run `34528829696`) linted its eight files and 
 on v8. The corrected statement lives in `docs/queue.md` `C3` and `docs/RUNBOOK.md` §5, which also record what
 remains unverified (the local merge + push path under v8). The original paragraph above is left as written — a
 ledger that quietly tidies its own errors is not a ledger.
+
+**Third addendum (same day, appended).** The `actions/checkout` pin moved from `d23441a4` (v6) to `3d3c42e5`
+(v7.0.1). §5 above describes the pin as v6; that paragraph is left as written, and this addendum is the current
+state.
+
+It is in this ledger because a major bump of a CI action is a CI change, which `AGENTS.md` puts behind owner
+sign-off — Dependabot PR #5 arrived as a one-line diff with every check green, was left open for that decision,
+and was merged only after the owner authorized it. Nothing else changed in the PR (1 insertion, 1 deletion).
+
+Why it is inert here: v7's one behaviour change that can affect a checkout step is that it refuses to check out
+a fork pull-request head for `pull_request_target` and `workflow_run`. This workflow triggers on `push` and
+`pull_request` only, so that refusal cannot fire. `fetch-depth: 0` and `persist-credentials: false` are
+unchanged and still honoured.
+
+The pin's version comment was checked against the tag rather than trusted from the PR body:
+
+```text
+$ gh api repos/actions/checkout/git/ref/tags/v7.0.1 --jq '{ref, type: .object.type, sha: .object.sha}'
+{"ref":"refs/tags/v7.0.1","sha":"3d3c42e5aac5ba805825da76410c181273ba90b1","type":"commit"}
+```
+
+**Evidence.** PR #5's own run `34528909681` (`pull_request`, still on the v6 pin): `success`. The post-merge run
+on `main`, `34531219266` (`push`, head `d094517`): `success` — the `Checkout code` step's log shows v7's
+repository-object-format probe and its includeIf credential handling, and the lint job named the file it linted
+(`.github/workflows/super-linter.yml`), so the file set was not empty. Two configuration warnings surfaced in
+that same log and are queued as `C5`; the update path this bump travelled is queued as `C4`.
