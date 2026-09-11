@@ -162,10 +162,18 @@ CI is Super Linter on push/PR to `main`, at `super-linter/super-linter@v8.7.0` p
 only the files a change touches (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not gate merges
 and does not deploy. Both actions are SHA-pinned because the job runs the `zizmor` audit, which fails on
 unpinned uses; `.github/dependabot.yml` keeps those pins fresh (monthly, with a cooldown). What the categories
-mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10 and D12 — in short: markdownlint,
-YAML, secrets, spelling and workflow security are on; the natural-language style glossary, the formatters that
-would rewrite frozen product files or append-only records, and the four checks that target the served site
-(`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`) are off.
+mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10, D12 and D17 — in short:
+markdownlint, YAML, secrets, spelling and workflow security are on, and `RUFF` is the single Python linter of
+record. Off, each for a reason recorded beside it in the workflow: the natural-language style glossary and the
+formatters that would rewrite frozen product files or append-only records (D10); the four checks that target the
+served site (`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`, D12); and (D17) CSS
+(`VALIDATE_CSS`, `VALIDATE_CSS_PRETTIER` — stylelint's default config over the frozen stylesheets), the three
+redundant Python linters (`VALIDATE_PYTHON_FLAKE8`, `VALIDATE_PYTHON_ISORT`, `VALIDATE_PYTHON_PYLINT` — four
+overlapping Python linters for one adopted policy), the unadopted formatters
+(`VALIDATE_PYTHON_BLACK`, `VALIDATE_PYTHON_RUFF_FORMAT`), commitlint (`VALIDATE_GIT_COMMITLINT` — it had no
+config here and was disabled at runtime, so off is the honest state) and the summary flags
+(`ENABLE_GITHUB_ACTIONS_STEP_SUMMARY`, `ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT` — they enabled a summary
+that `SAVE_SUPER_LINTER_SUMMARY` prevented from existing, and the job holds no `pull-requests: write`).
 
 **Dependabot update policy (D18).** The repository accepts patch and minor action updates automatically — they
 arrive as one grouped PR that the owner merges. A semver-major action bump is **owner-gated and performed by
@@ -194,10 +202,14 @@ A red run is a defect to fix, not noise to scroll past. Between the Phase 0 audi
 failed on three consecutive doc commits and nobody noticed, because the docs said it was "hygiene only". If it
 is red, either fix the finding or change this configuration on purpose and record why.
 
-**Expected noise, not a failure:** the log ends with `Failed to call GitHub API (…/issues/<n>/comments) … 403`
-and `Error while posting pull request summary`. That is the summary *comment* failing because the job
-deliberately does not hold `pull-requests: write`; every per-linter result still appears as its own status
-check on the PR.
+**Summary noise: what used to be expected, and no longer is.** Until 2026-09-10 the log ended with
+`Failed to call GitHub API (…/issues/<n>/comments) … 403` and `Error while posting pull request summary` —
+the summary *comment* failing because the job deliberately does not hold `pull-requests: write`. That was an
+artefact of the summary flags being on while `SAVE_SUPER_LINTER_SUMMARY` kept the summary itself from
+existing; D17 turned both flags off (`ENABLE_GITHUB_ACTIONS_STEP_SUMMARY`,
+`ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT`), so the comment is never attempted and neither line appears. The
+job still reports every per-linter result as its own status check on the PR — that is where to read the
+outcome.
 
 ## 6 · Rollback / recovery
 

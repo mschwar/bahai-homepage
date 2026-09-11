@@ -8,7 +8,7 @@
 # Scope note: this repository checks prose (markdownlint), YAML, secrets and workflow security. It does NOT
 # lint, format or statically analyse the served site: index.html, wallpaper.html and js/* are frozen product
 # files, and the checks that target them run without a config this repository has adopted. Full rationale:
-# docs/DECISIONS.md (D10, D12).
+# docs/DECISIONS.md (D10, D12, D17).
 name: Lint Code Base
 
 on:
@@ -84,3 +84,46 @@ jobs:
           VALIDATE_JAVASCRIPT_ES: false
           # Prettier-over-JS: targets are the frozen js/*.js.
           VALIDATE_JAVASCRIPT_PRETTIER: false
+          # ---- CSS and the redundant Python linters off on purpose (D17) ----
+          # stylelint (CSS) runs with its DEFAULT config, which this repository has
+          # never adopted, and its targets are the frozen product stylesheets
+          # (css/style.css, css/wallpaper.css -- frozen by contract). Its findings are
+          # pre-existing style rules this minified stylesheet has never followed
+          # (`rule-empty-line-before`, `declaration-block-single-line-max-declarations`).
+          # Verified 2026-09-10: `prettier --check` fails on main's unchanged
+          # css/style.css, so the finding predates any change here. Same class as the
+          # D12 block above.
+          VALIDATE_CSS: false
+          VALIDATE_CSS_PRETTIER: false
+          # Four overlapping Python linters were enabled by default and this repository
+          # has adopted exactly one. VALIDATE_PYTHON_RUFF stays ON and is deliberately
+          # left unmentioned here: Super Linter rejects a config that mixes explicit
+          # true and false VALIDATE_* entries, and it is the single Python linter of
+          # record. Historical note: these three had never been exercised, because
+          # super-linter lints only the changed set and no change had ever included a
+          # scripts/*.py file. They went red exactly once -- PR #14 -- and only because
+          # an out-of-scope edit to scripts/scrape_hidden_words.py put that file into
+          # the changed set. That is the vacuous-pass pattern docs/queue.md unit C8
+          # already documents.
+          VALIDATE_PYTHON_FLAKE8: false
+          VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_PYLINT: false
+          # commitlint announced itself as enabled while having no config available, so
+          # super-linter disabled it at runtime and warned on every run. This
+          # repository's commit discipline lives in its append-only decision ledger
+          # (docs/DECISIONS.md), not in a linter. Turning it off explicitly is the
+          # honest state (queue C5).
+          VALIDATE_GIT_COMMITLINT: false
+          # A three-flag contradiction: these two enabled a summary that
+          # SAVE_SUPER_LINTER_SUMMARY (default false) prevented from existing, and the
+          # job deliberately does not hold `pull-requests: write`, so a PR summary
+          # comment could never post anyway. The owner chose to turn the summary OFF,
+          # not on, so the flag set is now consistent and the warning cannot occur
+          # (queue C5).
+          ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: false
+          ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false
+          # Unadopted formatters, the same policy as the D10 formatter block. Turning
+          # Black off is also exactly what removes super-linter's repeated
+          # `Black and Ruff are both enabled, and might conflict` warning.
+          VALIDATE_PYTHON_BLACK: false
+          VALIDATE_PYTHON_RUFF_FORMAT: false

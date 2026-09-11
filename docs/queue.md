@@ -193,8 +193,8 @@ repair. Each names a contract and a gate. Units arrive here as workstreams find 
 workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
 are written into this section.
 
-**Open now:** `C5`, `C6`, `C7`, `C10` — all owner-gated.
-**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C8` (D12), `C9` (D13).
+**Open now:** `C6`, `C7`, `C10` — owner-gated; `C11` is agent-gated.
+**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C8` (D12), `C9` (D13).
 
 Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
 `C4` and `C5` from the review of the `actions/checkout` bump (D10, third addendum); `C6` and `C7` from the
@@ -203,7 +203,8 @@ product file (PR #9, H2A's refactor), closed the same day on the owner's option 
 `C9` from the post-deploy live verification of H2A and **corrected the same day** — first filed as "the Badíʿ
 date never resolves on the live site", which the owner disputed and re-testing disproved, then executed on the
 owner's option (a) and recorded as D13; `C10` from the owner's 2026-09-10 decision to strip the auto-merge
-question out of `C4` and record it as its own unit (D18).
+question out of `C4` and record it as its own unit (D18); `C11` from the D17 linter-policy review, where the
+single Python linter of record was run directly and does not pass on `scripts/`.
 
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
@@ -349,8 +350,25 @@ so whoever reads the PR can see the rule; or
 **Exit gate:** the chosen policy is recorded, and the next Dependabot PR is handled consistently with it.
 **Gate:** human — CI configuration.
 
-### C5 — Three super-linter settings announce checks that do not run · gate: human
+### C5 — Three super-linter settings announce checks that do not run · **done** · gate: human (authorized 2026-09-10)
 
+**Outcome (executed 2026-09-10, contract option: turn each off explicitly, or configure it to run for real).**
+All three are resolved at their cause in `.github/workflows/super-linter.yml`, none by muting a warning:
+commitlint is off explicitly (`VALIDATE_GIT_COMMITLINT: false`) because the repository's commit discipline
+lives in the append-only ledger, not in a linter; the summary pair is off
+(`ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: false`, `ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false`), which makes
+the flag set consistent with `SAVE_SUPER_LINTER_SUMMARY` and with the job's permissions block; and Black is off
+(`VALIDATE_PYTHON_BLACK: false`, `VALIDATE_PYTHON_RUFF_FORMAT: false`), which is what removes the Black-vs-Ruff
+conflict. The same change turns off CSS (`VALIDATE_CSS`, `VALIDATE_CSS_PRETTIER`) and the three redundant Python
+linters (`VALIDATE_PYTHON_FLAKE8`, `VALIDATE_PYTHON_ISORT`, `VALIDATE_PYTHON_PYLINT`), leaving Ruff as the single
+Python linter of record, and opens `C11` for the file that Ruff does not pass. Decision: `docs/DECISIONS.md`
+**D17**.
+**Evidence:** the run on this branch with no warning of the commitlint / summary / Black-vs-Ruff class and a
+named non-empty file set, quoted in the pull request; `make parity` 19 passed / 0 failed and `make validate`
+153 checked / 0 / 0 / 0, both unchanged; the raw `uvx ruff check .` output (**8 errors**) recorded in D17 and in
+`C11`.
+
+**The original diagnosis (kept as the executed contract).**
 **Evidence (2026-09-10).** Identical warnings in v8's first run (`34527479040`, 20:38–20:39Z) and in the
 post-merge run for the checkout bump (`34531219266`):
 
@@ -572,6 +590,53 @@ auto-merge unnecessary; or
 **Exit gate:** the choice is recorded in `docs/DECISIONS.md`, and the next Dependabot PR is handled
 consistently with it.
 **Gate:** human — CI configuration; option (a) additionally touches branch protection and repository settings.
+
+---
+
+### C11 — `scripts/scrape_hidden_words.py` is not clean under the Python linter of record · gate: agent
+
+**Evidence.** With `C5`/`D17` leaving Ruff as the single Python linter, `uvx ruff check .` was run directly
+against the repository on 2026-09-10. `--show-files` confirms the only `.py` in the tree are the two
+`scripts/*.py`, and the run reports **8 errors**:
+
+```text
+I001 [*] Import block is un-sorted or un-formatted  --> scripts/scrape_hidden_words.py:1:1
+SIM102   Use a single `if` statement instead of nested `if` statements --> scripts/scrape_hidden_words.py:56:13
+F541 [*] f-string without any placeholders          --> scripts/scrape_hidden_words.py:104:11
+SIM113   Use `enumerate()` for index variable `candidate_idx` in `for` loop --> scripts/scrape_hidden_words.py:113:9
+F541 [*] f-string without any placeholders          --> scripts/scrape_hidden_words.py:130:19
+F541 [*] f-string without any placeholders          --> scripts/scrape_hidden_words.py:137:19
+UP024 [*] Replace aliased errors with `OSError`     --> scripts/scrape_hidden_words.py:185:12
+BLE001   Do not catch blind exception: `Exception`  --> scripts/validate_quotes.py:14:12
+
+Found 8 errors.
+[*] 5 fixable with the `--fix` option.
+```
+
+Seven findings are in `scripts/scrape_hidden_words.py`; the eighth is in `scripts/validate_quotes.py`
+(`BLE001`, the deliberate blind `except` around the JSON parse). The scraper's only lint attention so far was
+an out-of-scope edit in a **closed** PR (#14), which put the file into the changed set and turned the three
+redundant Python linters red for the first time in the repository's history — a finding that was never
+reconciled, only unblocked (`docs/DECISIONS.md` D17).
+
+**Why it is a defect, not cosmetics.** `scripts/scrape_hidden_words.py` is the script that regenerates the
+corpus (`docs/RUNBOOK.md` §4), so it is live dev tooling, and it is now the one file that will go red the first
+time anyone legitimately touches it — because Ruff is the linter of record and the file does not pass it. This
+is `C1`/`C8`'s class again: a check whose result is not currently knowable from the file itself, and a red that
+would arrive attached to an unrelated change and be dismissed as noise. It is recorded here rather than fixed
+inside the CI-policy change so that the policy change stays what it is and this repair gets its own evidence.
+
+**Contract:** bring `scripts/` clean under Ruff. Pick exactly one and record it in `docs/DECISIONS.md` —
+(a) fix the findings: `ruff check --fix` for the five autofixable ones (`I001`, three `F541`, `UP024`), and
+hand-edit the three that are not (`SIM102`, `SIM113`, `BLE001`), preserving the script's output exactly;
+(b) narrow the rule set with a `ruff.toml` selecting only the rule families this repository intends to hold, and
+record which families are deliberately not adopted; or
+(c) apply a per-finding `# noqa` with a written reason, so the exclusions are visible in the file.
+This changes a dev-only script, not the served site: no file under `index.html` / `css/*` / `js/*` / `data/*` /
+`ios/widget/*` is touched, so no frozen hash moves.
+**Exit gate:** `uvx ruff check scripts/` clean, and `make validate` still **153 checked / 0 errors / 0 warnings /
+0 duplicate texts**.
+**Gate:** agent — dev tooling; no frozen file, no product path.
 
 ---
 
