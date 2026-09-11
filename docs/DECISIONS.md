@@ -903,3 +903,34 @@ unchanged (`index.html`, `css/style.css`, `js/script.js`, `js/quote-core.js`, `j
 `data/quotes_hidden_words.json`). `ios/widget/*` untouched.
 
 *Source:* owner in-session 2026-09-11 (“agreed. do 3.”); mock 3 of the e-ink lock-screen series.
+
+## D26 — H2B-A collection/source contract drafted · **proposed, not yet accepted** · 2026-09-11
+
+Not an owner decision yet — recorded so the ledger shows a contract exists and exactly what it
+does and does not settle, per `docs/queue.md` H2B's own "evidence is a field, not a vibe" rule.
+
+**What this is.** `docs/architecture/COLLECTION_CONTRACT.md` proposes a producer-agnostic
+collection/item schema (collection identity + version + provenance/rights; item identity +
+`item_type`/`verification_state` using the same vocabulary Garden-of-Wisdom's 2026-09-11 retrofit
+adopted independently), collection-scoped cache keys (`dailyVerse:<collection_id>:<date>`), a
+`selectedCollection` localStorage key defaulting to `hidden-words`, and a declarative (non-code)
+eligibility-rule shape generalizing today's hard-coded `max_words: 75`.
+
+**What this does NOT do.** No frozen file changed. No real second collection exists. No fixture
+was wired into `tests/parity.mjs` — a fixture shape is specified in the contract doc but not
+committed as a test asset. `make validate` (153/0/0/0) and `make parity` (24 passed, 0 failed) are
+unchanged from baseline, confirming this pass touched no product behavior.
+
+**Five unresolved human decisions**, the load-bearing one being whether migrating
+`data/quotes_hidden_words.json` to the new shape happens in place (a frozen-file, owner-gated
+change) or via a new path alongside the old one. See the contract doc's "Unresolved human
+decisions" section for all five.
+
+**Why proposed rather than accepted:** `AGENTS.md`'s autonomy boundary reserves provenance/
+curation/rights judgment for the owner (e.g. whether all 153 Hidden Words items are safely
+`verified` / `full-passage` by default). This decision entry exists so a cold-start agent sees
+that a contract was drafted and exactly what in it still needs a human, not so the entry reads as
+settled.
+
+*Source:* `bootstrap/packets/2026-09-11-h2b-collection-contract/prompts/01_H2B_COLLECTION_CONTRACT_ONLY.txt`
+(H2B-A); root `H2B_CONTRACT_HANDOFF.md`.

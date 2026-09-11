@@ -1,0 +1,97 @@
+You are operating in `mschwar/bahai-homepage`.
+
+This is H2B-B and is BLOCKED unless:
+1. H2B-A collection contract has been accepted by the owner and is canonical in this repo.
+2. A VERIFIED Garden-of-Wisdom Bahá’í preview export exists and conforms to that contract.
+3. The owner has supplied the exact export path/commit/artifact to consume.
+
+If any condition is false, STOP.
+
+Read:
+- README.md
+- AGENTS.md
+- docs/queue.md
+- docs/DECISIONS.md
+- docs/RUNBOOK.md
+- H2B_CONTRACT_HANDOFF.md
+- canonical H2B collection contract
+- bootstrap/packets/2026-09-11-h2b-collection-contract/workunits/H2B_B_IMPLEMENT_WITH_GARDEN.md
+- the verified Garden export + provenance handoff supplied by the owner
+
+# OWNER-SUPPLIED INPUT
+
+VERIFIED_GARDEN_EXPORT = REPLACE_WITH_EXACT_PATH_OR_COMMIT
+
+# TASK
+
+Implement H2B using the accepted generic contract.
+
+The live selector already exists. Wire it to:
+- The Hidden Words (default)
+- the verified Garden Bahá’í preview collection
+
+Do not add any third collection.
+
+# INVARIANTS
+
+- one passage remains the hero;
+- Hidden Words remains default;
+- no feed/dashboard/search/browser is added to the homepage;
+- deterministic selection by date survives;
+- switching collection must not produce cache collisions;
+- today/yesterday must both use the selected collection;
+- selected collection persistence is exactly what the accepted contract says;
+- existing dark/light behavior remains;
+- no framework, bundler, package manifest, backend, runtime AI, analytics or auth;
+- Garden is a data producer, not a runtime dependency. Do not fetch Garden's GitHub repo at runtime.
+
+# DATA INTEGRATION
+
+Bring in the Garden export in the smallest durable way allowed by the accepted contract.
+Preserve export version/provenance.
+Do not hand-edit verified quote text inside the homepage repo except through the defined import/copy process.
+
+# TESTS FIRST / PARITY
+
+Before changing behavior:
+- extend the parity suite/fixtures to pin Hidden Words default behavior;
+- add deterministic selection tests for the Garden collection;
+- add selected-source persistence tests;
+- add collection-scoped cache tests;
+- add today/yesterday selected-collection tests;
+- pin selector accessibility behavior from D23.
+
+Then implement.
+
+Run before/after evidence for Hidden Words parity.
+
+# MULTI-SURFACE
+
+Follow the accepted H2B plan for wallpaper/iOS. Do not opportunistically redesign those surfaces.
+If the contract says they remain single-source for this unit, document that honestly. If a generated corpus copy is required, use the approved generation path.
+
+# DOCS / QUEUE
+
+Update canonical docs and queue only after evidence supports the new state.
+Do not unblock Ruhi unless H2B's actual exit gate is closed.
+
+# HANDOFF
+
+Create `H2B_IMPLEMENTATION_HANDOFF.md` with:
+- files changed;
+- collection contract version;
+- Garden export version/source commit;
+- Hidden Words parity evidence before/after;
+- second-collection deterministic-selection evidence;
+- cache/persistence evidence;
+- selector UX/a11y evidence;
+- live/local verification instructions;
+- multi-surface status;
+- exact remaining gate for R1/Ruhi;
+- deviations.
+
+# STOP CONDITION
+
+STOP when H2B is implemented, validated, and handed off.
+
+Do not begin Ruhi Book 1 research or add more collections.
