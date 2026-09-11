@@ -52,13 +52,14 @@ read-first order, commands, data-contract reality, autonomy boundary, and the fo
 
 ### Experimental ambient surfaces (unlinked, off the parity path)
 
-Both exist to put the *same* daily verse on other surfaces. Neither is linked from `index.html` and neither is
-on the parity path — **a change to `js/script.js` has no obligation to propagate to them.** That coupling is
-queue unit `H2B`'s problem, not a silent expectation on every future change.
+Neither is linked from `index.html` and neither is on the parity path — **a change to `js/script.js`
+has no obligation to propagate to them.** That coupling is queue unit `H2B`'s problem, not a silent
+expectation on every future change. After D25 the wallpaper is a lock-screen PNG over the ≤35-word
+subset, so its “today” can differ from the homepage’s 75-word today.
 
 | Surface | Live URL | Status |
 |---|---|---|
-| Wallpaper generator | <https://mschwar.github.io/bahai-homepage/wallpaper.html> | `wallpaper.html` + `css/wallpaper.css` + `js/wallpaper.js`; React 18 loaded from `unpkg.com`; pick device size / appearance / font scale, renders today's verse onto a canvas with Download PNG. **Deployed but unreachable from the homepage** — there is no link to it anywhere in `index.html`. |
+| Lock-screen wallpaper | <https://mschwar.github.io/bahai-homepage/wallpaper.html> | `wallpaper.html` + `css/wallpaper.css` + `js/wallpaper.js`; React 18 from `unpkg.com`; e-ink paper PNG of today’s Hidden Word (≤35 words, D25); pick iPhone size, Download PNG. iOS draws its own clock — the file is blank stock in the top ~40%. **Deployed but unreachable from the homepage.** |
 | iOS widget | *(no live URL — source only)* | `ios/widget/DailyVerseWidget.swift`, `ios/widget/QuoteStore.swift` and a bundled corpus copy. WidgetKit + SwiftUI, day-of-year selection, refresh at next midnight. |
 
 **Honest status of the widget:** there is **no `.xcodeproj` / `.xcworkspace` in this repo**, so as committed it

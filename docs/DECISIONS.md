@@ -866,3 +866,40 @@ homepage frozen file (`index.html`, `css/style.css`, `js/script.js`, `js/quote-c
 
 *Source:* owner decision in-session 2026-09-11 (`C12` option (b)); `docs/queue.md` `C12`; D22, D23,
 D3.
+
+## D25 — Wallpaper is an e-ink lock-screen PNG; ≤35-word subset; no WidgetKit for this look · accepted 2026-09-11
+
+Owner chose mock **3** (quiet clock, verse as the screen, Carta-like stock) after seeing lock-screen
+mockups. Apple’s 160×72 lock-screen widget cannot hold a complete Hidden Word (the shortest in the
+corpus is 18 words and already clips the author). This surface is therefore a **wallpaper PNG**, not
+a widget. D3 still holds: experimental, unlinked from `index.html` (H1.10).
+
+**What the PNG is.** Flat e-ink paper `#efe8d6`, ink `#1f1c16`, muted author `#6b6456`. Verse and
+author are Cormorant Garamond (author italic, right-aligned). A hairline sits above the verse. The
+top ~40% of the canvas is empty stock so iOS can draw its own clock; the time in the on-page preview
+is overlay chrome and is **not** in the file.
+
+**Which verses.** Only passages of **≤35 words** (52 of 153 records). Selection is still
+`dayOfYear % len` over that subset, so this surface’s “today” can differ from the homepage’s 75-word
+today. Cache namespace is `dailyEink:` so leftover 75-word wallpaper cache cannot leak in.
+
+**What this is not.** Not WidgetKit. Not a Live Photo. Not auto-set on the phone (the user still
+saves the PNG). Dark studio chrome is gone; the generator page is the same paper.
+
+**Evidence.** `make wallpaper-check` **4 passed, 0 failed** (paper `rgb(239, 232, 214)` and flat at
+both sampled corners; words=18 (≤35), author `textAlign=right`, `ctx.font` italic Cormorant
+Garamond; `toDataURL('image/png')` 173862 chars; no page or console errors). `make validate`
+**153 / 0 / 0 / 0**. `make parity` **24 passed, 0 failed**. Browser QA on
+`http://localhost:8000/wallpaper.html`: hairline + verse start at ~40% from the top; a 35-word
+injected verse’s ink bounds were 40.1%–57.3% of canvas height (not clipped); size select resizes
+the canvas to 1170×2532 / 1179×2556 / 1290×2796; the preview clock is CSS overlay, not canvas
+pixels; mobile stacks to one column; homepage yesterday remains `display:none`.
+
+**Hashes (this unit).** `wallpaper.html`
+`951288e2ad9b20909382f4091a2bcc2bb5bb567113ae74d959d5cd19ab308981`, `css/wallpaper.css`
+`b1bdd5971a31ec89d20d9f35d99b15b4583478a2d4e4238918d07829444664c0`, `js/wallpaper.js`
+`8f0d62d46e0fb5ea116c2911f06175930f2ef77c12fad51150f49e8c6d48ec50`. Homepage frozen files
+unchanged (`index.html`, `css/style.css`, `js/script.js`, `js/quote-core.js`, `js/badi-init.js`,
+`data/quotes_hidden_words.json`). `ios/widget/*` untouched.
+
+*Source:* owner in-session 2026-09-11 (“agreed. do 3.”); mock 3 of the e-ink lock-screen series.

@@ -673,6 +673,10 @@ Generator chrome is still the dark studio panel; `ios/widget/*` is still unmatch
 `docs/DECISIONS.md` **D24**. Evidence: `docs/audit/2026-09-10/C12_WALLPAPER_MATCH_RUN.txt` —
 `make wallpaper-check` 5/0, `make validate` 153/0/0/0, `make parity` 24/0.
 
+**Superseded the same day by D25.** The owner then chose the e-ink lock-screen look (mock 3) over
+the homepage-matched poster. `wallpaper.html` is now that PNG: paper `#efe8d6`, ≤35-word subset,
+no clock in the file. WidgetKit is not the vehicle for this look.
+
 ---
 
 ## Tech-debt ledger — closures since the Phase 0 audit
