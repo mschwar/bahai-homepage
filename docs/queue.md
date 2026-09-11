@@ -18,25 +18,18 @@ Canonical forward plan for `bahai-homepage`. Supersedes `PROJECT_ROADMAP.md` and
 
 ## Priority order
 
-Open units in execution order; closed units are listed in their own sections. Every unit below is
-**owner-gated** except `H2B`, whose gate is `agent` once the data contract is written.
+Open units in execution order; closed units are listed in their own sections. The remaining scheduled
+unit is **owner-gated** except `H2B`, whose gate is `agent` once the data contract is written.
 
 | # | Unit | What it is | Gate |
 |---|---|---|---|
-| 1 | `C4` | Dependabot has no stated policy for major-version bumps | human — CI configuration |
-| 2 | `C5` | Three super-linter settings announce checks that do not run | human — CI configuration |
-| 3 | `C7` | Saved dark theme leaves the body carrying *both* theme classes | human — frozen `index.html` / `js/script.js` |
-| 4 | `C6` | The designed copy affordance is invisible (`.quote-actions{display:none}`) | human — frozen `css/*` / `index.html` |
-| 5 | `C9` | The Badíʿ date never resolves on the live site (the vendor library's mixed-content call) | human — frozen files and/or product doctrine |
-| 6 | `H2B` | Collection / source abstraction | agent, after the data contract is written |
+| 1 | `H2B` | Collection / source abstraction | agent, after the data contract is written |
 
-`R1` is BLOCKED (human) behind `H2B` + a rights/provenance review; `H3` is BLOCKED behind `R1`. Ordering
-rationale: the two CI-configuration units are first because neither changes a product file and `C4` guards a live
-update path; the two frozen-file units follow as a pair, each needing `make parity` before and after; `C9` is the
-last of the defects because every one of its options is a product change; `H2B` is last because it must wait for a
-contract that does not exist yet.
+`R1` is BLOCKED (human) behind `H2B` + a rights/provenance review; `H3` is BLOCKED behind `R1`. `C12` is a
+candidate (wallpaper light-token drift after D22), not scheduled. Ordering rationale: `H2B` is the remaining
+scheduled unit and must wait for a contract that does not exist yet.
 
-Closed: `H1`, `H2A`, `C1`, `C2`, `C3`, `C8`.
+Closed: `H1`, `H2A`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`.
 
 ---
 
@@ -164,6 +157,11 @@ header.
 Depends on the data/provenance contract, **not** on Ruhi.
 **Evidence:** the written contract + the fixture-selection test output + Hidden Words parity before/after.
 
+**Placeholder chrome already shipped (D22, 2026-09-11).** The on-page source control exists: a second floating
+toggle under the theme control, opening a two-item menu (`The Hidden Words` / `Coming later`). Picking an item
+dismisses the menu and does **not** change the corpus. Wiring a real second collection into that control is this
+unit.
+
 ## R1 — Ruhi Book 1 memorization collection · **BLOCKED** · gate: human
 
 Blocked by **(a)** H2B's collection contract and **(b)** a rights/provenance review. **No timeline** (owner
@@ -193,7 +191,7 @@ repair. Each names a contract and a gate. Units arrive here as workstreams find 
 workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
 are written into this section.
 
-**Open now:** none — all current units are closed.
+**Open now:** `C12` (candidate, not scheduled).
 **Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13), `C10` (D19), `C11` (D20).
 
 Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
@@ -204,7 +202,8 @@ product file (PR #9, H2A's refactor), closed the same day on the owner's option 
 date never resolves on the live site", which the owner disputed and re-testing disproved, then executed on the
 owner's option (a) and recorded as D13; `C10` from the owner's 2026-09-10 decision to strip the auto-merge
 question out of `C4` and record it as its own unit (D18); `C11` from the D17 linter-policy review, where the
-single Python linter of record was run directly and does not pass on `scripts/`.
+single Python linter of record was run directly and does not pass on `scripts/`; `C12` from the D22 homepage
+restyle, which left the experimental wallpaper (and iOS widget) on the pre-D22 light tokens.
 
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
@@ -411,6 +410,9 @@ are all true of an invisible control — *presence is not perceivability* — so
 contrast, and that assertion was verified to fail at 1:1 against the un-fixed CSS.
 **Exit gate — closed.** A visible, perceivable copy control plus `make parity` green (19/0).
 **Gate:** human — modifies `css/*`.
+
+**Later (D22, 2026-09-11):** the owner hid the Copy button again. Click-the-quote remains the copy path.
+C6 stays closed as executed; the reversal is a new product decision, not a reopen.
 
 ### C7 — Saved dark theme leaves the body carrying *both* theme classes · **done** · gate: human (authorized 2026-09-10)
 
@@ -644,6 +646,27 @@ behavior change, not a lint fix). `uvx ruff check scripts/` now reports 0 findin
 reports 153/0/0/0 against `data/quotes_hidden_words.json`, unchanged from baseline. See `docs/DECISIONS.md`
 `D20` for the full record.
 
+### C12 — Wallpaper light tokens now diverge from the homepage restyle · **pending** · gate: human
+
+Found while executing the 2026-09-11 owner restyle (D22). The homepage light background is now natalia dawn
+`#f7f4f0` and the verse face is Cormorant Garamond. `css/wallpaper.css` / `js/wallpaper.js` / `wallpaper.html`
+still use the previous Source Serif Pro / `#EFEBE9` path. D3 keeps the wallpaper experimental and off the
+parity path; `AGENTS.md` forbids modifying it without an owner decision. The iOS widget is the same class of
+drift (SwiftUI, source-only, no `.xcodeproj`).
+
+**Why it is a defect, not cosmetics.** After D22, "today's verse" on the homepage and on the wallpaper
+generator no longer share a light-theme face or ground. A visitor who reaches `wallpaper.html` by URL (it is
+still deployed) will see a different page than the one D22 just made.
+
+**Contract:** pick exactly one and record it in `docs/DECISIONS.md` —
+(a) leave the drift; wallpaper is a separate experimental surface (D3);
+(b) restyle the wallpaper light path to match D22 (`#f7f4f0` + Cormorant Garamond) and re-check the canvas
+    download;
+(c) unpublish `wallpaper.html` from `main` (retain on an archive branch, same mechanism as D4).
+**Exit gate:** the choice is recorded; if (b), a headless wallpaper render with no console/page errors.
+**Gate:** human — experimental surface; `AGENTS.md` "Do not modify the wallpaper or iOS widget without an
+owner decision."
+
 ---
 
 ## Tech-debt ledger — closures since the Phase 0 audit
@@ -660,7 +683,7 @@ recorded here rather than by rewriting it. Its item numbers are referenced throu
 | 5 | Stale, misleading roadmap | **Closed by D5** — archived to `docs/history/` under a SUPERSEDED banner. |
 | 6 | Toolchain mismatch (`python`, unpinned dev deps) | **Closed in H1** — `PYTHON ?= python3`, `requirements-dev.txt`. |
 | 7 | `saveCachedQuote(pendingBadiKey, …)` writes today's verse under the Badíʿ-day key | **Closed 2026-09-10 (D16)** — the write is removed; the Gregorian key is the only authoritative read source. Parity section D re-pinned from the defect to the corrected behaviour. |
-| 8 | No tests beyond `validate_quotes.py` | **Closed by H2A** — `tests/parity.mjs` (now 19 assertions). |
+| 8 | No tests beyond `validate_quotes.py` | **Closed by H2A** — `tests/parity.mjs` (now 22 assertions, D22). |
 | 9 | No pinned external deps / integrity pins | **Open** — and now concrete: the Badíʿ vendor CDN is implicated in `C9`'s declined-location path. Not scheduled. |
 | 10 | ES tooling absent locally | **Open, by decision** — D12 turned off the unconfigured product-file checks; `make parity` + `make validate` are the product's checks of record. |
 | 11 | `index.html` used `innerHTML` for the Badíʿ string | **Closed by H2A** — now text nodes + `<br>`. |
