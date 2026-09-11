@@ -193,8 +193,8 @@ repair. Each names a contract and a gate. Units arrive here as workstreams find 
 workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
 are written into this section.
 
-**Open now:** `C6`, `C7`, `C10` — owner-gated; `C11` is agent-gated.
-**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C8` (D12), `C9` (D13).
+**Open now:** `C10` — owner-gated; `C11` is agent-gated.
+**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13).
 
 Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
 `C4` and `C5` from the review of the `actions/checkout` bump (D10, third addendum); `C6` and `C7` from the
@@ -392,42 +392,36 @@ misconfiguration — two flags enable a summary that a third prevents from exist
 `docs/DECISIONS.md`.
 **Gate:** human — CI configuration.
 
-### C6 — The designed copy affordance is invisible: `.quote-actions{display:none}` hides the copy row · gate: human
+### C6 — The designed copy affordance is invisible: `.quote-actions{display:none}` hides the copy row · **done** · gate: human (authorized 2026-09-10)
 
-**Evidence (2026-09-10, parity suite section G).** The live page has a full clipboard handler — primary
-`navigator.clipboard`, `execCommand` fallback, a `#copy-status` message — but the CSS rule
-`.quote-actions{display:none}` hides the `#copy-button` row. The parity suite's computed-style check confirms
-`display:none` on the row and a zero-size button. The only reachable copy affordance is clicking the quote
-text itself (`#quote-text` is wired to the same handler), which is not discoverable.
+**Outcome (executed 2026-09-10, contract option (a)):** `css/style.css` restores the row
+(`display:flex`, matching the sibling `.status-row`), so the designed copy control is visible and
+discoverable below the attribution. The clipboard handler and both fallbacks were already present
+and are untouched. Recorded as `docs/DECISIONS.md` **D16**; evidence in
+`docs/audit/2026-09-10/C6_C7_DEBT7_RUN.txt`, with `C6-before-copy-affordance.png` /
+`C6-after-copy-affordance.png`.
 
-**Why it is a defect.** The copy interaction was clearly designed (button, status, fallbacks) but ships hidden,
-so the user-facing path to a core feature ("click-to-copy" is in the product doctrine) is an invisible
-click-target. Hidden dead UI invites the "remove the dead code" reading, which would silently drop a working
-behavior the parity suite now pins.
+**A second, hidden defect was found while verifying the first, and fixed.** Restoring the row was
+not sufficient: the button rendered `#EFEBE9` on a `#EFEBE9` background — **contrast 1:1**, an
+invisible white rectangle that occupied 120×45 px. `.button` (declared later at equal specificity)
+was overriding `.button-inline` and applying the dark `.panel-buttons` palette to the light
+jumbotron. Scoping the rule to `.quote-jumbotron .button-inline` fixes the cascade; contrast is now
+**12.85:1 in both themes**. The first attempt's checks (not `display:none`, non-zero box, enabled)
+are all true of an invisible control — *presence is not perceivability* — so section G now asserts
+contrast, and that assertion was verified to fail at 1:1 against the un-fixed CSS.
+**Exit gate — closed.** A visible, perceivable copy control plus `make parity` green (19/0).
+**Gate:** human — modifies `css/*`.
 
-**Contract:** make the copy affordance visible and discoverable — either restore the `.quote-actions` row, or
-add an explicit visible control wired to the same copy handler — with before/after screenshot evidence and the
-parity suite re-run (section G must stay green).
-**Exit gate:** a visible, discoverable copy control plus `make parity` green.
-**Gate:** human — modifies `css/*` and/or `index.html` (frozen files).
+### C7 — Saved dark theme leaves the body carrying *both* theme classes · **done** · gate: human (authorized 2026-09-10)
 
-### C7 — Saved dark theme leaves the body carrying *both* theme classes · gate: human
-
-**Evidence (2026-09-10, parity suite section E).** `index.html` hardcodes `<body class="light-mode">`, while
-`js/script.js` *appends* the saved theme class on load. After a reload to a saved dark theme the body carries
-`light-mode dark-mode` together. The parity suite confirms the pair: `body ends with both
-light-mode+dark-mode after reload to a saved dark theme`. `dark-mode` wins only by CSS specificity, so the
-effective theme is currently correct, but the class list is not a single source of truth.
-
-**Why it is a defect.** Correctness depends on specificity ordering between two contradictory classes rather
-than the body carrying exactly one theme. Any future styling change that alters specificity, or any component
-that styles off `light-mode`, will be applied on top of a dark theme — a latent wrong-theme class of bug.
-
-**Contract:** reconcile so the body carries exactly one of `light-mode`/`dark-mode` after a reload to a saved
-theme (e.g. the script replaces the class instead of appending, or the hardcoded default is removed at init),
-with the parity suite re-run (section E must stay green).
-**Exit gate:** `make parity` green and the body carries exactly one theme class after reload to a saved dark theme.
-**Gate:** human — modifies `index.html` and/or `js/script.js` (frozen files).
+**Outcome (executed 2026-09-10, contract option (a)):** `js/script.js` removes both theme classes
+before adding the saved (or default) one, so the body carries exactly one of
+`light-mode`/`dark-mode` on load, on default, and after a reload to a saved theme. `index.html` is
+untouched. Section E now *asserts* the single-class invariant instead of logging a note about the
+dual-class one — logging was not pinning. Recorded as `docs/DECISIONS.md` **D16**.
+**Exit gate — closed.** `make parity` green and exactly one theme class after reload to a saved
+dark theme.
+**Gate:** human — modifies `js/script.js`.
 
 ### C8 — The first change to touch the product files turned CI red on four categories that only ever target those files · **done** · gate: human (authorized 2026-09-10)
 
@@ -637,6 +631,27 @@ This changes a dev-only script, not the served site: no file under `index.html` 
 **Exit gate:** `uvx ruff check scripts/` clean, and `make validate` still **153 checked / 0 errors / 0 warnings /
 0 duplicate texts**.
 **Gate:** agent — dev tooling; no frozen file, no product path.
+
+---
+
+## Tech-debt ledger — closures since the Phase 0 audit
+
+`docs/audit/2026-09-10/TECH_DEBT_AND_RISKS.md` is the immutable Phase 0 record (D10), so closures are
+recorded here rather than by rewriting it. Its item numbers are referenced throughout this queue.
+
+| # | Item | State |
+|---|---|---|
+| 1 | Hard-coded corpus path + implicit contract | **Partly closed by H2A** — one JS source of truth (`js/quote-core.js`); the remaining copy is `ios/widget/QuoteStore.swift`, which is `H2B`'s seam. |
+| 2 | ~10 MB orphaned multi-faith payload served publicly | **Closed by H1C / D4** — unpublished from `main`, retained on `archive/legacy-multifaith`. |
+| 3 | Experimental surfaces undocumented and unlinked | **Closed by H1 / D3** — documented as experimental ambient surfaces; `H1.10` decided to leave them unlinked. |
+| 4 | Duplicate corpus copies, no regeneration step | **Open — `H2B`.** |
+| 5 | Stale, misleading roadmap | **Closed by D5** — archived to `docs/history/` under a SUPERSEDED banner. |
+| 6 | Toolchain mismatch (`python`, unpinned dev deps) | **Closed in H1** — `PYTHON ?= python3`, `requirements-dev.txt`. |
+| 7 | `saveCachedQuote(pendingBadiKey, …)` writes today's verse under the Badíʿ-day key | **Closed 2026-09-10 (D16)** — the write is removed; the Gregorian key is the only authoritative read source. Parity section D re-pinned from the defect to the corrected behaviour. |
+| 8 | No tests beyond `validate_quotes.py` | **Closed by H2A** — `tests/parity.mjs` (now 19 assertions). |
+| 9 | No pinned external deps / integrity pins | **Open** — and now concrete: the Badíʿ vendor CDN is implicated in `C9`'s declined-location path. Not scheduled. |
+| 10 | ES tooling absent locally | **Open, by decision** — D12 turned off the unconfigured product-file checks; `make parity` + `make validate` are the product's checks of record. |
+| 11 | `index.html` used `innerHTML` for the Badíʿ string | **Closed by H2A** — now text nodes + `<br>`. |
 
 ---
 
