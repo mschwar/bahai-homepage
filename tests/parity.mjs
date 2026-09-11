@@ -15,10 +15,11 @@
 //      key is NOT written (TECH_DEBT_AND_RISKS.md #7, fixed) so a cache hit can't mismatch
 //   E. theme persistence: body carries exactly one of light-mode/dark-mode (queue C7)
 //   F. Badici fallback / graceful degradation when the external lib is unreachable
-//   G. clipboard copy (primary + execCommand fallback + failure); Copy button is hidden
-//       (click-the-quote is the affordance). Status still reports Copied. / Copy failed.
+//   G. clipboard copy (primary + execCommand fallback + failure); Copy button is
+//       visually hidden but still keyboard-reachable. Status reports Copied. / Copy failed.
 //   H. reduced-motion scroll behavior
-//   I. source-toggle placeholder: opens a two-item menu, pick dismisses, corpus unchanged
+//   I. source-toggle placeholder: opens a two-item menu; pick / Escape / click-outside
+//       dismiss; corpus unchanged; light tokens + dark bg pinned
 //
 // Run:   node tests/parity.mjs   (uses the globally-installed playwright + bundled
 //                                Chromium; no package manifest is added to the repo)
@@ -187,8 +188,12 @@ await run('B. Today / yesterday relationship', [
     const page = await ctx.newPage();
     await loadPage(page);
     if ((await attr(page, '#yesterday-jumbotron-display', 'hidden')) === null) throw new Error('yesterday section should start hidden');
+    const yestDisplay = await page.evaluate(() => getComputedStyle(document.getElementById('yesterday-jumbotron-display')).display);
+    if (yestDisplay !== 'none') throw new Error(`yesterday jumbotron must not layout while hidden, got display=${yestDisplay}`);
     await page.click('#yesterday-button');
     if (await attr(page, '#yesterday-jumbotron-display', 'hidden')) throw new Error('yesterday section did not unhide');
+    const yestShown = await page.evaluate(() => getComputedStyle(document.getElementById('yesterday-jumbotron-display')).display);
+    if (yestShown === 'none') throw new Error('yesterday jumbotron still display:none after reveal');
     if ((await attr(page, '#yesterday-button', 'aria-expanded')) !== 'true') throw new Error('aria-expanded not true');
     const yt = (await txt(page, '#quote-text-yesterday')).trim();
     if (yt !== expYest.text) throw new Error('yesterday text mismatch');
@@ -379,27 +384,45 @@ await run('G. Clipboard copy', [
     if (status !== 'Copied.') throw new Error(`expected Copied., got: ${status}`);
     await ctx.close();
   }],
-  ['the Copy button is not visible; click-the-quote remains the copy path', async () => {
+  ['the Copy button is visually hidden but still a real, enabled control', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page);
     const vis = await page.evaluate(() => {
-      const btn = document.getElementById('copy-button');
-      const yest = document.getElementById('copy-button-yesterday');
-      const cs = getComputedStyle(btn);
-      const b = btn.getBoundingClientRect();
-      return {
-        display: cs.display,
-        visible: b.width > 0 && b.height > 0,
-        yestDisplay: yest ? getComputedStyle(yest).display : null
+      const measure = (id) => {
+        const btn = document.getElementById(id);
+        const cs = getComputedStyle(btn);
+        const b = btn.getBoundingClientRect();
+        return {
+          display: cs.display,
+          clipped: (b.width <= 1 && b.height <= 1) || cs.clip === 'rect(0px, 0px, 0px, 0px)',
+          disabled: btn.disabled,
+          srOnly: btn.classList.contains('visually-hidden')
+        };
       };
+      return { today: measure('copy-button'), yest: measure('copy-button-yesterday') };
     });
-    if (vis.display !== 'none' || vis.visible) {
-      throw new Error(`copy-button must be hidden, got display=${vis.display} visible=${vis.visible}`);
+    for (const [name, m] of [['today', vis.today], ['yesterday', vis.yest]]) {
+      if (m.display === 'none') throw new Error(`${name} copy-button must stay in the a11y tree, got display=none`);
+      if (!m.clipped || !m.srOnly) throw new Error(`${name} copy-button must be visually hidden, got ${JSON.stringify(m)}`);
+      if (m.disabled) throw new Error(`${name} copy-button should be enabled after quote load`);
     }
-    if (vis.yestDisplay !== 'none') {
-      throw new Error(`yesterday copy-button must be hidden, got display=${vis.yestDisplay}`);
-    }
+    await ctx.close();
+  }],
+  ['keyboard activation of the visually-hidden Copy button writes the verse', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    await page.evaluate(() => {
+      window.__copied = null;
+      Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { window.__copied = t; } } });
+    });
+    await page.locator('#copy-button').focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(50);
+    const copied = await page.evaluate(() => window.__copied);
+    const expected = `${expToday.text}\n— ${expToday.author || 'Bahá’u’lláh'}`;
+    if (copied !== expected) throw new Error(`keyboard copy payload mismatch, got ${copied}`);
     await ctx.close();
   }],
   ['falls back to execCommand copy when navigator.clipboard rejects', async () => {
@@ -501,13 +524,41 @@ await run('I. Source-toggle placeholder (chrome only; does not switch corpus)', 
     const afterPick = await page.evaluate(() => ({
       hidden: document.getElementById('source-menu').hidden,
       expanded: document.getElementById('source-toggle-button').getAttribute('aria-expanded'),
-      verse: document.getElementById('quote-text').textContent.trim()
+      verse: document.getElementById('quote-text').textContent.trim(),
+      focus: document.activeElement && document.activeElement.id
     }));
     if (!afterPick.hidden || afterPick.expanded !== 'false') {
       throw new Error(`menu should close after pick, hidden=${afterPick.hidden} aria-expanded=${afterPick.expanded}`);
     }
     if (afterPick.verse !== before) {
       throw new Error('placeholder pick must not change the verse');
+    }
+    if (afterPick.focus !== 'source-toggle-button') {
+      throw new Error(`after pick, focus should return to the toggle, got ${afterPick.focus}`);
+    }
+    await ctx.close();
+  }],
+  ['Escape and a click outside both close the source menu', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    await page.click('#source-toggle-button');
+    await page.keyboard.press('Escape');
+    const afterEsc = await page.evaluate(() => ({
+      hidden: document.getElementById('source-menu').hidden,
+      expanded: document.getElementById('source-toggle-button').getAttribute('aria-expanded')
+    }));
+    if (!afterEsc.hidden || afterEsc.expanded !== 'false') {
+      throw new Error(`Escape should close the menu, hidden=${afterEsc.hidden} aria-expanded=${afterEsc.expanded}`);
+    }
+    await page.click('#source-toggle-button');
+    await page.click('#quote-text');
+    const afterOutside = await page.evaluate(() => ({
+      hidden: document.getElementById('source-menu').hidden,
+      expanded: document.getElementById('source-toggle-button').getAttribute('aria-expanded')
+    }));
+    if (!afterOutside.hidden || afterOutside.expanded !== 'false') {
+      throw new Error(`click-outside should close the menu, hidden=${afterOutside.hidden} aria-expanded=${afterOutside.expanded}`);
     }
     await ctx.close();
   }],
@@ -534,6 +585,18 @@ await run('I. Source-toggle placeholder (chrome only; does not switch corpus)', 
     if (tokens.authorAlign !== 'right') {
       throw new Error(`expected author right-aligned, got ${tokens.authorAlign}`);
     }
+    const darkCtx = await browser.newContext();
+    const darkPage = await darkCtx.newPage();
+    await blockExternal(darkPage); await fixClock(darkPage);
+    await darkPage.addInitScript(() => localStorage.setItem('theme', 'dark-mode'));
+    await darkPage.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
+    await darkPage.waitForFunction(() => document.getElementById('quote-text').textContent !== 'Loading Sacred Verse…', { timeout: 15000 });
+    await darkPage.waitForFunction(() => getComputedStyle(document.body).backgroundColor === 'rgb(26, 38, 57)', { timeout: 5000 });
+    const darkBg = await darkPage.evaluate(() => getComputedStyle(document.body).backgroundColor);
+    if (darkBg !== 'rgb(26, 38, 57)') {
+      throw new Error(`expected dark bg rgb(26, 38, 57) (#1A2639), got ${darkBg}`);
+    }
+    await darkCtx.close();
     await ctx.close();
   }],
 ]);

@@ -43,9 +43,9 @@
         aria-expanded="false"
         aria-controls="source-menu"
       >☰</button>
-      <div id="source-menu" class="source-menu" hidden role="listbox" aria-label="Sources">
-        <button type="button" role="option" data-source="hidden-words" aria-selected="true">The Hidden Words</button>
-        <button type="button" role="option" data-source="coming-later" aria-selected="false">Coming later</button>
+      <div id="source-menu" class="source-menu" hidden>
+        <button type="button" data-source="hidden-words" aria-current="true">The Hidden Words</button>
+        <button type="button" data-source="coming-later">Coming later</button>
       </div>
     </div>
   </div>
@@ -56,7 +56,7 @@
       <h1 id="quote-text" aria-live="polite" aria-atomic="true">Loading Sacred Verse…</h1>
       <div class="attribution-line"><p id="quote-author" class="quote-author"></p></div>
       <div class="quote-actions">
-        <button id="copy-button" type="button" class="button button-inline">Copy</button>
+        <button id="copy-button" type="button" class="button button-inline visually-hidden">Copy</button>
         <p id="copy-status" class="copy-status" role="status" aria-live="polite"></p>
       </div>
       <div class="status-row">
@@ -126,7 +126,7 @@
       </h2>
       <div class="attribution-line"><p id="quote-author-yesterday" class="quote-author"></p></div>
       <div class="quote-actions">
-        <button id="copy-button-yesterday" type="button" class="button button-inline">Copy</button>
+        <button id="copy-button-yesterday" type="button" class="button button-inline visually-hidden">Copy</button>
         <p id="copy-status-yesterday" class="copy-status" role="status" aria-live="polite"></p>
       </div>
 

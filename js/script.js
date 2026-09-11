@@ -67,14 +67,12 @@ dom.themeToggleBtn?.addEventListener('click', () => {
 /* Chrome only: the menu does not change the corpus. Wiring is H2B. */
 function setSourceMenu(open) {
   if (!dom.sourceMenu || !dom.sourceToggleBtn) return;
+  const wasOpen = !dom.sourceMenu.hidden;
+  if (!open && !wasOpen) return;
+  const focusWasInMenu = Boolean(dom.sourceMenu.contains(document.activeElement));
   dom.sourceMenu.hidden = !open;
   dom.sourceToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
-  if (open) {
-    const selected =
-      dom.sourceMenu.querySelector('[aria-selected="true"]') ||
-      dom.sourceMenu.querySelector('[data-source]');
-    selected?.focus();
-  }
+  if (!open && wasOpen && focusWasInMenu) dom.sourceToggleBtn.focus();
 }
 
 dom.sourceToggleBtn?.addEventListener('click', (event) => {
@@ -84,16 +82,23 @@ dom.sourceToggleBtn?.addEventListener('click', (event) => {
 
 dom.sourceToggle?.addEventListener('click', (event) => event.stopPropagation());
 
+dom.sourceToggle?.addEventListener('focusout', (event) => {
+  const next = event.relatedTarget;
+  if (next && dom.sourceToggle.contains(next)) return;
+  setSourceMenu(false);
+});
+
 dom.sourceMenu?.addEventListener('click', (event) => {
   const option = event.target.closest('[data-source]');
   if (!option) return;
   setSourceMenu(false);
-  dom.sourceToggleBtn?.focus();
 });
 
 document.addEventListener('click', () => setSourceMenu(false));
 document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape') setSourceMenu(false);
+  if (event.key !== 'Escape') return;
+  if (dom.sourceMenu?.hidden) return;
+  setSourceMenu(false);
 });
 
 /* ----------------------  CACHE (shared core)  ------------------- */

@@ -26,10 +26,10 @@ body{
 /*  FLOATING CHROME (theme + source)  ------------------------------------- */
 .chrome-floating{
   position:fixed;top:16px;right:16px;z-index:1000;
-  display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+  display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .chrome-toggle{
-  background:none;border:none;font-size:.8em;opacity:.45;color:var(--theme-icon);
-  border-radius:50%;padding:4px;cursor:pointer;line-height:1;
+  background:none;border:none;font-size:.8em;opacity:.7;color:var(--theme-icon);
+  border-radius:50%;padding:4px;min-width:24px;min-height:24px;cursor:pointer;line-height:1;
   transition:opacity .25s,transform .2s}
 .chrome-toggle:hover{opacity:.85;transform:scale(1.1)}
 .icon-sun{display:none}
@@ -45,12 +45,14 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
   font:inherit;font-size:.85em;padding:6px 10px;cursor:pointer;text-align:right;
   opacity:.65}
 .source-menu button:hover,
-.source-menu button[aria-selected="true"]{opacity:1}
+.source-menu button[aria-current="true"]{opacity:1}
 
 /*  JUMBOTRONS  ----------------------------------------------------------- */
 .quote-jumbotron{
   min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
   padding:40px 20px;background:var(--bg-color)}
+/* .quote-jumbotron{display:flex} otherwise beats the UA [hidden] rule (equal specificity). */
+.quote-jumbotron[hidden]{display:none}
 .quote-content-wrapper{max-width:700px;width:90%;text-align:left}
 #quote-text,#quote-text-yesterday{
   font-family:'Cormorant Garamond',Georgia,serif;font-size:1.5em;font-weight:400;line-height:1.55;
@@ -58,8 +60,11 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
 .attribution-line{text-align:right}
 .quote-author{
   font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;color:var(--text-color-light)}
-/* Copy stays click-the-quote; the C6 visible button is too much chrome. Status remains. */
-#copy-button,#copy-button-yesterday{display:none}
+/* Copy chrome is clipped, not display:none, so keyboard/AT still reach the control. */
+.visually-hidden{
+  position:absolute!important;width:1px!important;height:1px!important;
+  min-width:0!important;min-height:0!important;padding:0!important;margin:-1px!important;
+  overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0}
 .quote-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:.5em}
 .status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
 .status-message,.copy-status{font-size:.95em;color:var(--text-color-light)}
