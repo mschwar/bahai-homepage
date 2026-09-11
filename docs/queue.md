@@ -193,8 +193,9 @@ repair. Each names a contract and a gate. Units arrive here as workstreams find 
 workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
 are written into this section.
 
-**Open now:** `C10` — owner-gated; `C11` is agent-gated.
-**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13).
+**Open now:** `C11` — agent-gated.
+**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13),
+`C10` (D19).
 
 Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
 `C4` and `C5` from the review of the `actions/checkout` bump (D10, third addendum); `C6` and `C7` from the
@@ -557,7 +558,7 @@ permission. The mixed-content console error and the failed `http://ipinfo.io/geo
 real and reproducible — but they are observations of case C, the declined-location path, not of production. No
 page error and no failed request originates from this repository's own code, which was correct and remains so.
 
-### C10 — Dependabot auto-merge: a spoofable-bot guard in a write-permissioned workflow · gate: human
+### C10 — Dependabot auto-merge: a spoofable-bot guard in a write-permissioned workflow · **done** · gate: human
 
 **Evidence.** A prior attempt at a Dependabot auto-merge workflow gated its trigger with
 `if: github.actor == 'dependabot[bot]'` in a job holding `contents: write` and `pull-requests: write`. zizmor's
@@ -584,6 +585,10 @@ auto-merge unnecessary; or
 **Exit gate:** the choice is recorded in `docs/DECISIONS.md`, and the next Dependabot PR is handled
 consistently with it.
 **Gate:** human — CI configuration; option (a) additionally touches branch protection and repository settings.
+
+**Closed 2026-09-10.** The owner picked option (b): drop auto-merge entirely and rely on D18's grouped
+patch/minor PR, merged by hand. No auto-merge workflow file existed to remove. Decision:
+`docs/DECISIONS.md` **D19**.
 
 ---
 

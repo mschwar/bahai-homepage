@@ -662,3 +662,33 @@ That question is recorded as queue unit `C10` for the owner to adjudicate separa
 
 *Source:* `docs/queue.md` `C4` (closed) and `C10` (new).
 
+## D19 — Dependabot auto-merge: option (b), drop it entirely · accepted 2026-09-10
+
+Closes queue unit `C10`. The owner authorized this in-session on 2026-09-10 as `C10`'s contract option (b).
+No `.github/` file is touched by this decision, so it carries no CI-configuration sign-off of its own beyond
+the one D18 already recorded; it is recorded here purely as a ledger entry.
+
+**Why.** `C10` documented a prior, since-superseded attempt at a Dependabot auto-merge workflow whose trigger
+guard, `if: github.actor == 'dependabot[bot]'`, zizmor's `bot-conditions` audit rejects as spoofable — the
+actor is not the PR author, and the guard sat on a job holding `contents: write` and `pull-requests: write`.
+That attempt was never merged; it was stripped out before D18 landed, and no auto-merge workflow file exists
+anywhere in the current repository (`git grep -l auto.merge -- '*.yml' '*.yaml'` finds nothing; there is no
+such file under `.github/workflows/`). Fixing the guard to the canonical `github.event.pull_request.user.login`
+form (`C10` option (a)) would still leave two further dependencies: a repository setting that cannot be set
+from a pull request ("Settings > General > Allow auto-merge"), and the super-linter check being a REQUIRED
+check under branch protection, without which the gate is illusory. Weighed against one dependency ecosystem
+(`github-actions`), a monthly schedule and `open-pull-requests-limit: 3`, a write-permissioned auto-merge job
+is not buying enough to justify that security surface.
+
+**Policy, in plain words.** No auto-merge workflow is added. Dependabot PRs — the grouped monthly patch/minor
+PR that D18 already produces (`.github/dependabot.yml`, `groups.actions-patch-minor`) — continue to be merged
+by hand by the owner. Nothing about D18's grouping, schedule, cooldown or major-version suppression changes.
+
+**No code change.** There is nothing to remove: the auto-merge workflow this decision declines to build was
+never present on `main`. This entry exists so the choice between `C10`'s three options is recorded, not to
+undo any file.
+
+*Source:* owner authorization in-session 2026-09-10; `docs/queue.md` `C10` (closed here); `docs/DECISIONS.md`
+D18 (the grouped PR this decision relies on); `git grep -l auto.merge -- '*.yml' '*.yaml'` (no matches) and
+`.github/workflows/` (only `super-linter.yml`) verified 2026-09-10.
+

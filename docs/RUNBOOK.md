@@ -179,7 +179,7 @@ that `SAVE_SUPER_LINTER_SUMMARY` prevented from existing, and the job holds no `
 arrive as one grouped PR that the owner merges. A semver-major action bump is **owner-gated and performed by
 hand**: Dependabot is configured to suppress majors (`.github/dependabot.yml`, `ignore`), because a major CI
 action upgrade is a CI configuration change and its diff is not distinguishable from a routine patch (the
-`actions/checkout` v6→v7.0.1 bump, PR #5).
+`actions/checkout` v6→v7.0.1 bump, PR #5). There is no auto-merge workflow; see D19.
 
 **The served site is not linted — `make parity` is its check of record.** The four checks above were turned
 off on 2026-09-10 (queue `C8`, decision D12) because they run with super-linter's default config, which this
