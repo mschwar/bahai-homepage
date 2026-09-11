@@ -167,6 +167,12 @@ YAML, secrets, spelling and workflow security are on; the natural-language style
 would rewrite frozen product files or append-only records, and the four checks that target the served site
 (`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`) are off.
 
+**Dependabot update policy (D18).** The repository accepts patch and minor action updates automatically — they
+arrive as one grouped PR that the owner merges. A semver-major action bump is **owner-gated and performed by
+hand**: Dependabot is configured to suppress majors (`.github/dependabot.yml`, `ignore`), because a major CI
+action upgrade is a CI configuration change and its diff is not distinguishable from a routine patch (the
+`actions/checkout` v6→v7.0.1 bump, PR #5).
+
 **The served site is not linted — `make parity` is its check of record.** The four checks above were turned
 off on 2026-09-10 (queue `C8`, decision D12) because they run with super-linter's default config, which this
 repository has never adopted, and their only targets are frozen product files. Before that, they had never

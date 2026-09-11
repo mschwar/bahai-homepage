@@ -193,8 +193,8 @@ repair. Each names a contract and a gate. Units arrive here as workstreams find 
 workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
 are written into this section.
 
-**Open now:** `C4`, `C5`, `C6`, `C7` — all owner-gated.
-**Closed:** `C1` (D10), `C2` (D14), `C3`, `C8` (D12), `C9` (D13).
+**Open now:** `C5`, `C6`, `C7`, `C10` — all owner-gated.
+**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C8` (D12), `C9` (D13).
 
 Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
 `C4` and `C5` from the review of the `actions/checkout` bump (D10, third addendum); `C6` and `C7` from the
@@ -202,7 +202,8 @@ parity-suite review that closed H2A's first half; `C8` from the first CI run who
 product file (PR #9, H2A's refactor), closed the same day on the owner's option (a) and recorded as D12;
 `C9` from the post-deploy live verification of H2A and **corrected the same day** — first filed as "the Badíʿ
 date never resolves on the live site", which the owner disputed and re-testing disproved, then executed on the
-owner's option (a) and recorded as D13.
+owner's option (a) and recorded as D13; `C10` from the owner's 2026-09-10 decision to strip the auto-merge
+question out of `C4` and record it as its own unit (D18).
 
 
 ### C1 — CI is red on `main`: Super Linter's natural-language rules reject the docs' own vocabulary · **done** · gate: human (authorized 2026-09-10)
@@ -321,7 +322,13 @@ any path this repository uses. `docs/RUNBOOK.md` §5 no longer carries the unres
 if the run actually read the files, and on this repository's most common landing path that had been assumed
 rather than observed.
 
-### C4 — Dependabot has no stated policy for major-version bumps · gate: human
+### C4 — Dependabot has no stated policy for major-version bumps · **done** · gate: human (authorized 2026-09-10)
+
+**Outcome (executed 2026-09-10, contract options (c)-then-(a)).** `.github/dependabot.yml` now suppresses
+semver-major updates for the `github-actions` ecosystem (`ignore`), so majors are performed **by hand** as a
+deliberate decision; and it groups patch and minor updates into one PR (`groups.actions-patch-minor`) that the
+owner merges. Auto-merge is deliberately **not** part of this change — the owner stripped it out and recorded
+it as `C10` below. Decision: `docs/DECISIONS.md` **D18**. No product file was touched.
 
 **Evidence.** `.github/dependabot.yml` declares one ecosystem (`github-actions`), a monthly schedule, a
 seven-day cooldown and `open-pull-requests-limit: 3`. It says nothing about which update types this repository
@@ -537,6 +544,34 @@ never resolves on the live site, on the strength of a single headless run whose 
 permission. The mixed-content console error and the failed `http://ipinfo.io/geo?json` request it quoted are
 real and reproducible — but they are observations of case C, the declined-location path, not of production. No
 page error and no failed request originates from this repository's own code, which was correct and remains so.
+
+### C10 — Dependabot auto-merge: a spoofable-bot guard in a write-permissioned workflow · gate: human
+
+**Evidence.** A prior attempt at a Dependabot auto-merge workflow gated its trigger with
+`if: github.actor == 'dependabot[bot]'` in a job holding `contents: write` and `pull-requests: write`. zizmor's
+`bot-conditions` audit rejects that condition as spoofable, because the **actor** is not the **PR author**:
+anything (a workflow, a second user, a compromised token) that presents the username `dependabot[bot]` as the
+actor would pass the guard and reach a job with write permissions. The canonical, non-spoofable form tests the
+pull request's author instead: `github.event.pull_request.user.login`.
+
+**Why it is a defect.** The guard sits on a job with write permissions, so a spoofed trigger is a real
+privilege-escalation path, not a lint nit. Two further constraints make auto-merge fragile here even with a
+correct guard: (1) it depends on a repository setting that cannot be set from a pull request — "Settings >
+General > Allow auto-merge" — so the workflow alone cannot enable it; and (2) if the super-linter job is not a
+REQUIRED check under branch protection, an auto-merge can complete before lint runs, so the gate is illusory —
+the run reports success but the merge is not actually gated on it.
+
+**Contract:** pick exactly one and record it in `docs/DECISIONS.md` —
+(a) fix the guard to the canonical form (`github.event.pull_request.user.login`), set the "Allow auto-merge"
+repository setting, and make the lint check required under branch protection, then land it — a real, working
+auto-merge, at the cost of more moving parts;
+(b) drop auto-merge entirely and rely on the grouped patch/minor PR that `C4`/D18 now produces and that the
+owner merges by hand — the simplest, and a monthly grouped PR for a single dependency ecosystem may make
+auto-merge unnecessary; or
+(c) something else, with the trade-offs stated.
+**Exit gate:** the choice is recorded in `docs/DECISIONS.md`, and the next Dependabot PR is handled
+consistently with it.
+**Gate:** human — CI configuration; option (a) additionally touches branch protection and repository settings.
 
 ---
 
