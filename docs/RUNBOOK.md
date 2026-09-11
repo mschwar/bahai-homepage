@@ -202,10 +202,14 @@ A red run is a defect to fix, not noise to scroll past. Between the Phase 0 audi
 failed on three consecutive doc commits and nobody noticed, because the docs said it was "hygiene only". If it
 is red, either fix the finding or change this configuration on purpose and record why.
 
-**Expected noise, not a failure:** the log ends with `Failed to call GitHub API (…/issues/<n>/comments) … 403`
-and `Error while posting pull request summary`. That is the summary *comment* failing because the job
-deliberately does not hold `pull-requests: write`; every per-linter result still appears as its own status
-check on the PR.
+**Summary noise: what used to be expected, and no longer is.** Until 2026-09-10 the log ended with
+`Failed to call GitHub API (…/issues/<n>/comments) … 403` and `Error while posting pull request summary` —
+the summary *comment* failing because the job deliberately does not hold `pull-requests: write`. That was an
+artefact of the summary flags being on while `SAVE_SUPER_LINTER_SUMMARY` kept the summary itself from
+existing; D17 turned both flags off (`ENABLE_GITHUB_ACTIONS_STEP_SUMMARY`,
+`ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT`), so the comment is never attempted and neither line appears. The
+job still reports every per-linter result as its own status check on the PR — that is where to read the
+outcome.
 
 ## 6 · Rollback / recovery
 
