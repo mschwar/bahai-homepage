@@ -15,8 +15,10 @@
 //      key is NOT written (TECH_DEBT_AND_RISKS.md #7, fixed) so a cache hit can't mismatch
 //   E. theme persistence: body carries exactly one of light-mode/dark-mode (queue C7)
 //   F. Badici fallback / graceful degradation when the external lib is unreachable
-//   G. clipboard copy (primary + execCommand fallback + failure); copy row is visible (C6)
+//   G. clipboard copy (primary + execCommand fallback + failure); Copy button is hidden
+//       (click-the-quote is the affordance). Status still reports Copied. / Copy failed.
 //   H. reduced-motion scroll behavior
+//   I. source-toggle placeholder: opens a two-item menu, pick dismisses, corpus unchanged
 //
 // Run:   node tests/parity.mjs   (uses the globally-installed playwright + bundled
 //                                Chromium; no package manifest is added to the repo)
@@ -367,7 +369,7 @@ await run('G. Clipboard copy', [
       window.__copied = null;
       Object.defineProperty(navigator, 'clipboard', { configurable: true, value: { writeText: async (t) => { window.__copied = t; } } });
     });
-    // The copy row is visible (queue C6); the quote text is ALSO wired to the same handler.
+    // The Copy button is hidden; the quote text is the copy affordance.
     await page.click('#quote-text');
     await page.waitForTimeout(50);
     const copied = await page.evaluate(() => window.__copied);
@@ -377,84 +379,27 @@ await run('G. Clipboard copy', [
     if (status !== 'Copied.') throw new Error(`expected Copied., got: ${status}`);
     await ctx.close();
   }],
-  ['parity: the copy action row is VISIBLE and the copy button is a real, perceivable control', async () => {
+  ['the Copy button is not visible; click-the-quote remains the copy path', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page);
     const vis = await page.evaluate(() => {
-      const row = document.querySelector('.quote-actions');
       const btn = document.getElementById('copy-button');
-      const rowCs = getComputedStyle(row);
-      const r = row.getBoundingClientRect();
+      const yest = document.getElementById('copy-button-yesterday');
+      const cs = getComputedStyle(btn);
       const b = btn.getBoundingClientRect();
-      return { rowDisplay: rowCs.display, rowVisible: r.width > 0 && r.height > 0, btnVisible: b.width > 0 && b.height > 0, btnDisabled: btn.disabled };
-    });
-    if (vis.rowDisplay === 'none' || !vis.rowVisible) throw new Error(`copy row must be visible after C6, got display=${vis.rowDisplay} rowVisible=${vis.rowVisible}`);
-    if (!vis.btnVisible) throw new Error('copy-button should be visible');
-    if (vis.btnDisabled) throw new Error('copy-button should be enabled after quote load');
-    // LAYOUT IS NOT PERCEIVABILITY. The row was restored to display:flex while the button's
-    // label and border resolved to the same colour as the page background (the .button rule,
-    // declared later at equal specificity, overrode .button-inline and applied the dark
-    // .panel-buttons palette to the light jumbotron): a 1:1 ratio, i.e. an invisible control
-    // that a size-based assertion happily passed. Pin the contrast, in both themes.
-    const contrast = async () => page.evaluate(() => {
-      const btn = document.getElementById('copy-button');
-      const cs = getComputedStyle(btn);
-      let el = btn, bg = 'rgba(0, 0, 0, 0)';
-      while (el) {
-        const c = getComputedStyle(el).backgroundColor;
-        if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
-        el = el.parentElement;
-      }
-      const nums = s => (s.match(/[\d.]+/g) || []).map(Number);
-      const lum = c => {
-        const [r, g, b] = nums(c).slice(0, 3).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+      return {
+        display: cs.display,
+        visible: b.width > 0 && b.height > 0,
+        yestDisplay: yest ? getComputedStyle(yest).display : null
       };
-      const a = lum(cs.color), b2 = lum(bg);
-      return { color: cs.color, bg, ratio: +(((Math.max(a, b2) + 0.05) / (Math.min(a, b2) + 0.05)).toFixed(2)) };
     });
-    const light = await contrast();
-    if (light.ratio < 4.5) throw new Error(`copy-button label must be perceivable in light mode; contrast ${light.ratio}:1 (${light.color} on ${light.bg})`);
-    // and the same in the dark theme, where the palette swaps
-    const darkCtx = await browser.newContext();
-    const darkPage = await darkCtx.newPage();
-    await blockExternal(darkPage); await fixClock(darkPage);
-    await darkPage.addInitScript(() => localStorage.setItem('theme', 'dark-mode'));
-    await darkPage.goto(`${BASE}/`, { waitUntil: 'domcontentloaded' });
-    await darkPage.waitForFunction(() => document.getElementById('quote-text').textContent !== 'Loading Sacred Verse…', { timeout: 15000 }).catch(() => {});
-    // The theme swap runs through a CSS transition (body: .3s, .button: .25s), so a colour read
-    // taken immediately lands mid-interpolation and yields a meaningless ratio. Wait until the
-    // computed colour stops changing before measuring -- polling for stability rather than
-    // sleeping, so it does not depend on the faked clock's timer semantics.
-    await darkPage.waitForFunction(() => {
-      const btn = document.getElementById('copy-button');
-      if (!btn) return false;
-      const c = getComputedStyle(btn).color;
-      if (window.__lastColor === c) return true;
-      window.__lastColor = c;
-      return false;
-    }, { timeout: 5000 }).catch(() => {});
-    const dark = await darkPage.evaluate(() => {
-      const btn = document.getElementById('copy-button');
-      const cs = getComputedStyle(btn);
-      let el = btn, bg = 'rgba(0, 0, 0, 0)';
-      while (el) {
-        const c = getComputedStyle(el).backgroundColor;
-        if (c && c !== 'rgba(0, 0, 0, 0)' && c !== 'transparent') { bg = c; break; }
-        el = el.parentElement;
-      }
-      const nums = s => (s.match(/[\d.]+/g) || []).map(Number);
-      const lum = c => {
-        const [r, g, b] = nums(c).slice(0, 3).map(v => { v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
-        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
-      };
-      const a = lum(cs.color), b2 = lum(bg);
-      return { color: cs.color, bg, ratio: +(((Math.max(a, b2) + 0.05) / (Math.min(a, b2) + 0.05)).toFixed(2)) };
-    });
-    if (dark.ratio < 4.5) throw new Error(`copy-button label must be perceivable in dark mode; contrast ${dark.ratio}:1 (${dark.color} on ${dark.bg})`);
-    await darkCtx.close();
-    console.log(`      .quote-actions visible (C6); copy button perceivable — light ${light.ratio}:1, dark ${dark.ratio}:1`);
+    if (vis.display !== 'none' || vis.visible) {
+      throw new Error(`copy-button must be hidden, got display=${vis.display} visible=${vis.visible}`);
+    }
+    if (vis.yestDisplay !== 'none') {
+      throw new Error(`yesterday copy-button must be hidden, got display=${vis.yestDisplay}`);
+    }
     await ctx.close();
   }],
   ['falls back to execCommand copy when navigator.clipboard rejects', async () => {
@@ -508,6 +453,87 @@ await run('H. Reduced-motion scroll behavior', [
     await page.click('#scroll-down-arrow');
     const behaviors = await page.evaluate(() => window.__scrollBehaviors);
     if (!behaviors.includes('smooth')) throw new Error(`expected scrollIntoView behavior smooth, got: ${JSON.stringify(behaviors)}`);
+    await ctx.close();
+  }],
+]);
+
+await run('I. Source-toggle placeholder (chrome only; does not switch corpus)', [
+  ['sits below the theme toggle and starts closed', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    const layout = await page.evaluate(() => {
+      const theme = document.getElementById('theme-toggle-button');
+      const source = document.getElementById('source-toggle-button');
+      const menu = document.getElementById('source-menu');
+      const tr = theme.getBoundingClientRect();
+      const sr = source.getBoundingClientRect();
+      return {
+        sourceBelowTheme: sr.top >= tr.bottom - 1,
+        menuHidden: menu.hidden === true,
+        expanded: source.getAttribute('aria-expanded'),
+        options: [...menu.querySelectorAll('[data-source]')].map(el => el.getAttribute('data-source'))
+      };
+    });
+    if (!layout.sourceBelowTheme) throw new Error('source toggle must sit below the theme toggle');
+    if (!layout.menuHidden || layout.expanded !== 'false') {
+      throw new Error(`menu should start closed, hidden=${layout.menuHidden} aria-expanded=${layout.expanded}`);
+    }
+    if (layout.options.join(',') !== 'hidden-words,coming-later') {
+      throw new Error(`expected placeholder options hidden-words,coming-later; got ${layout.options.join(',')}`);
+    }
+    await ctx.close();
+  }],
+  ['clicking the toggle opens the menu; picking an option closes it without changing the verse', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    const before = (await txt(page, '#quote-text')).trim();
+    await page.click('#source-toggle-button');
+    const opened = await page.evaluate(() => ({
+      hidden: document.getElementById('source-menu').hidden,
+      expanded: document.getElementById('source-toggle-button').getAttribute('aria-expanded')
+    }));
+    if (opened.hidden || opened.expanded !== 'true') {
+      throw new Error(`menu should open, hidden=${opened.hidden} aria-expanded=${opened.expanded}`);
+    }
+    await page.click('[data-source="coming-later"]');
+    const afterPick = await page.evaluate(() => ({
+      hidden: document.getElementById('source-menu').hidden,
+      expanded: document.getElementById('source-toggle-button').getAttribute('aria-expanded'),
+      verse: document.getElementById('quote-text').textContent.trim()
+    }));
+    if (!afterPick.hidden || afterPick.expanded !== 'false') {
+      throw new Error(`menu should close after pick, hidden=${afterPick.hidden} aria-expanded=${afterPick.expanded}`);
+    }
+    if (afterPick.verse !== before) {
+      throw new Error('placeholder pick must not change the verse');
+    }
+    await ctx.close();
+  }],
+  ['light page beige and verse face match the natalia dawn oracle; author is right-aligned', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    const tokens = await page.evaluate(() => {
+      const body = getComputedStyle(document.body);
+      const quote = getComputedStyle(document.getElementById('quote-text'));
+      const authorLine = getComputedStyle(document.querySelector('.attribution-line'));
+      return {
+        bg: body.backgroundColor,
+        font: quote.fontFamily,
+        authorAlign: authorLine.textAlign
+      };
+    });
+    if (tokens.bg !== 'rgb(247, 244, 240)') {
+      throw new Error(`expected light bg rgb(247, 244, 240) (#f7f4f0), got ${tokens.bg}`);
+    }
+    if (!/cormorant garamond/i.test(tokens.font)) {
+      throw new Error(`expected Cormorant Garamond on the verse, got ${tokens.font}`);
+    }
+    if (tokens.authorAlign !== 'right') {
+      throw new Error(`expected author right-aligned, got ${tokens.authorAlign}`);
+    }
     await ctx.close();
   }],
 ]);
