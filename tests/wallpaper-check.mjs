@@ -1,12 +1,9 @@
 // tests/wallpaper-check.mjs
-// Headless check of the wallpaper generator PNG (queue C12 option b).
+// Headless check of the e-ink lock-screen PNG (D25).
 //
-// DEV-ONLY. Not part of the served site and adds no runtime dependency.
-// Drives wallpaper.html in headless Chromium via Playwright, self-hosting a
-// static HTTP server so the page's fetch() of the corpus works under a real
-// origin. Unlike tests/parity.mjs, this does NOT abort Google Fonts or unpkg:
-// the generated image must paint with Cormorant Garamond, and the page mounts
-// React 18 from the CDN.
+// DEV-ONLY. Not part of the served site. Unlike tests/parity.mjs this does
+// NOT abort Google Fonts or unpkg: the image must paint Cormorant Garamond,
+// and the page mounts React 18 from the CDN.
 //
 // Run:   node tests/wallpaper-check.mjs
 //        make wallpaper-check
@@ -45,8 +42,7 @@ async function test(name, fn) {
   catch (e) { failed++; failures.push({ name, e }); console.log(`FAIL  ${name}\n      ${e.message}`); }
 }
 
-const LIGHT = [247, 244, 240];
-const DARK = [26, 38, 57];
+const PAPER = [239, 232, 214]; // #efe8d6
 
 function rgbEq(got, expected, label) {
   const [r, g, b, a] = got;
@@ -72,6 +68,7 @@ async function sampleCanvas(page) {
       bl: at(8, c.height - 8),
       font: ctx.font,
       align: ctx.textAlign,
+      words: Number(c.dataset.words || 0),
       png: c.toDataURL('image/png'),
     };
   });
@@ -90,81 +87,44 @@ page.on('console', (msg) => {
 
 await page.goto(`${BASE}/wallpaper.html`, { waitUntil: 'networkidle', timeout: 30000 });
 
-await page.waitForFunction(() => {
-  const c = document.querySelector('.preview-canvas');
-  if (!c || c.width < 100) return false;
-  const d = c.getContext('2d').getImageData(8, 8, 1, 1).data;
-  return d[3] === 255 && (d[0] + d[1] + d[2] > 0);
-}, { timeout: 20000 });
-
 await page.evaluate(async () => {
   if (document.fonts && document.fonts.ready) await document.fonts.ready;
   if (document.fonts && document.fonts.load) {
     await document.fonts.load('400 48px "Cormorant Garamond"');
-    await document.fonts.load('400 24px "Source Sans Pro"');
+    await document.fonts.load('italic 400 24px "Cormorant Garamond"');
   }
 });
 
-// Re-wait after fonts: the page itself draws on document.fonts.ready.
 await page.waitForFunction(() => {
   const c = document.querySelector('.preview-canvas');
   if (!c || c.width < 100) return false;
   const d = c.getContext('2d').getImageData(8, 8, 1, 1).data;
-  return d[0] === 247 && d[1] === 244 && d[2] === 240 && d[3] === 255;
-}, { timeout: 15000 });
+  return d[0] === 239 && d[1] === 232 && d[2] === 214 && d[3] === 255;
+}, { timeout: 20000 });
 
-await test('light canvas fill is rgb(247, 244, 240) and flat (no gradient)', async () => {
+await test('e-ink paper fill is rgb(239, 232, 214) and flat', async () => {
   const s = await sampleCanvas(page);
   if (!s) throw new Error('preview canvas missing');
   if (s.width !== 1170 || s.height !== 2532) {
     throw new Error(`expected default 1170x2532, got ${s.width}x${s.height}`);
   }
-  rgbEq(s.tl, LIGHT, 'light top-left');
-  rgbEq(s.bl, LIGHT, 'light bottom-left');
-  console.log(`      light corners rgb(${s.tl[0]}, ${s.tl[1]}, ${s.tl[2]}) / rgb(${s.bl[0]}, ${s.bl[1]}, ${s.bl[2]})`);
+  rgbEq(s.tl, PAPER, 'paper top-left');
+  rgbEq(s.bl, PAPER, 'paper bottom-left');
+  console.log(`      paper corners rgb(${s.tl[0]}, ${s.tl[1]}, ${s.tl[2]})`);
 });
 
-await test('Cormorant Garamond is loaded and used on the verse after fonts.ready', async () => {
-  const fontState = await page.evaluate(async () => {
-    if (document.fonts && document.fonts.ready) await document.fonts.ready;
-    const check = document.fonts.check('400 48px "Cormorant Garamond"');
-    const loaded = [...document.fonts]
-      .filter((f) => f.status === 'loaded')
-      .map((f) => f.family);
-    return { check, loaded };
-  });
-  if (!fontState.check) {
-    throw new Error(`document.fonts.check(Cormorant Garamond) is false; loaded=${fontState.loaded.join(', ')}`);
+await test('verse is ≤35 words and author is right-aligned Cormorant', async () => {
+  const s = await sampleCanvas(page);
+  if (s.words < 1 || s.words > 35) {
+    throw new Error(`lock-screen verse must be 1–35 words, got ${s.words}`);
   }
-  if (!fontState.loaded.some((f) => /cormorant garamond/i.test(f))) {
-    throw new Error(`Cormorant Garamond not in loaded faces: ${fontState.loaded.join(', ')}`);
+  if (s.align !== 'right') {
+    throw new Error(`expected author textAlign=right, got ${s.align}`);
   }
-
-  // Last ctx.font after a verse-only redraw is the verse face.
-  await page.uncheck('input[type="checkbox"]');
-  await page.waitForFunction(() => {
-    const c = document.querySelector('.preview-canvas');
-    if (!c) return false;
-    return /cormorant garamond/i.test(c.getContext('2d').font);
-  }, { timeout: 10000 });
-  const verse = await sampleCanvas(page);
-  if (!/cormorant garamond/i.test(verse.font)) {
-    throw new Error(`expected verse ctx.font to include Cormorant Garamond, got ${verse.font}`);
+  if (!/cormorant garamond/i.test(s.font)) {
+    throw new Error(`expected Cormorant Garamond on the canvas, got ${s.font}`);
   }
-  console.log(`      fonts.check=true ctx.font=${verse.font}`);
-
-  await page.check('input[type="checkbox"]');
-  await page.waitForFunction(() => {
-    const c = document.querySelector('.preview-canvas');
-    return c && c.getContext('2d').textAlign === 'right';
-  }, { timeout: 10000 });
-  const withAuthor = await sampleCanvas(page);
-  if (withAuthor.align !== 'right') {
-    throw new Error(`expected author textAlign=right, got ${withAuthor.align}`);
-  }
-  if (!/source sans pro/i.test(withAuthor.font)) {
-    throw new Error(`expected author ctx.font to include Source Sans Pro, got ${withAuthor.font}`);
-  }
+  console.log(`      words=${s.words} align=${s.align} font=${s.font}`);
 });
 
 await test('Download PNG is a non-empty image/png data URL', async () => {
@@ -175,22 +135,7 @@ await test('Download PNG is a non-empty image/png data URL', async () => {
   if (s.png.length < 1000) {
     throw new Error(`PNG data URL implausibly short (${s.png.length} chars)`);
   }
-  console.log(`      png bytes(approx)=${Math.round((s.png.length - 'data:image/png;base64,'.length) * 0.75)} chars=${s.png.length}`);
-});
-
-await test('dark canvas fill is rgb(26, 38, 57) and flat (no gradient)', async () => {
-  const appearance = page.locator('select.control-select').filter({ has: page.locator('option[value="night"]') });
-  await appearance.selectOption('night');
-  await page.waitForFunction(() => {
-    const c = document.querySelector('.preview-canvas');
-    if (!c || c.width < 100) return false;
-    const d = c.getContext('2d').getImageData(8, 8, 1, 1).data;
-    return d[0] === 26 && d[1] === 38 && d[2] === 57 && d[3] === 255;
-  }, { timeout: 10000 });
-  const s = await sampleCanvas(page);
-  rgbEq(s.tl, DARK, 'dark top-left');
-  rgbEq(s.bl, DARK, 'dark bottom-left');
-  console.log(`      dark corners rgb(${s.tl[0]}, ${s.tl[1]}, ${s.tl[2]}) / rgb(${s.bl[0]}, ${s.bl[1]}, ${s.bl[2]})`);
+  console.log(`      png chars=${s.png.length}`);
 });
 
 await test('wallpaper.html has no page or console errors', async () => {

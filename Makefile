@@ -27,7 +27,7 @@ parity:
 parity-live:
 	$(NODE) tests/parity-live.mjs
 
-# Experimental wallpaper PNG tokens (queue C12). DEV-ONLY: same global playwright
+# Experimental e-ink lock-screen PNG (D25). DEV-ONLY: same global playwright
 # as `parity`. Unlike `parity` it does not abort Google Fonts or unpkg, because
 # the generated image must paint Cormorant Garamond. Off the homepage parity path.
 wallpaper-check:
