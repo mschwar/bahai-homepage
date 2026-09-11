@@ -1,6 +1,7 @@
 /*  THEME ROOTS  ---------------------------------------------------------- */
 :root{
-  --bg-color:#EFEBE9; --text-color:#1A2639; --text-color-light:rgba(26,38,57,.8);
+  /* Light page beige from aunt-natalia dawn --color-bg (#f7f4f0); was #EFEBE9. */
+  --bg-color:#f7f4f0; --text-color:#1A2639; --text-color-light:rgba(26,38,57,.8);
   --panel-buttons-bg:#0E1B30; --panel-buttons-text:#EFEBE9;
   --button-border:var(--panel-buttons-text); --button-hover-bg:rgba(239,235,233,.10);
   --button-active-bg:var(--panel-buttons-text); --button-active-text:var(--panel-buttons-bg);
@@ -22,14 +23,29 @@ body{
   transition:background .3s ease,color .3s ease;
 }
 
-/*  FLOATING THEME TOGGLE  ------------------------------------------------ */
-.theme-toggle-floating{
-  position:fixed;top:16px;right:16px;z-index:1000;background:none;border:none;
-  font-size:.8em;opacity:.45;color:var(--theme-icon);border-radius:50%;padding:4px;
-  cursor:pointer;line-height:1;transition:opacity .25s,transform .2s}
-.theme-toggle-floating:hover{opacity:.85;transform:scale(1.1)}
+/*  FLOATING CHROME (theme + source)  ------------------------------------- */
+.chrome-floating{
+  position:fixed;top:16px;right:16px;z-index:1000;
+  display:flex;flex-direction:column;align-items:flex-end;gap:2px}
+.chrome-toggle{
+  background:none;border:none;font-size:.8em;opacity:.45;color:var(--theme-icon);
+  border-radius:50%;padding:4px;cursor:pointer;line-height:1;
+  transition:opacity .25s,transform .2s}
+.chrome-toggle:hover{opacity:.85;transform:scale(1.1)}
 .icon-sun{display:none}
 body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
+
+.source-toggle{position:relative}
+.source-menu{
+  position:absolute;top:100%;right:0;margin-top:4px;padding:4px 0;min-width:11em;
+  background:var(--bg-color);color:var(--text-color);
+  border:1px solid var(--text-color-light);border-radius:3px;text-align:right}
+.source-menu button{
+  display:block;width:100%;background:none;border:none;color:var(--text-color);
+  font:inherit;font-size:.85em;padding:6px 10px;cursor:pointer;text-align:right;
+  opacity:.65}
+.source-menu button:hover,
+.source-menu button[aria-selected="true"]{opacity:1}
 
 /*  JUMBOTRONS  ----------------------------------------------------------- */
 .quote-jumbotron{
@@ -37,14 +53,17 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
   padding:40px 20px;background:var(--bg-color)}
 .quote-content-wrapper{max-width:700px;width:90%;text-align:left}
 #quote-text,#quote-text-yesterday{
-  font-family:'Source Serif Pro',serif;font-size:1.5em;font-weight:400;line-height:1.55;
-  margin-bottom:1.5em;white-space:pre-line}
+  font-family:'Cormorant Garamond',Georgia,serif;font-size:1.5em;font-weight:400;line-height:1.55;
+  margin-bottom:2.5em;white-space:pre-line;cursor:pointer}
+.attribution-line{text-align:right}
 .quote-author{
   font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;color:var(--text-color-light)}
-.quote-actions{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:1em}
+/* Copy stays click-the-quote; the C6 visible button is too much chrome. Status remains. */
+#copy-button,#copy-button-yesterday{display:none}
+.quote-actions{display:flex;align-items:center;justify-content:flex-end;gap:12px;flex-wrap:wrap;margin-top:.5em}
 .status-row{display:flex;align-items:center;gap:12px;flex-wrap:wrap;margin-top:8px}
-.status-message,.copy-status{font-size:.95em;color:var(--text-color-light);min-height:1.2em}
-.copy-status{margin:0}
+.status-message,.copy-status{font-size:.95em;color:var(--text-color-light)}
+.copy-status{margin:0;min-height:0}
 .quote-jumbotron .button-inline{min-width:auto;padding:.5em 1em;color:var(--text-color);border-color:var(--text-color)}
 
 /*  ↓ MAIN SCROLL ARROW – now left-justified  */
@@ -99,7 +118,8 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
 .button:focus-visible,
 .scroll-down-arrow:focus-visible,
 .toggle-citation-arrow:focus-visible,
-.theme-toggle-floating:focus-visible{
+.chrome-toggle:focus-visible,
+.source-menu button:focus-visible{
   outline:2px solid currentColor;outline-offset:3px}
 
 /*  REDUCED MOTION  ------------------------------------------------------- */
@@ -108,6 +128,7 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
   body{transition:none}
   .scroll-down-arrow,
   .toggle-citation-arrow,
+  .chrome-toggle,
   .button,
   .date-text,
   .yesterday-citation{transition:none}

@@ -19,6 +19,9 @@ const COPY_STATUS_TIMEOUT_MS = 1600;
 /* -------------------------  DOM HOOKS  -------------------------- */
 const dom = {
   themeToggleBtn: document.getElementById('theme-toggle-button'),
+  sourceToggleBtn: document.getElementById('source-toggle-button'),
+  sourceToggle: document.querySelector('.source-toggle'),
+  sourceMenu: document.getElementById('source-menu'),
   quoteText: document.getElementById('quote-text'),
   quoteAuthor: document.getElementById('quote-author'),
   quoteSource: document.getElementById('quote-source-full'),
@@ -58,6 +61,39 @@ dom.themeToggleBtn?.addEventListener('click', () => {
     'theme',
     document.body.classList.contains('dark-mode') ? 'dark-mode' : 'light-mode'
   );
+});
+
+/* ----------------------  SOURCE TOGGLE (placeholder)  ----------- */
+/* Chrome only: the menu does not change the corpus. Wiring is H2B. */
+function setSourceMenu(open) {
+  if (!dom.sourceMenu || !dom.sourceToggleBtn) return;
+  dom.sourceMenu.hidden = !open;
+  dom.sourceToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
+  if (open) {
+    const selected =
+      dom.sourceMenu.querySelector('[aria-selected="true"]') ||
+      dom.sourceMenu.querySelector('[data-source]');
+    selected?.focus();
+  }
+}
+
+dom.sourceToggleBtn?.addEventListener('click', (event) => {
+  event.stopPropagation();
+  setSourceMenu(Boolean(dom.sourceMenu?.hidden));
+});
+
+dom.sourceToggle?.addEventListener('click', (event) => event.stopPropagation());
+
+dom.sourceMenu?.addEventListener('click', (event) => {
+  const option = event.target.closest('[data-source]');
+  if (!option) return;
+  setSourceMenu(false);
+  dom.sourceToggleBtn?.focus();
+});
+
+document.addEventListener('click', () => setSourceMenu(false));
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape') setSourceMenu(false);
 });
 
 /* ----------------------  CACHE (shared core)  ------------------- */
