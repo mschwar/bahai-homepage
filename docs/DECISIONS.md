@@ -799,3 +799,31 @@ D3 / `AGENTS.md` keep those surfaces off this change.
 
 *Source:* owner request in-session 2026-09-11 (hide Copy; natalia light font + beige; author down and right;
 source-toggle placeholder); `docs/queue.md` `H2B` / `C12`.
+
+## D23 — Review follow-up on D22: Copy stays reachable, source menu is a disclosure, yesterday `[hidden]` wins · accepted 2026-09-11
+
+Pre-merge review of PR #22 (code review + QA). D22's product intent is unchanged. Three defects
+found in that pass are closed here.
+
+**Copy is visually hidden, not `display:none`.** D22 hid the chrome; it did not ask to drop the
+keyboard path. `#copy-button` / `#copy-button-yesterday` use `.visually-hidden` (clip) so they stay
+in the tab order and the accessibility tree. Click-the-quote remains the sighted path.
+
+**Source menu is a disclosure, not a listbox.** The two items are plain `type="button"`. Escape only
+runs while the menu is open; closing restores focus to the toggle if it was inside the menu;
+`focusout` closes when focus leaves `.source-toggle`.
+
+**Yesterday jumbotron actually hides.** `.quote-jumbotron{display:flex}` and the UA `[hidden]` rule
+are equal specificity; flex won, so `#yesterday-jumbotron-display[hidden]` still laid out a full
+viewport of yesterday's verse. `.quote-jumbotron[hidden]{display:none}` (0-2-0) wins. Pre-existing
+on `main`; found by QA on this PR; fixed here because it is user-visible wrong text on a product
+whose doctrine is one passage until Yesterday is opted into.
+
+Chrome toggles get a 24×24 min hit box and slightly higher opacity so the new `☰` is perceivable
+next to the theme emoji.
+
+**Parity.** Section B now asserts computed `display:none` while yesterday is hidden. Section G pins
+the visually-hidden-but-enabled Copy control and keyboard Enter. Section I pins Escape, click-
+outside, focus return after pick, and dark bg `rgb(26, 38, 57)`.
+
+*Source:* child-agent PR review + QA on PR #22, 2026-09-11; D22.
