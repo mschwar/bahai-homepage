@@ -139,7 +139,16 @@ file.
 the frozen-file sha256 sets, and the separate wallpaper-surface check). The frozen-file hashes are recorded
 in that second file and in `docs/DECISIONS.md` **D11**.
 
-## H2B — collection / source abstraction · **pending** · gate: agent (after the data contract is written)
+## H2B — collection / source abstraction · **in-progress (H2B-A contract drafted, not reviewed)** · gate: agent (after the data contract is written)
+
+**H2B-A status (2026-09-11):** the collection/source contract is written —
+`docs/architecture/COLLECTION_CONTRACT.md`, handed off in root `H2B_CONTRACT_HANDOFF.md`. It is
+**not yet reviewed or accepted**, and it does not by itself satisfy H2B's acceptance criteria
+below — no real second collection exists, no fixture is wired into `tests/parity.mjs`, and no
+frozen file has changed. Five items are recorded as unresolved human decisions in the contract
+doc, including the load-bearing one (migrate `data/quotes_hidden_words.json` in place vs. a new
+path). **H2B-B (implementation) has not started** and depends on this contract being reviewed
+first, per the H2B-A/H2B-B split in `bootstrap/packets/2026-09-11-h2b-collection-contract/`.
 
 Acceptance criteria (preserved verbatim from the seed):
 
