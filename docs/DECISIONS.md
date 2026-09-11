@@ -827,3 +827,79 @@ the visually-hidden-but-enabled Copy control and keyboard Enter. Section I pins 
 outside, focus return after pick, and dark bg `rgb(26, 38, 57)`.
 
 *Source:* child-agent PR review + QA on PR #22, 2026-09-11; D22.
+
+## D24 — Wallpaper generated image matches the homepage after D22/D23 · accepted 2026-09-11
+
+Closes queue unit `C12`, whose option (b) the owner chose in-session on 2026-09-11. D22 recorded the
+wallpaper (and the iOS widget) as out of scope and still on the pre-D22 light tokens; this entry is
+the owner sign-off `AGENTS.md` requires before those experimental files may be touched. The product
+that changes is the **canvas PNG** (preview + Download PNG), not the homepage and not the generator
+chrome around the controls.
+
+**What the PNG is now.** Light: flat `#f7f4f0` (no cream–tan gradient), verse `#1A2639`, muted
+author `rgba(26, 38, 57, 0.8)`. Dark: flat `#1A2639`, verse `#EFEBE9`, muted author
+`rgba(239, 235, 233, 0.8)`. Verse face is Cormorant Garamond at weight 400 (homepage is 400, not the
+wallpaper's previous 300), with Georgia as the fallback, matching `#quote-text`. Author is Source
+Sans Pro, right-aligned under the verse block, matching `.attribution-line`. `wallpaper.html` loads
+Cormorant Garamond from Google Fonts css2 the same way `index.html` does; Source Sans Pro is kept;
+Source Serif Pro stays on the page because the dark-studio title still uses it. `document.fonts.ready`
+still gates the canvas draw so the PNG is not fallback-serif.
+
+**What did not change, stated so it is not rediscovered as a surprise.** The generator chrome (the
+dark studio panel, `.wallpaper-body` / `.wallpaper-panel`) is still the pre-D22 studio treatment.
+`css/wallpaper.css` is byte-identical to D11. `ios/widget/*` is untouched and still unmatched — it
+is source-only, has no `.xcodeproj`, and D3 / `AGENTS.md` still keep it off this path. No on-page
+link from `index.html` (H1.10 / D14 option (b)). React 18 from `unpkg.com` is unchanged.
+
+**Evidence.** `docs/audit/2026-09-10/C12_WALLPAPER_MATCH_RUN.txt`. `make wallpaper-check` **5 passed,
+0 failed** (light fill `rgb(247, 244, 240)` and flat; dark fill `rgb(26, 38, 57)` and flat; verse
+`ctx.font` includes Cormorant Garamond after `document.fonts.ready`; `toDataURL('image/png')`
+non-empty; no page or console errors). `make validate` **153 / 0 / 0 / 0**. `make parity` **24
+passed, 0 failed** (homepage must not regress; this unit does not re-pin it).
+
+**Hashes (this unit).** `wallpaper.html`
+`aa20bd8dcab2c5946548ec979952255567e4a0199c93bf53a98a7dea57260101`, `js/wallpaper.js`
+`7e5e170a7be1f38bf45f6f6d98d14bf6498aff34003bfd229432ead402297d11`. Unchanged:
+`css/wallpaper.css` `4326866c94f784a87e403d77d759e2425e84c259d5f169bd9651aaeafaa44301`, and every
+homepage frozen file (`index.html`, `css/style.css`, `js/script.js`, `js/quote-core.js`,
+`js/badi-init.js`, `data/quotes_hidden_words.json`) plus both `ios/widget/` files.
+
+*Source:* owner decision in-session 2026-09-11 (`C12` option (b)); `docs/queue.md` `C12`; D22, D23,
+D3.
+
+## D25 — Wallpaper is an e-ink lock-screen PNG; ≤35-word subset; no WidgetKit for this look · accepted 2026-09-11
+
+Owner chose mock **3** (quiet clock, verse as the screen, Carta-like stock) after seeing lock-screen
+mockups. Apple’s 160×72 lock-screen widget cannot hold a complete Hidden Word (the shortest in the
+corpus is 18 words and already clips the author). This surface is therefore a **wallpaper PNG**, not
+a widget. D3 still holds: experimental, unlinked from `index.html` (H1.10).
+
+**What the PNG is.** Flat e-ink paper `#efe8d6`, ink `#1f1c16`, muted author `#6b6456`. Verse and
+author are Cormorant Garamond (author italic, right-aligned). A hairline sits above the verse. The
+top ~40% of the canvas is empty stock so iOS can draw its own clock; the time in the on-page preview
+is overlay chrome and is **not** in the file.
+
+**Which verses.** Only passages of **≤35 words** (52 of 153 records). Selection is still
+`dayOfYear % len` over that subset, so this surface’s “today” can differ from the homepage’s 75-word
+today. Cache namespace is `dailyEink:` so leftover 75-word wallpaper cache cannot leak in.
+
+**What this is not.** Not WidgetKit. Not a Live Photo. Not auto-set on the phone (the user still
+saves the PNG). Dark studio chrome is gone; the generator page is the same paper.
+
+**Evidence.** `make wallpaper-check` **4 passed, 0 failed** (paper `rgb(239, 232, 214)` and flat at
+both sampled corners; words=18 (≤35), author `textAlign=right`, `ctx.font` italic Cormorant
+Garamond; `toDataURL('image/png')` 173862 chars; no page or console errors). `make validate`
+**153 / 0 / 0 / 0**. `make parity` **24 passed, 0 failed**. Browser QA on
+`http://localhost:8000/wallpaper.html`: hairline + verse start at ~40% from the top; a 35-word
+injected verse’s ink bounds were 40.1%–57.3% of canvas height (not clipped); size select resizes
+the canvas to 1170×2532 / 1179×2556 / 1290×2796; the preview clock is CSS overlay, not canvas
+pixels; mobile stacks to one column; homepage yesterday remains `display:none`.
+
+**Hashes (this unit).** `wallpaper.html`
+`951288e2ad9b20909382f4091a2bcc2bb5bb567113ae74d959d5cd19ab308981`, `css/wallpaper.css`
+`b1bdd5971a31ec89d20d9f35d99b15b4583478a2d4e4238918d07829444664c0`, `js/wallpaper.js`
+`8f0d62d46e0fb5ea116c2911f06175930f2ef77c12fad51150f49e8c6d48ec50`. Homepage frozen files
+unchanged (`index.html`, `css/style.css`, `js/script.js`, `js/quote-core.js`, `js/badi-init.js`,
+`data/quotes_hidden_words.json`). `ios/widget/*` untouched.
+
+*Source:* owner in-session 2026-09-11 (“agreed. do 3.”); mock 3 of the e-ink lock-screen series.

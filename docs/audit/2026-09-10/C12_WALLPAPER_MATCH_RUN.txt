@@ -1,0 +1,85 @@
+command: make wallpaper-check && make validate && make parity
+cwd: /Users/mschwar/Developer/bahai-homepage
+date: 2026-09-11T05:56:17Z
+branch: feat/c12-wallpaper-match-homepage
+playwright: 1.59.1
+node: v26.0.0
+python: 3.14.5
+=== raw output ===
+
+$ node tests/wallpaper-check.mjs
+      light corners rgb(247, 244, 240) / rgb(247, 244, 240)
+PASS  light canvas fill is rgb(247, 244, 240) and flat (no gradient)
+      fonts.check=true ctx.font=73px "Cormorant Garamond", Georgia, serif
+PASS  Cormorant Garamond is loaded and used on the verse after fonts.ready
+      png bytes(approx)=268758 chars=358366
+PASS  Download PNG is a non-empty image/png data URL
+      dark corners rgb(26, 38, 57) / rgb(26, 38, 57)
+PASS  dark canvas fill is rgb(26, 38, 57) and flat (no gradient)
+PASS  wallpaper.html has no page or console errors
+
+== RESULT: 5 passed, 0 failed ==
+
+$ make validate
+python3 scripts/validate_quotes.py
+Quotes checked: 153
+Errors: 0
+Warnings: 0
+Duplicate texts: 0
+
+$ make parity
+node tests/parity.mjs
+
+## A. Deterministic day-of-year selection over the <=75-word subset
+      dayOfYear=166 shortSubsetLen=128 idx=38
+PASS  selects the expected verse for "today"
+PASS  selection is stable across reloads (same fixed day)
+      yesterday idx=37
+PASS  today is distinct from yesterday when dayOfYear differs
+
+## B. Today / yesterday relationship
+PASS  yesterday button reveals the yesterday section with yesterday's verse
+
+## C. Cache-by-date (Gregorian key)
+PASS  boots from cache when the quote fetch fails (offline cache-boot)
+PASS  after a fresh load, today's verse is cached under dailyVerse:<todayKey> and lastKey is set
+
+## D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
+      gregKey=dailyVerse:2026-06-15  lastKey==2026-06-15  badiKey=absent  (wrinkle fixed & pinned)
+PASS  today quote is NOT written under the Badici-day key (wrinkle fixed; Gregorian key is authoritative for reads)
+
+## E. Theme persistence
+PASS  applies saved dark-mode on load, body carries exactly one theme class
+PASS  defaults to light-mode when no saved theme, exactly one theme class
+PASS  toggle flips the class and persists; reload to a saved theme leaves exactly one theme class
+
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+      attempts=[3,1] (accurate -> default sunset); date rendered, not blank
+PASS  declined location: downgrades to the default sunset instead of rendering nothing
+
+## G. Clipboard copy
+PASS  copy via clicking today's quote text writes "<text>\n— <author>" to navigator.clipboard
+PASS  the Copy button is visually hidden but still a real, enabled control
+PASS  keyboard activation of the visually-hidden Copy button writes the verse
+PASS  falls back to execCommand copy when navigator.clipboard rejects
+PASS  reports "Copy failed." when both paths fail
+
+## H. Reduced-motion scroll behavior
+PASS  uses behavior auto (instant) when prefers-reduced-motion: reduce
+PASS  uses behavior smooth when reduced-motion is not preferred
+
+## I. Source-toggle placeholder (chrome only; does not switch corpus)
+PASS  sits below the theme toggle and starts closed
+PASS  clicking the toggle opens the menu; picking an option closes it without changing the verse
+PASS  Escape and a click outside both close the source menu
+PASS  light page beige and verse face match the natalia dawn oracle; author is right-aligned
+
+== RESULT: 24 passed, 0 failed ==
+
+=== hashes ===
+aa20bd8dcab2c5946548ec979952255567e4a0199c93bf53a98a7dea57260101  wallpaper.html
+7e5e170a7be1f38bf45f6f6d98d14bf6498aff34003bfd229432ead402297d11  js/wallpaper.js
+4326866c94f784a87e403d77d759e2425e84c259d5f169bd9651aaeafaa44301  css/wallpaper.css
+74d4fbc1a4301fca79bf8af78011df82149ab60bbc034b1c5e7c8a9b4229b4a1  tests/wallpaper-check.mjs
