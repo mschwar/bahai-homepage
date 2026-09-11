@@ -1,0 +1,141 @@
+You are operating in `mschwar/bahai-homepage`.
+
+This is H2B-A: COLLECTION/SOURCE CONTRACT ONLY.
+
+Read first, in order:
+1. README.md
+2. AGENTS.md
+3. docs/queue.md
+4. docs/DECISIONS.md (especially D22/D23 and H2B-related decisions)
+5. docs/RUNBOOK.md
+6. docs/audit/2026-09-10/DATA_AND_PROVENANCE_MAP.md
+7. docs/audit/2026-09-10/TECH_DEBT_AND_RISKS.md
+8. bootstrap/packets/2026-09-11-h2b-collection-contract/workunits/H2B_A_COLLECTION_CONTRACT.md
+9. bootstrap/packets/2026-09-11-h2b-collection-contract/shared/CROSS_REPO_COLLECTION_PRINCIPLES.md
+10. current index.html, js/quote-core.js, js/script.js, tests/parity.mjs, data/quotes_hidden_words.json, ios/widget/QuoteStore.swift
+
+Inspect current git state/history around PR #22 / D22 / D23 so you understand the already-shipped source-selector placeholder.
+
+# CURRENT REALITY TO VERIFY
+
+- H1 and H2A are complete.
+- H2B is the sole scheduled product unit.
+- source-selector chrome is already live but currently does not change corpus.
+- Hidden Words remains the only runtime corpus.
+- JS has a shared QuoteCore seam; iOS remains a separate Swift implementation/corpus copy.
+- repo doctrine forbids framework/build-system/runtime-dependency adoption for the served site.
+
+Correct any premise that is stale.
+
+# TASK
+
+Design and document the explicit collection/source contract H2B needs BEFORE wiring a real second collection.
+
+Do not use Ruhi or Garden as hard-coded schema shapes. They are example future producers only.
+
+The contract must explicitly answer:
+
+## Collection-level
+- stable ID
+- label
+- version
+- description/purpose
+- producer/upstream provenance
+- rights/provenance note
+- schema version
+- eligibility rules / word-length policy
+
+## Item-level
+- stable item ID
+- text
+- author/attribution
+- human source reference
+- authoritative source URL where available
+- item type (`full-passage`, `excerpt`, `paraphrase`, `oral-attribution`, `unknown` or justified equivalents)
+- verification state
+- optional tags/curation metadata
+- upstream record/occurrence identity
+
+## Runtime semantics
+- deterministic daily selection
+- collection-scoped cache keys
+- selected-collection persistence
+- Hidden Words as default
+- today/yesterday relationship after switching
+- what happens when a collection is unavailable/invalid/empty
+- migration from current `quotes_hidden_words.json`
+- how old cached Hidden Words values are treated
+- whether selection is computed from full collection or eligible subset
+
+## Validation
+- schema validation rules
+- duplicate IDs/text handling
+- item-type / verification-value controls
+- provenance requirements
+- version compatibility
+
+## Multi-surface implications
+
+Give an explicit recommendation for:
+- root web corpus source of truth,
+- wallpaper consumer,
+- iOS widget corpus generation/copy strategy,
+without trying to solve Swift/JS sharing through magic.
+
+# FIXTURE DESIGN
+
+Specify a tiny non-production fixture for tests, but do NOT wire a real Garden/Ruhi collection yet.
+
+Fixture must prove:
+- two collections can coexist;
+- deterministic selection differs by collection;
+- source persistence works;
+- Hidden Words stays default;
+- cache keys do not collide.
+
+# PRODUCT CONSTRAINT
+
+The selector is already visually present. Do not redesign it into a settings panel. Do not add browse/search/filter UI to the homepage.
+
+# OUTPUTS
+
+Create durable docs in a location consistent with current repo governance, including:
+- the canonical collection contract/schema spec;
+- migration plan;
+- test/fixture plan;
+- explicit decision proposal if owner sign-off is required;
+- update `docs/queue.md` state carefully without falsely marking H2B complete.
+
+Create root `H2B_CONTRACT_HANDOFF.md` containing:
+1. proposed contract summary;
+2. concrete example Hidden Words collection under the new contract;
+3. concrete example fixture collection;
+4. cache-key examples;
+5. selector persistence semantics;
+6. migration plan;
+7. iOS/wallpaper plan;
+8. test changes required;
+9. exact files that H2B-B would later touch;
+10. unresolved human decisions;
+11. compatibility notes for a future Garden export and future quote-ledger/Ruhi export;
+12. deviations.
+
+# VALIDATION
+
+Run current repo gates that are relevant (`make validate`, `make parity`, and any docs/lint checks required by AGENTS.md/RUNBOOK.md) even if you only change docs/specs.
+
+# GIT
+
+Stay on the dedicated H2B contract branch.
+No force-push.
+No implementation of a real second collection.
+
+# STOP CONDITION
+
+STOP after the H2B contract/handoff is complete and validated.
+
+Do not wire Garden data.
+Do not begin Ruhi research.
+Do not change the source selector's production behavior.
+
+The next step is human/frontier review of the contract alongside Garden's rehabilitated data model.
