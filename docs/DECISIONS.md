@@ -515,3 +515,32 @@ is not what changes the outcome: the ipinfo request is issued whenever no positi
 *Source:* `docs/queue.md` `C9` (OPEN); the live run outputs quoted verbatim in the pull request for this
 change.
 
+## D18 — Dependabot: majors are gated off, patch and minor are grouped · accepted 2026-09-10
+
+Closes queue unit `C4`. The owner authorized this in-session on 2026-09-10 as contract option (c)-then-(a) of
+`C4`, and separately decided that the auto-merge question is stripped out of this work and becomes its own
+queue unit (`C10`). Because it is a CI configuration change, this entry is the owner sign-off that `AGENTS.md`
+reserves before `.github/` may be touched.
+
+**Why.** `.github/dependabot.yml` previously declared one ecosystem (`github-actions`), a monthly schedule, a
+seven-day cooldown and `open-pull-requests-limit: 3` — and said nothing about which update types this
+repository wants. PR #5 raised `actions/checkout` from v6 to v7.0.1, a semver-major, and it looked exactly like
+a patch bump: one line, every check green, nothing in the title or the checks marking it as a decision (D10,
+third addendum). It was merged only because the owner read the diff closely enough to notice the word "major".
+The care in this repository is concentrated in the SHA pin; the update path that keeps that pin fresh (D10 §5)
+was unsupervised in precisely the case that can break a workflow.
+
+**Policy, in plain words.** Semver-major updates never arrive as pull requests: `ignore` suppresses
+`version-update:semver-major` for the `github-actions` ecosystem, so a major bump is performed **by hand** as a
+deliberate decision (and, being a CI configuration change, carries its own owner sign-off). Patch and minor
+updates arrive as **one grouped PR** (`groups.actions-patch-minor`, `update-types: ["patch", "minor"]`) that
+the owner merges, so the SHA pins stay fresh without a pull request per action. The existing monthly schedule,
+seven-day cooldown and `open-pull-requests-limit: 3` are unchanged.
+
+**What it deliberately does NOT do — no auto-merge.** The owner decided auto-merge is not part of this change
+and no workflow was added. A prior attempt at it used `if: github.actor == 'dependabot[bot]'`, which zizmor's
+`bot-conditions` audit rejects as spoofable (the actor is not the PR author) in a job holding `contents: write`.
+That question is recorded as queue unit `C10` for the owner to adjudicate separately.
+
+*Source:* `docs/queue.md` `C4` (closed) and `C10` (new).
+

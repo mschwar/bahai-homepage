@@ -7,7 +7,13 @@
 #
 # `cooldown` is set because zizmor's dependabot-cooldown audit requires it: a
 # freshly published action release should not be adopted the moment it appears.
-# See docs/DECISIONS.md (D10).
+#
+# Update policy (docs/DECISIONS.md D18): semver-major updates are suppressed
+# below and are performed by hand as a deliberate decision, because a major bump
+# of a CI action is a CI configuration change that AGENTS.md reserves for owner
+# sign-off and its diff cannot be trusted to look like one (PR #5). Everything
+# that remains is patch or minor, and it is grouped into a single PR so the pins
+# stay fresh without a pull request per action.
 
 version: 2
 updates:
@@ -18,3 +24,16 @@ updates:
     cooldown:
       default-days: 7
     open-pull-requests-limit: 3
+    # A major action upgrade is a DECISION, not routine maintenance, and its
+    # diff cannot be trusted to look like one: PR #5 raised actions/checkout
+    # from v6 to v7.0.1 and looked exactly like a patch bump (one line, every
+    # check green). Suppress majors so they are performed by hand.
+    ignore:
+      - dependency-name: "*"
+        update-types: ["version-update:semver-major"]
+    # With majors ignored, everything remaining is patch or minor. One grouped
+    # PR keeps the pins fresh without a pull request per action.
+    groups:
+      actions-patch-minor:
+        applies-to: version-updates
+        update-types: ["patch", "minor"]
