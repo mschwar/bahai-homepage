@@ -21,20 +21,20 @@
     'iphone-14-13-12': { label: 'iPhone 14/13/12 (1170 × 2532)', width: 1170, height: 2532 }
   };
 
+  // Canvas tokens match the homepage after D22/D23 (C12 option b).
+  // Generator chrome around the controls is a separate surface and is not restyled here.
   const THEMES = {
     dawn: {
       label: 'Light',
-      bgTop: '#f3eee7',
-      bgBottom: '#d5c8ba',
-      text: '#1a2639',
-      textMuted: 'rgba(26, 38, 57, 0.7)'
+      bg: '#f7f4f0',
+      text: '#1A2639',
+      textMuted: 'rgba(26, 38, 57, 0.8)'
     },
     night: {
       label: 'Dark',
-      bgTop: '#0e1422',
-      bgBottom: '#1c2434',
-      text: '#f3f0ea',
-      textMuted: 'rgba(243, 240, 234, 0.75)'
+      bg: '#1A2639',
+      text: '#EFEBE9',
+      textMuted: 'rgba(239, 235, 233, 0.8)'
     }
   };
 
@@ -44,8 +44,13 @@
     large: { label: 'Large', scale: 1.08 }
   };
 
-  const QUOTE_WEIGHT = 300;
-  const AUTHOR_WEIGHT = 300;
+  const VERSE_FACE = 'Cormorant Garamond';
+  const AUTHOR_FACE = 'Source Sans Pro';
+  const QUOTE_WEIGHT = 400;
+  const AUTHOR_WEIGHT = 400;
+
+  const verseFont = (size) => `${QUOTE_WEIGHT} ${size}px "${VERSE_FACE}", Georgia, serif`;
+  const authorFont = (size) => `${AUTHOR_WEIGHT} ${size}px "${AUTHOR_FACE}", sans-serif`;
 
   const { read: readCachedQuote, save: saveCachedQuote } = createQuoteCache(CACHE_PREFIX);
 
@@ -71,14 +76,14 @@
 
   const fitText = (ctx, text, maxWidth, maxHeight, startSize, minSize, lineHeight) => {
     for (let size = startSize; size >= minSize; size -= 2) {
-      ctx.font = `${QUOTE_WEIGHT} ${size}px "Source Serif Pro", serif`;
+      ctx.font = verseFont(size);
       const lines = wrapText(ctx, text, maxWidth);
       if (lines.length * size * lineHeight <= maxHeight) {
         return { size, lines };
       }
     }
 
-    ctx.font = `${QUOTE_WEIGHT} ${minSize}px "Source Serif Pro", serif`;
+    ctx.font = verseFont(minSize);
     return { size: minSize, lines: wrapText(ctx, text, maxWidth) };
   };
 
@@ -86,10 +91,7 @@
     const { width, height, theme, quote, author, showAuthor, fontScale } = config;
     const palette = THEMES[theme];
 
-    const gradient = ctx.createLinearGradient(0, 0, 0, height);
-    gradient.addColorStop(0, palette.bgTop);
-    gradient.addColorStop(1, palette.bgBottom);
-    ctx.fillStyle = gradient;
+    ctx.fillStyle = palette.bg;
     ctx.fillRect(0, 0, width, height);
 
     const margin = Math.round(width * 0.1);
@@ -109,7 +111,7 @@
     ctx.textAlign = 'left';
     ctx.textBaseline = 'top';
     ctx.fillStyle = palette.text;
-    ctx.font = `${QUOTE_WEIGHT} ${fitted.size}px "Source Serif Pro", serif`;
+    ctx.font = verseFont(fitted.size);
 
     fitted.lines.forEach((line, index) => {
       ctx.fillText(line, margin, top + index * fitted.size * lineHeight);
@@ -117,8 +119,9 @@
 
     if (showAuthor) {
       ctx.fillStyle = palette.textMuted;
-      ctx.font = `${AUTHOR_WEIGHT} ${authorSize}px "Source Sans Pro", sans-serif`;
-      ctx.fillText(author, margin, top + quoteHeight + authorSize * 0.6);
+      ctx.font = authorFont(authorSize);
+      ctx.textAlign = 'right';
+      ctx.fillText(author, width - margin, top + quoteHeight + authorSize * 0.6);
     }
   };
 
