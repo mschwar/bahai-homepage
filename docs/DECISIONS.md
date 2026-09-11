@@ -759,3 +759,43 @@ validator, `make validate`, and `make parity` gates remain required. This addend
 unit and does not alter D20's append-only record.
 
 *Source:* C11 PR verification; pre-existing `PYTHON_MYPY` output and the `origin/main` reproduction.
+
+## D22 — Owner restyle: hide Copy, natalia-dawn light tokens, right-aligned author, source-toggle placeholder · accepted 2026-09-11
+
+Owner-authorized product change. Touches frozen files (`index.html`, `css/style.css`, `js/script.js`), which
+`AGENTS.md` puts behind owner sign-off; this decision is the authorization. Dark theme colours are unchanged.
+
+**Copy control is hidden again.** C6/D16 restored a visible `Copy` button. The owner rejected that chrome:
+`#copy-button` and `#copy-button-yesterday` are `display:none`. Click-the-quote remains the copy path (payload
+unchanged: `<text>\n— <author>`), and `#copy-status` still reports `Copied.` / `Copy failed.` The D16 hover-
+tint limitation on `.quote-jumbotron .button-inline` is moot while the button is hidden.
+
+**Light theme tokens from aunt-natalia dawn (oracle only for light).** Passage face is Cormorant Garamond
+(natalia `--font-passage`, paragraphs I/II/III). Light page beige is natalia dawn `--color-bg` `#f7f4f0`
+(was `#EFEBE9`). Dark `--bg-color` stays `#1A2639`. Source Sans Pro remains the UI face; Source Serif Pro
+remains the Badíʿ title face. Fonts still load from Google Fonts (existing pattern; pinning stays tech-debt
+`#9`).
+
+**Author.** One step down (`#quote-text` margin-bottom `1.5em` → `2.5em`) and right-aligned
+(`.attribution-line { text-align: right }`), today and yesterday.
+
+**Source toggle placeholder.** A second floating control under the theme toggle opens a two-item menu
+(`The Hidden Words` / `Coming later`). Pick dismisses; the corpus does not change. Wiring is `H2B`.
+
+**Parity.** Section G now asserts the Copy button is *hidden* (reversing the C6 visibility pin) and that
+click-the-quote still copies. New section I covers the source-toggle layout, open/pick/close, and the light
+tokens (bg `rgb(247, 244, 240)`, Cormorant Garamond, author `right`). `make parity` is **22 passed, 0 failed**;
+`make validate` is 153/0/0/0.
+
+**Frozen-file baseline (this batch).** `index.html`
+`2c2d192978841afbddb1a032576b8665da2032deceb0166a3e918ad16665140e`, `css/style.css`
+`ae84dac00858bec0572d527931468badae8b99ba1095eea714ab2e5464bd0930`, `js/script.js`
+`d54b3f7742f49130cc3defcc1d1a6ff715dd82176fdb98cd034ad587df960b19`. Unchanged: `js/quote-core.js`,
+`js/badi-init.js`, `css/wallpaper.css`, `js/wallpaper.js`, `data/quotes_hidden_words.json`, both
+`ios/widget/` files.
+
+**Out of scope, recorded as queue `C12`.** Wallpaper (and the iOS widget) still use the pre-D22 light tokens.
+D3 / `AGENTS.md` keep those surfaces off this change.
+
+*Source:* owner request in-session 2026-09-11 (hide Copy; natalia light font + beige; author down and right;
+source-toggle placeholder); `docs/queue.md` `H2B` / `C12`.
