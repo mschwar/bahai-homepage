@@ -1,7 +1,7 @@
 PYTHON ?= python3
 NODE  ?= node
 
-.PHONY: validate parity parity-live
+.PHONY: validate parity parity-live wallpaper-check
 
 validate:
 	$(PYTHON) scripts/validate_quotes.py
@@ -26,3 +26,9 @@ parity:
 # Run it after any deploy — see docs/RUNBOOK.md §3.1.
 parity-live:
 	$(NODE) tests/parity-live.mjs
+
+# Experimental wallpaper PNG tokens (queue C12). DEV-ONLY: same global playwright
+# as `parity`. Unlike `parity` it does not abort Google Fonts or unpkg, because
+# the generated image must paint Cormorant Garamond. Off the homepage parity path.
+wallpaper-check:
+	$(NODE) tests/wallpaper-check.mjs
