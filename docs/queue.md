@@ -25,11 +25,10 @@ unit is **owner-gated** except `H2B`, whose gate is `agent` once the data contra
 |---|---|---|---|
 | 1 | `H2B` | Collection / source abstraction | agent, after the data contract is written |
 
-`R1` is BLOCKED (human) behind `H2B` + a rights/provenance review; `H3` is BLOCKED behind `R1`. `C12` is a
-candidate (wallpaper light-token drift after D22), not scheduled. Ordering rationale: `H2B` is the remaining
-scheduled unit and must wait for a contract that does not exist yet.
+`R1` is BLOCKED (human) behind `H2B` + a rights/provenance review; `H3` is BLOCKED behind `R1`. Ordering
+rationale: `H2B` is the remaining scheduled unit and must wait for a contract that does not exist yet.
 
-Closed: `H1`, `H2A`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`.
+Closed: `H1`, `H2A`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
 
 ---
 
@@ -191,8 +190,8 @@ repair. Each names a contract and a gate. Units arrive here as workstreams find 
 workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
 are written into this section.
 
-**Open now:** `C12` (candidate, not scheduled).
-**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13), `C10` (D19), `C11` (D20).
+**Open now:** none.
+**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13), `C10` (D19), `C11` (D20), `C12` (D24).
 
 Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
 `C4` and `C5` from the review of the `actions/checkout` bump (D10, third addendum); `C6` and `C7` from the
@@ -646,7 +645,7 @@ behavior change, not a lint fix). `uvx ruff check scripts/` now reports 0 findin
 reports 153/0/0/0 against `data/quotes_hidden_words.json`, unchanged from baseline. See `docs/DECISIONS.md`
 `D20` for the full record.
 
-### C12 — Wallpaper light tokens now diverge from the homepage restyle · **pending** · gate: human
+### C12 — Wallpaper light tokens now diverge from the homepage restyle · **done (option (b))** · gate: human (authorized 2026-09-11)
 
 Found while executing the 2026-09-11 owner restyle (D22). The homepage light background is now natalia dawn
 `#f7f4f0` and the verse face is Cormorant Garamond. `css/wallpaper.css` / `js/wallpaper.js` / `wallpaper.html`
@@ -666,6 +665,13 @@ still deployed) will see a different page than the one D22 just made.
 **Exit gate:** the choice is recorded; if (b), a headless wallpaper render with no console/page errors.
 **Gate:** human — experimental surface; `AGENTS.md` "Do not modify the wallpaper or iOS widget without an
 owner decision."
+
+**Closed 2026-09-11.** The owner selected contract option (b): restyle the wallpaper **generated
+image** (canvas PNG + preview) to match the homepage after D22/D23. Light PNG is now flat `#f7f4f0`
+with Cormorant Garamond; dark PNG is flat `#1A2639`; author is Source Sans Pro, right-aligned.
+Generator chrome is still the dark studio panel; `ios/widget/*` is still unmatched. Decision:
+`docs/DECISIONS.md` **D24**. Evidence: `docs/audit/2026-09-10/C12_WALLPAPER_MATCH_RUN.txt` —
+`make wallpaper-check` 5/0, `make validate` 153/0/0/0, `make parity` 24/0.
 
 ---
 
