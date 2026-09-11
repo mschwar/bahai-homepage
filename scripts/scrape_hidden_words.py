@@ -1,8 +1,9 @@
-import requests
-from bs4 import BeautifulSoup
 import json
 import os
 import re
+
+import requests
+from bs4 import BeautifulSoup
 
 # --- Configuration ---
 URL = "https://www.bahai.org/library/authoritative-texts/bahaullah/hidden-words/hidden-words.xhtml?28ffb3b6"
@@ -53,9 +54,8 @@ def parse_one_hidden_word_item(hw_item_div, part_name, quotes_list):
         while current_node:
             if isinstance(current_node, str): 
                 text_parts.append(str(current_node).strip())
-            elif hasattr(current_node, 'get_text'):
-                if not (current_node.name == 'a' and current_node.get('class') and 'td' in current_node.get('class')):
-                    text_parts.append(current_node.get_text(strip=True))
+            elif hasattr(current_node, 'get_text') and not (current_node.name == 'a' and current_node.get('class') and 'td' in current_node.get('class')):
+                text_parts.append(current_node.get_text(strip=True))
             current_node = current_node.next_sibling
     else:
         for a_num_tag in quote_p_tag.find_all('a', class_="td ff gf"):
@@ -101,16 +101,14 @@ def parse_hidden_words(html_content):
     if not content_wrapper:
         print("DEBUG: Error finding content_wrapper (sibling of nav_and_title_wrapper).")
         return all_quotes
-    print(f"DEBUG: content_wrapper found. Let's list its direct 'div' children that will be sections:")
+    print("DEBUG: content_wrapper found. Let's list its direct 'div' children that will be sections:")
     
     section_div_candidates = content_wrapper.find_all('div', recursive=False)
     
     # --- NEW DEBUG ---
-    candidate_idx = 0
-    for candidate in section_div_candidates:
+    for candidate_idx, candidate in enumerate(section_div_candidates):
         if candidate.name == 'div': 
             print(f"  Candidate Section Div {candidate_idx}: <{candidate.name}> class='{candidate.get('class', [])}' id='{candidate.get('id', '')}'")
-        candidate_idx += 1
     # --- END NEW DEBUG ---
     print(f"DEBUG: Found {len(section_div_candidates)} direct 'div' children of content_wrapper to check as sections.")
 
@@ -127,14 +125,14 @@ def parse_hidden_words(html_content):
         
         ic_div = actual_part_content_holder.find('div', class_='ic') 
         if not ic_div:
-            print(f"DEBUG: No div.ic found in this actual_part_content_holder. Skipping.")
+            print("DEBUG: No div.ic found in this actual_part_content_holder. Skipping.")
             continue 
         
         h2_header = ic_div.find('h2', class_='g')
         h3_lang_header = ic_div.find('h3', class_='j')
 
         if not h2_header or not h3_lang_header:
-            print(f"DEBUG: Missing H2 or H3 within ic_div for this part. Skipping.")
+            print("DEBUG: Missing H2 or H3 within ic_div for this part. Skipping.")
             continue
 
         part_text_h2 = h2_header.get_text(strip=True)
@@ -182,7 +180,7 @@ def save_quotes_to_json(quotes, filepath):
         with open(filepath, 'w', encoding='utf-8') as f:
             json.dump(unique_quotes, f, indent=2, ensure_ascii=False)
         print(f"Quotes successfully saved to: {filepath} ({len(unique_quotes)} unique quotes)")
-    except IOError as e:
+    except OSError as e:
         print(f"Error saving quotes to {filepath}: {e}")
 
 if __name__ == "__main__":

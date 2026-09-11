@@ -193,9 +193,8 @@ repair. Each names a contract and a gate. Units arrive here as workstreams find 
 workstream but not listed below is **pending** — not scheduled and not authorized — until its contract and gate
 are written into this section.
 
-**Open now:** `C11` — agent-gated.
-**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13),
-`C10` (D19).
+**Open now:** none — all current units are closed.
+**Closed:** `C1` (D10), `C2` (D14), `C3`, `C4` (D18), `C5` (D17), `C6` (D16), `C7` (D16), `C8` (D12), `C9` (D13), `C10` (D19), `C11` (D20).
 
 Provenance, so the two sets above stay auditable: `C1`, `C2` and `C3` came from the post-handoff review;
 `C4` and `C5` from the review of the `actions/checkout` bump (D10, third addendum); `C6` and `C7` from the
@@ -592,7 +591,7 @@ patch/minor PR, merged by hand. No auto-merge workflow file existed to remove. D
 
 ---
 
-### C11 — `scripts/scrape_hidden_words.py` is not clean under the Python linter of record · gate: agent
+### C11 — `scripts/scrape_hidden_words.py` is not clean under the Python linter of record · **CLOSED (D20)**
 
 **Evidence.** With `C5`/`D17` leaving Ruff as the single Python linter, `uvx ruff check .` was run directly
 against the repository on 2026-09-10. `--show-files` confirms the only `.py` in the tree are the two
@@ -636,6 +635,14 @@ This changes a dev-only script, not the served site: no file under `index.html` 
 **Exit gate:** `uvx ruff check scripts/` clean, and `make validate` still **153 checked / 0 errors / 0 warnings /
 0 duplicate texts**.
 **Gate:** agent — dev tooling; no frozen file, no product path.
+
+**Closed 2026-09-10.** The owner selected contract option (a). All 8 findings were fixed directly: 5
+autofixable (`I001`, three `F541`, `UP024`) via `ruff check --fix`, reviewed diff-by-diff; `SIM102` and
+`SIM113` by hand, preserving logic exactly; `BLE001` kept as a deliberate blind except with a scoped
+`# noqa: BLE001` (narrowing it would let file-read errors escape the validator's error handling — a real
+behavior change, not a lint fix). `uvx ruff check scripts/` now reports 0 findings; `validate_quotes.py` still
+reports 153/0/0/0 against `data/quotes_hidden_words.json`, unchanged from baseline. See `docs/DECISIONS.md`
+`D20` for the full record.
 
 ---
 

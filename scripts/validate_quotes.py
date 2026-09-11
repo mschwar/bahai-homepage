@@ -11,7 +11,7 @@ def main() -> int:
 
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001 - deliberate: also covers file-read errors (OSError, UnicodeDecodeError), not just JSONDecodeError
         print(f"ERROR: Failed to parse JSON: {exc}")
         return 1
 
@@ -21,7 +21,7 @@ def main() -> int:
 
     errors = []
     warnings = []
-    seen = {}
+    seen: dict[str, list[int]] = {}
 
     for idx, item in enumerate(data):
         if not isinstance(item, dict):

@@ -692,3 +692,70 @@ undo any file.
 D18 (the grouped PR this decision relies on); `git grep -l auto.merge -- '*.yml' '*.yaml'` (no matches) and
 `.github/workflows/` (only `super-linter.yml`) verified 2026-09-10.
 
+## D20 — `scripts/` brought clean under Ruff: fix all 8 findings, keep the BLE001 blind except · accepted 2026-09-10
+
+**Owner authorization.** `C11` carries `gate: agent` — `scripts/` is agent-executable dev tooling, not a
+frozen path (`AGENTS.md`), and `C11`/`D17` already established Ruff as the single Python linter of record.
+The owner selected contract option (a) from `C11`: fix all 8 findings directly rather than narrow the rule set
+(option b) or blanket-`noqa` (option c), on the condition that each script's actual runtime output/behavior is
+preserved exactly — a behavior change in dev tooling that regenerates/validates the quote corpus would be a
+real defect, not a lint fix.
+
+**What was fixed, per finding, in `scripts/scrape_hidden_words.py`:**
+- `I001` (unsorted import block) — `ruff check --fix`: reordered `import json/os/re` before
+  `import requests` / `from bs4 import BeautifulSoup`, with a blank line separating stdlib from third-party.
+  No import was added, removed, or renamed; behavior unchanged.
+- `SIM102` (nested `if`) — hand-edit at the `elif hasattr(current_node, 'get_text'):` / inner `if not (...)`
+  pair: combined into one `elif hasattr(current_node, 'get_text') and not (...)`. The combined boolean is the
+  conjunction of the same two conditions, short-circuiting identically to the nested form; no other branch
+  reached this code path.
+- `F541` ×3 (f-strings with no placeholders) — `ruff check --fix` removed the extraneous `f` prefix from three
+  plain `DEBUG:` print strings. The printed text is byte-identical; only the string type changed.
+- `SIM113` (manual index counter) — hand-edit: `candidate_idx = 0` / `for candidate in ...: ... candidate_idx
+  += 1` became `for candidate_idx, candidate in enumerate(section_div_candidates):`. The index still starts at
+  0, still increments once per iteration in the same loop body, and is used identically inside the print
+  statement.
+- `UP024` (aliased `IOError`) — `ruff check --fix`: `except IOError as e:` → `except OSError as e:`. In
+  Python 3, `IOError` is a deprecated alias for the builtin `OSError` (same class, same object identity), so
+  the set of exceptions caught is unchanged.
+
+**`scripts/validate_quotes.py` — `BLE001` (blind `except Exception:` around the JSON parse), choice made:
+kept the blind except, added a scoped `# noqa: BLE001` with a one-line reason, did NOT narrow to
+`except json.JSONDecodeError:`.** The `try` block covers both `path.read_text(encoding="utf-8")` (which can
+raise `OSError` on a permissions/IO failure or `UnicodeDecodeError` on a bad encoding) and `json.loads(...)`
+(which raises `json.JSONDecodeError`). Narrowing the except clause to `json.JSONDecodeError` alone would let a
+file-read failure propagate as an uncaught traceback instead of the script's current "ERROR: Failed to parse
+JSON: ..." message and clean exit code 1 — a real behavior change for a validator this repository relies on
+(`make validate`), not a cosmetic one. `docs/queue.md`'s `C11` text already names this except as deliberate.
+The `# noqa: BLE001` makes the exclusion visible in the file per the option-(a)/(c) hybrid the contract
+anticipated for exactly this case.
+
+**Verification.** `uvx ruff check .` and `uvx ruff check scripts/` both report `All checks passed!` (0
+findings, was 8). `python3 scripts/validate_quotes.py data/quotes_hidden_words.json` still reports
+`Quotes checked: 153 / Errors: 0 / Warnings: 0 / Duplicate texts: 0` — identical to the pre-change baseline,
+confirming `validate_quotes.py`'s behavior did not change. `scripts/scrape_hidden_words.py` performs a live
+network fetch against bahai.org with no dry-run mode; it was reviewed line-by-line against the diff (not
+executed) to confirm each fix is behavior-preserving, per the reasoning above. `make validate` (153/0/0/0) and
+`make parity` (19 passed/0 failed) both pass unaffected, as expected for a change confined to `scripts/*.py`.
+No file under `index.html` / `css/*` / `js/*` / `data/*` / `ios/widget/*` was touched; no frozen hash moves.
+
+**Closes queue unit `C11`.**
+
+*Source:* owner authorization in-session 2026-09-10 (`C11` option (a)); `docs/queue.md` `C11` (closed here);
+`docs/DECISIONS.md` `D17` (Ruff as linter of record); the `uvx ruff check .` before/after output and
+`validate_quotes.py` run output quoted in the pull request for this change.
+
+## D21 — Incidental mypy annotation for the validator's existing index map · accepted 2026-09-11
+
+**Reason.** C11's first legitimate Python-file change caused the previously unexercised
+`PYTHON_MYPY` category to run. It reported a pre-existing error on
+`scripts/validate_quotes.py:24`: `Need type annotation for "seen"`; the same error reproduces against
+`origin/main` before C11's changes. Because `seen` maps normalized quote text to lists of integer record
+indexes, the narrow behavior-preserving repair is `seen: dict[str, list[int]] = {}`. No validation logic,
+output, exception handling, corpus data, or served/frozen file changes are involved.
+
+**Verification.** The annotation is type-only; `uvx mypy scripts/validate_quotes.py` passes, and C11's Ruff,
+validator, `make validate`, and `make parity` gates remain required. This addendum closes no separate queue
+unit and does not alter D20's append-only record.
+
+*Source:* C11 PR verification; pre-existing `PYTHON_MYPY` output and the `origin/main` reproduction.
