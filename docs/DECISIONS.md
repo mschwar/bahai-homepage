@@ -515,6 +515,65 @@ is not what changes the outcome: the ipinfo request is issued whenever no positi
 *Source:* `docs/queue.md` `C9` (OPEN); the live run outputs quoted verbatim in the pull request for this
 change.
 
+## D17 — Super Linter: CSS and the redundant Python linters off; the phantom checks resolved · accepted 2026-09-10
+
+**Owner authorization.** `.github/` is CI configuration, which `AGENTS.md` places behind owner sign-off (its
+autonomy boundary, and its instruction not to make CI/deploy changes as a side effect), and unit `C5` carries
+`gate: human`. The owner accepted the options below **in-session on 2026-09-10**, and this entry is the record
+of that authorization. Nothing here changes a product file, `VALIDATE_ALL_CODEBASE`, the action SHA pins or the
+`permissions` block. D16 is held by the in-flight C6/C7/tech-debt batch, so the sequence carries a one-number
+gap; this entry is deliberately D17 and the gap is not a lost record.
+
+**Closes queue unit `C5`** — "Three super-linter settings announce checks that do not run". All three warnings
+it was filed on (the commitlint notice, the summary three-flag contradiction, and `Black and Ruff are both
+enabled, and might conflict`) are fixed at their cause in `.github/workflows/super-linter.yml`, in the D10/D12
+comment style, rather than muted. Only `false` entries are added: Super Linter rejects a config that mixes
+explicit `true` and `false` `VALIDATE_*` entries, so `VALIDATE_PYTHON_RUFF` is deliberately left unmentioned —
+it stays on by default and is the single Python linter of record.
+
+**Settings changed, each with its reason.** `VALIDATE_CSS: false` and `VALIDATE_CSS_PRETTIER: false` —
+stylelint runs with its DEFAULT config, which this repository has never adopted, over the frozen product
+stylesheets `css/style.css` and `css/wallpaper.css`. Its findings (`rule-empty-line-before`,
+`declaration-block-single-line-max-declarations`) are pre-existing style rules this minified stylesheet has
+never followed; `npx --yes prettier@3.8.4 --check` fails on `main`'s unchanged `css/style.css` (verified
+2026-09-10), so the finding predates any change on this branch. Same class as D12. `VALIDATE_PYTHON_FLAKE8`,
+`VALIDATE_PYTHON_ISORT` and `VALIDATE_PYTHON_PYLINT: false` — four overlapping Python linters were on by
+default and this repository has adopted exactly one. These three had never been exercised, because
+super-linter lints only the changed set and no change had ever included a `scripts/*.py` file, so their long
+pass was vacuous; they went red exactly **once**, on PR #14, and only because an out-of-scope edit to
+`scripts/scrape_hidden_words.py` put that file into the changed set — the vacuous-pass pattern unit `C8`
+documents. `VALIDATE_GIT_COMMITLINT: false` — commitlint announced itself as enabled with no config available,
+so super-linter disabled it at runtime and warned on every run; commit discipline here lives in this
+append-only ledger, not in a linter. `ENABLE_GITHUB_ACTIONS_STEP_SUMMARY: false` and
+`ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT: false` — a three-flag contradiction: those two enabled a summary
+that `SAVE_SUPER_LINTER_SUMMARY` (default false) prevented from existing, and the job deliberately does not
+hold `pull-requests: write`, so a PR summary comment could never post. The owner chose to turn the summary
+OFF, not on, so the flag set is now consistent and the warning cannot recur. `VALIDATE_PYTHON_BLACK: false` and
+`VALIDATE_PYTHON_RUFF_FORMAT: false` — unadopted formatters, the same policy as the D10 formatter block; Black
+off is also what removes the Black-vs-Ruff conflict warning.
+
+**Ruff evidence — what was actually run, stated honestly.** With the redundant three off, Ruff is the one
+Python linter of record, so it was run directly against this repository's Python on 2026-09-10:
+`uvx ruff check .`, whose `--show-files` confirms the only `.py` in the tree are the two `scripts/*.py`. Raw
+result: **8 errors — Ruff does not currently pass on this repository's Python.** Seven are in
+`scripts/scrape_hidden_words.py` (`I001` import sort, `SIM102`, `SIM113`, three `F541` f-strings without
+placeholders, `UP024`) and one is in `scripts/validate_quotes.py` (`BLE001`). This is recorded as a finding,
+not softened. What the entry establishes is narrower and is the point: Ruff genuinely runs and reports, where
+the three linters it replaces had never run at all, and the file carrying almost all the findings is not
+touched by this change — queue unit `C11` brings it clean. In CI Ruff lints only the changed set, so a green
+Ruff status on a PR that changes no `.py` file means no Python was checked; the direct `uvx` run above is the
+honest baseline, and no claim of a green Python lint is made here. The raw output is quoted verbatim in the
+pull request for this change and used as `C11`'s evidence.
+
+**Accepted cost and limitation.** CI now lints no CSS at all and checks Python with Ruff alone — no flake8,
+pylint or isort, and no stylesheet check of any kind. As D12 already records for the served site, the product's
+checks of record are not CI: they are `make parity` (19 behavioral assertions at this change, unchanged by it)
+and `make validate` (153 checked / 0 errors / 0 warnings / 0 duplicate texts). A green lint must not be read as
+evidence about `css/*` or about `scripts/*.py`.
+
+*Source:* owner authorization in-session 2026-09-10; `docs/queue.md` `C5` (closed here) and `C11` (opened here);
+`docs/RUNBOOK.md` §5; `.github/workflows/super-linter.yml`; the `uvx ruff check .` output quoted in the pull
+request for this change.
 ## D18 — Dependabot: majors are gated off, patch and minor are grouped · accepted 2026-09-10
 
 Closes queue unit `C4`. The owner authorized this in-session on 2026-09-10 as contract option (c)-then-(a) of

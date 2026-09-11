@@ -162,10 +162,18 @@ CI is Super Linter on push/PR to `main`, at `super-linter/super-linter@v8.7.0` p
 only the files a change touches (`VALIDATE_ALL_CODEBASE: false`). It is hygiene only: it does not gate merges
 and does not deploy. Both actions are SHA-pinned because the job runs the `zizmor` audit, which fails on
 unpinned uses; `.github/dependabot.yml` keeps those pins fresh (monthly, with a cooldown). What the categories
-mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10 and D12 — in short: markdownlint,
-YAML, secrets, spelling and workflow security are on; the natural-language style glossary, the formatters that
-would rewrite frozen product files or append-only records, and the four checks that target the served site
-(`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`) are off.
+mean here, and which ones are off, is recorded in `docs/DECISIONS.md` D10, D12 and D17 — in short:
+markdownlint, YAML, secrets, spelling and workflow security are on, and `RUFF` is the single Python linter of
+record. Off, each for a reason recorded beside it in the workflow: the natural-language style glossary and the
+formatters that would rewrite frozen product files or append-only records (D10); the four checks that target the
+served site (`HTML`, `HTML_PRETTIER`, `JAVASCRIPT_ES`, `JAVASCRIPT_PRETTIER`, D12); and (D17) CSS
+(`VALIDATE_CSS`, `VALIDATE_CSS_PRETTIER` — stylelint's default config over the frozen stylesheets), the three
+redundant Python linters (`VALIDATE_PYTHON_FLAKE8`, `VALIDATE_PYTHON_ISORT`, `VALIDATE_PYTHON_PYLINT` — four
+overlapping Python linters for one adopted policy), the unadopted formatters
+(`VALIDATE_PYTHON_BLACK`, `VALIDATE_PYTHON_RUFF_FORMAT`), commitlint (`VALIDATE_GIT_COMMITLINT` — it had no
+config here and was disabled at runtime, so off is the honest state) and the summary flags
+(`ENABLE_GITHUB_ACTIONS_STEP_SUMMARY`, `ENABLE_GITHUB_PULL_REQUEST_SUMMARY_COMMENT` — they enabled a summary
+that `SAVE_SUPER_LINTER_SUMMARY` prevented from existing, and the job holds no `pull-requests: write`).
 
 **Dependabot update policy (D18).** The repository accepts patch and minor action updates automatically — they
 arrive as one grouped PR that the owner merges. A semver-major action bump is **owner-gated and performed by
