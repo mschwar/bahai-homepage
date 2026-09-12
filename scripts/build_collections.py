@@ -73,7 +73,7 @@ def item_id_for(source: str) -> str:
 
 
 def build_collection(raw: list[dict]) -> dict:
-    items = []
+    items: list[dict[str, object]] = []
     seen: set[str] = set()
     for idx, record in enumerate(raw):
         text = str(record.get("text", "")).strip()
@@ -85,7 +85,7 @@ def build_collection(raw: list[dict]) -> dict:
             raise SystemExit(f"ERROR: duplicate derived item_id {item_id!r}")
         seen.add(item_id)
         author = str(record.get("author", "")).strip()
-        item = {
+        item: dict[str, object] = {
             "item_id": item_id,
             "text": text,
             "source_ref": source,
