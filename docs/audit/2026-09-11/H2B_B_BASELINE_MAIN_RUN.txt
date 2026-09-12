@@ -1,0 +1,14 @@
+$ make validate
+python3 scripts/validate_quotes.py
+Quotes checked: 153
+Errors: 0
+Warnings: 0
+Duplicate texts: 0
+
+$ make parity
+PASS  sits below the theme toggle and starts closed
+PASS  clicking the toggle opens the menu; picking an option closes it without changing the verse
+PASS  Escape and a click outside both close the source menu
+PASS  light page beige and verse face match the natalia dawn oracle; author is right-aligned
+
+== RESULT: 24 passed, 0 failed ==

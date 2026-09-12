@@ -8,13 +8,17 @@ this host on 2026-09-10; the output recorded here is the output they produced.
 There is no server-side runtime. Everything happens in the browser:
 
 ```text
-browser ──index.html──▶ data/quotes_hidden_words.json          (fetch, no-store)
-   │                    js/quote-core.js (selection + caching, shared)
-   │                    js/script.js  (render + copy + theme + yesterday)
+browser ──index.html──▶ data/collections/<collection_id>.json     (fetch, no-store)
+   │                    js/quote-core.js (collection registry + selection + caching)
+   │                    js/script.js  (render + source menu + copy + theme + yesterday)
    ├──▶ https://wondrous-badi.today/scripts/BadiDateToday.v1.js  (Badíʿ date library)
    ├──▶ https://fonts.googleapis.com/... (Source Sans Pro / Source Serif Pro)
-   └── (experimental, unlinked) /wallpaper.html ─▶ React 18 UMD (unpkg) ─▶ js/quote-core.js ─▶ same corpus
+   └── (experimental, unlinked) /wallpaper.html ─▶ React 18 UMD (unpkg) ─▶ js/quote-core.js
+                                                                       ─▶ data/quotes_hidden_words.json
 ```
+
+The homepage reads collection files; the experimental wallpaper still reads the legacy raw corpus
+(`data/quotes_hidden_words.json`) through the shared core. Both are documented in §8.
 
 | External dependency | Used by | Failure mode |
 |---|---|---|
@@ -62,7 +66,27 @@ Duplicate texts: 0
 ```
 
 `validate_quotes.py` checks only the data shape: list-of-objects, non-empty `text` and `source`, `author`
-as a warning, and duplicate texts. It says nothing about behavior.
+as a warning, and duplicate texts. It says nothing about behavior. It validates the **legacy raw corpus**
+only, and its contract is unchanged by H2B-B.
+
+### 3.0 · Collection files (since H2B-B)
+
+```bash
+make validate-collections     # contract check on every file the page loads
+make check-collections        # derived files current? (no write)
+make collections              # regenerate derived files from the raw corpus (dev-only)
+```
+
+`validate_collection.py` enforces the accepted collection contract
+(`docs/architecture/COLLECTION_CONTRACT.md`, D27): required collection/item fields and types, a recognized
+`schema_version`, a recognized `default_eligibility` rule shape, unique `item_id`s, enum membership for
+`item_type`/`verification_state`, well-formed-or-null `source_url`, and duplicate `text` as a **warning**.
+It exits non-zero on any error and is proven to have teeth (three malformed inputs, `RESULT: FAIL`,
+exit 1 — `docs/audit/2026-09-11/H2B_B_VERIFICATION_RUN.txt`).
+
+Importing a producer's collection is `scripts/import_collection.py --source <path> --expected-sha256 <hex>`;
+it refuses a payload whose hash does not match, and the provenance record goes to
+`docs/architecture/COLLECTION_IMPORTS.md`.
 
 ### 3.1 · Parity (behavioral) check — `make parity`
 
@@ -236,11 +260,31 @@ outcome.
 | iOS widget "won't build" | there is no `.xcodeproj` in the repo | expected — it is source-only (`README.md`, D3) |
 | CI fails on "Incorrect usage of the term: repo → repository" | `VALIDATE_NATURAL_LANGUAGE` was turned back on; textlint's `terminology` glossary disagrees with this repo's vocabulary | turn it off again — it is off on purpose (D10) |
 
-## 8 · Data contract reality (until `H2B` lands)
+## 8 · Data contract reality (after `H2B`)
 
-One corpus, `data/quotes_hidden_words.json` (153 records, `{text, source, author}`). The path and the
-`MAX_QUOTE_WORDS = 75` cap now live in **two** places: `js/quote-core.js` (the single JS source of truth
-shared by `index.html` and `wallpaper.html` after H2A) and `ios/widget/QuoteStore.swift` (a Swift
-reimplementation, deliberately not unified — see queue `H2A`/`H2B`). No schema version, no provenance
-record. Changing the corpus today means changing the JS core and the Swift copy. This is honest debt, not a
-contract; do not document it as one.
+**The explicit contract now exists** — `docs/architecture/COLLECTION_CONTRACT.md` (accepted, D27;
+implemented D28). A collection is a JSON object with identity/version/provenance/rights fields plus an
+`items` array:
+
+- **Canonical raw corpus (Hidden Words):** `data/quotes_hidden_words.json` — 153 records,
+  `{text, source, author}`, byte-frozen and unchanged. It is the scrape output, the input to the
+  generator, and the file the experimental wallpaper still reads.
+- **Files the homepage loads:** `data/collections/hidden-words.json` (generated) and
+  `data/collections/garden-homepage-preview.json` (vendored byte-identically from the Garden-of-Wisdom
+  producer export; provenance in `docs/architecture/COLLECTION_IMPORTS.md`). Both are `schema_version: 1`,
+  carry `provenance_note` / `rights_note`, and declare `default_eligibility: {"max_words": 75}`.
+- **Which collection is loaded** is decided by the `COLLECTIONS` allow-list in `js/quote-core.js` plus the
+  `selectedCollection` localStorage key (absent → `hidden-words`). A new collection is a new JSON file plus
+  one registry entry — never a new code path.
+- **Cache keys are collection-scoped:** `dailyVerse:<collection_id>:<date>` and
+  `dailyVerse:lastKey:<collection_id>`. Old unscoped keys are never migrated; they stop being read.
+- **Failure classes are distinct:** a structurally invalid collection clears `selectedCollection`; a
+  transient fetch failure keeps it. Either way Hidden Words renders.
+- **The iOS widget's `QuoteStore.swift` is still a deliberate Swift reimplementation** and cannot share JS.
+  Its bundled `ios/widget/quotes_hidden_words.json` is now **generated** from the one raw corpus by
+  `scripts/build_collections.py` (so the two copies can no longer drift silently — `make check-collections`),
+  but the Swift file itself still decodes the legacy `source` field. Its `source` → `source_ref` rename is a
+  recorded, owner-gated follow-up; do not claim to have built or tested that surface in-repo.
+
+Changing Hidden Words now means: edit the raw corpus, run `make collections`, run
+`make validate validate-collections check-collections parity`.

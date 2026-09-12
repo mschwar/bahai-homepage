@@ -1,10 +1,25 @@
 PYTHON ?= python3
 NODE  ?= node
 
-.PHONY: validate parity parity-live wallpaper-check
+.PHONY: validate validate-collections collections check-collections parity parity-live wallpaper-check
 
+# Legacy corpus validator (shipped contract: 153 checked / 0 errors / 0 warnings /
+# 0 duplicates). Unchanged by H2B-B — the raw corpus is still the canonical scrape
+# output. Collection-file validation is the target below.
 validate:
 	$(PYTHON) scripts/validate_quotes.py
+
+# Contract validation for the collection files the page actually loads (H2B-B).
+validate-collections:
+	$(PYTHON) scripts/validate_collection.py data/collections/hidden-words.json data/collections/garden-homepage-preview.json
+
+# Regenerate the derived collection files from the canonical raw corpus (dev-only).
+# `check-collections` verifies they are current without writing (CI-friendly).
+collections:
+	$(PYTHON) scripts/build_collections.py
+
+check-collections:
+	$(PYTHON) scripts/build_collections.py --check
 
 # Behavioral parity suite (queue H2A, first half). DEV-ONLY: needs the global
 # playwright + its bundled Chromium (npx playwright install chromium). It drives the

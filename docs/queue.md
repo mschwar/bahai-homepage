@@ -18,17 +18,19 @@ Canonical forward plan for `bahai-homepage`. Supersedes `PROJECT_ROADMAP.md` and
 
 ## Priority order
 
-Open units in execution order; closed units are listed in their own sections. The remaining scheduled
-unit is **owner-gated** except `H2B`, whose gate is `agent` once the data contract is written.
+Open units in execution order; closed units are listed in their own sections. **No scheduled unit is open
+now.** `H2B` closed 2026-09-11 (D28); the next unit that could be scheduled is `R1`, which is owner-gated and
+still blocked on a rights/provenance review.
 
 | # | Unit | What it is | Gate |
 |---|---|---|---|
-| 1 | `H2B` | Collection / source abstraction | agent, after the data contract is written |
+| — | *(none open)* | `H2B` is done; `R1`/`H3` are blocked (below) | — |
 
-`R1` is BLOCKED (human) behind `H2B` + a rights/provenance review; `H3` is BLOCKED behind `R1`. Ordering
-rationale: `H2B` is the remaining scheduled unit and must wait for a contract that does not exist yet.
+`R1` is BLOCKED (human) behind a rights/provenance review; `H3` is BLOCKED behind `R1`. `H2B`'s half of
+`R1`'s block is now satisfied — the collection contract exists and a real second collection is wired — but the
+rights/provenance half is untouched by H2B-B and remains the gate.
 
-Closed: `H1`, `H2A`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
+Closed: `H1`, `H2A`, `H2B`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
 
 ---
 
@@ -139,20 +141,25 @@ file.
 the frozen-file sha256 sets, and the separate wallpaper-surface check). The frozen-file hashes are recorded
 in that second file and in `docs/DECISIONS.md` **D11**.
 
-## H2B — collection / source abstraction · **in-progress (H2B-A contract reviewed, pass)** · gate: agent (after the data contract is written)
+## H2B — collection / source abstraction · **done** · gate: agent (contract written; frozen-file change owner-authorized) · closed 2026-09-11
+
+**Closed 2026-09-11 by H2B-B (D28).** The second collection is a real producer payload
+(`mschwar/Garden-of-Wisdom → exports/bahai-homepage-preview/v1/collection.json`, vendored byte-identically
+at `data/collections/garden-homepage-preview.json`), the shipped source-selector chrome is wired to it, and
+the five decisions H2B-A left open are resolved (D28). The two D27 follow-ups are carried: the
+failure-classification split is implemented and pinned, and the verification field name is canonically
+`verification_state` across repos.
+
+**What H2B-B did not do, stated plainly.** `ios/widget/*.swift` is untouched (its bundled *data* is now
+generated from the same canonical source, but `QuoteStore.swift`'s `source` → `source_ref` rename is a
+separate owner-gated unit, and the surface still cannot be built or tested in-repo). No synthetic fixture was
+committed — the contract proposed `tests/fixtures/fixture-a.json`, but the owner supplied a real second
+collection and the packet forbids a third; the negative cases are covered against the real files instead. The
+wallpaper is unchanged and still reads the legacy raw corpus.
 
 **H2B-A status (2026-09-11):** the collection/source contract is written —
 `docs/architecture/COLLECTION_CONTRACT.md`, handed off in root `H2B_CONTRACT_HANDOFF.md` — and
-has now been **reviewed: pass, accept as merged** (`docs/DECISIONS.md` D27). It does not by
-itself satisfy H2B's acceptance criteria below — no real second collection exists, no fixture is
-wired into `tests/parity.mjs`, and no frozen file has changed. Five items remain recorded as
-unresolved human decisions in the contract doc, including the load-bearing one (migrate
-`data/quotes_hidden_words.json` in place vs. a new path); D27 adds two more items for H2B-B to
-carry forward (the fetch-failure/invalid-collection fallback conflation, and reconciling
-`verification_state` vs. Garden's `verification_status` before either side's export/validator
-code is written against the wrong name). **H2B-B (implementation) has not started** and still
-depends on the five D26 owner decisions being resolved, per the H2B-A/H2B-B split in
-`bootstrap/packets/2026-09-11-h2b-collection-contract/`.
+reviewed: **pass, accept as merged** (`docs/DECISIONS.md` D27).
 
 Acceptance criteria (preserved verbatim from the seed):
 
@@ -167,17 +174,27 @@ today with no regeneration step — `TECH_DEBT_AND_RISKS.md` #4), and an explici
 header.
 
 Depends on the data/provenance contract, **not** on Ruhi.
-**Evidence:** the written contract + the fixture-selection test output + Hidden Words parity before/after.
 
-**Placeholder chrome already shipped (D22, 2026-09-11).** The on-page source control exists: a second floating
-toggle under the theme control, opening a two-item menu (`The Hidden Words` / `Coming later`). Picking an item
-dismisses the menu and does **not** change the corpus. Wiring a real second collection into that control is this
-unit.
+**Evidence (H2B-B, 2026-09-11):**
+`docs/audit/2026-09-11/H2B_B_VERIFICATION_RUN.txt` — the frozen-file hash table before/after (only
+`index.html`, `js/quote-core.js`, `js/script.js` changed), `make validate` 153/0/0/0,
+`make validate-collections` PASS, `make check-collections` PASS, `make wallpaper-check` 4/4, the full
+`make parity` run ending **34 passed, 0 failed**, and the producer hash/`cmp` proving the vendored Garden
+payload is byte-identical. Baseline for comparison:
+`docs/audit/2026-09-11/H2B_B_BASELINE_MAIN_RUN.txt` (`main` @ `0283f62`: `make validate` 153/0/0/0,
+`make parity` 24 passed, 0 failed). Visual QA:
+`docs/audit/2026-09-11/H2B-B-{1..6}-*.png` (default, menu open, Garden selected light/dark, after reload,
+back to Hidden Words). Import provenance: `docs/architecture/COLLECTION_IMPORTS.md`.
+
+**Placeholder chrome shipped earlier (D22, 2026-09-11).** The on-page source control existed as a
+two-item menu (`The Hidden Words` / `Coming later`). It now lists the two real collections and switches the
+corpus in place, with no page reload and no new surface.
 
 ## R1 — Ruhi Book 1 memorization collection · **BLOCKED** · gate: human
 
-Blocked by **(a)** H2B's collection contract and **(b)** a rights/provenance review. **No timeline** (owner
-decision Q4) — the gate is generated by H2B, not by a date.
+Blocked by a **rights/provenance review**. H2B's collection contract — the other half — is now satisfied
+(D28): a versioned, provenance-carrying export shape exists in code and in a second, real collection.
+**No timeline** (owner decision Q4) — the remaining gate is the rights review, not a date.
 
 Research task: determine which Book 1 passages are actually designated for memorization; map to
 `bahai-quote-ledger`; distinguish occurrence identity from passage/content identity; verify authoritative
@@ -187,7 +204,8 @@ conforming to the homepage collection contract.
 **Explicit guard:** do **not** substitute "all direct quotations in Book 1". Confirmed: no Ruhi data exists
 in this repo (correctly absent).
 
-**Unblock evidence required:** H2B contract merged + a recorded rights/provenance review outcome.
+**Unblock evidence required:** a recorded rights/provenance review outcome. (H2B contract + second-collection
+evidence: closed, `docs/DECISIONS.md` D28.)
 
 ## H3 — first real additional collection · **BLOCKED (behind R1)** · gate: agent after R1 passes
 
@@ -699,10 +717,10 @@ recorded here rather than by rewriting it. Its item numbers are referenced throu
 
 | # | Item | State |
 |---|---|---|
-| 1 | Hard-coded corpus path + implicit contract | **Partly closed by H2A** — one JS source of truth (`js/quote-core.js`); the remaining copy is `ios/widget/QuoteStore.swift`, which is `H2B`'s seam. |
+| 1 | Hard-coded corpus path + implicit contract | **Closed by H2A + H2B-B (D28)** — one JS source of truth (`js/quote-core.js`) plus an explicit collection contract; the runtime reads `data/collections/<collection_id>.json` and the registry is the only place a path is named. `ios/widget/QuoteStore.swift` still reimplements the shape in Swift, deliberately, and cannot share JS. |
 | 2 | ~10 MB orphaned multi-faith payload served publicly | **Closed by H1C / D4** — unpublished from `main`, retained on `archive/legacy-multifaith`. |
 | 3 | Experimental surfaces undocumented and unlinked | **Closed by H1 / D3** — documented as experimental ambient surfaces; `H1.10` decided to leave them unlinked. |
-| 4 | Duplicate corpus copies, no regeneration step | **Open — `H2B`.** |
+| 4 | Duplicate corpus copies, no regeneration step | **Closed by H2B-B (D28)** — `scripts/build_collections.py` emits both `data/collections/hidden-words.json` and `ios/widget/quotes_hidden_words.json` from the one canonical raw corpus, and `make check-collections` fails if either drifts. Scope limit: the widget's Swift *decode* still expects the legacy field name (owner-gated). |
 | 5 | Stale, misleading roadmap | **Closed by D5** — archived to `docs/history/` under a SUPERSEDED banner. |
 | 6 | Toolchain mismatch (`python`, unpinned dev deps) | **Closed in H1** — `PYTHON ?= python3`, `requirements-dev.txt`. |
 | 7 | `saveCachedQuote(pendingBadiKey, …)` writes today's verse under the Badíʿ-day key | **Closed 2026-09-10 (D16)** — the write is removed; the Gregorian key is the only authoritative read source. Parity section D re-pinned from the defect to the corrected behaviour. |

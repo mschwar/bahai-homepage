@@ -2,8 +2,9 @@
 
 ## Purpose
 
-A quiet, deterministic, **single-passage** daily verse homepage: one Hidden Words passage per Gregorian
-day-of-year from the ≤75-word subset, plus the Badíʿ date, a light "Yesterday" recall, click-to-copy, and a
+A quiet, deterministic, **single-passage** daily verse homepage: one passage per Gregorian day-of-year from
+the ≤75-word subset of the selected collection — **The Hidden Words by default**, with a low-weight source
+menu offering one second collection — plus the Badíʿ date, a light "Yesterday" recall, click-to-copy, and a
 persistent theme. Static, client-side, GitHub Pages. Read `README.md` first for the full product doctrine.
 
 ## What must not change
@@ -11,7 +12,8 @@ persistent theme. Static, client-side, GitHub Pages. Read `README.md` first for 
 - **Frozen files (byte-identical):** `index.html`, `css/*`, `js/*`, `data/quotes_hidden_words.json`,
   `ios/widget/*`. A change here is a product change; it needs an owner decision and parity evidence.
 - **No framework, build system, bundler, package manifest, or runtime dependency** for the served site.
-- **One passage, not a feed.** No settings drawer, dashboard, feed, streak, or recommendation surface.
+- **One passage, not a feed.** No settings drawer, dashboard, feed, streak, or recommendation surface. The
+  source menu is a two-item disclosure (which collection), never a browse/search/filter UI.
 - **Deterministic selection.** `quotes[dayOfYear % len]` over the ≤75-word subset; no randomness.
 - **Single `main` branch — and the whole branch is publicly served.** Pages is `build_type: legacy` with
   source branch `main` and path `/`, plus `.nojekyll`, so anything committed becomes reachable by URL. Never
@@ -39,15 +41,24 @@ python3 scripts/validate_quotes.py data/quotes_hidden_words.json
 
 ## Data contract — current reality
 
-There is exactly **one corpus**, `data/quotes_hidden_words.json` (153 records, `{text, source, author}`).
-Its path and the `MAX_QUOTE_WORDS = 75` cap are **hard-coded in two places** — `js/quote-core.js` (the shared
-JS source of truth, consumed by both `js/script.js` and `js/wallpaper.js` after H2A) and
-`ios/widget/QuoteStore.swift` (a Swift reimplementation, deliberately not unified). There is **no schema
-version and no provenance record**, and `ios/widget/quotes_hidden_words.json` is a byte-identical copy with
-no regeneration step.
+The collection contract exists and is implemented (queue `H2B`, decisions D27/D28):
+`docs/architecture/COLLECTION_CONTRACT.md`. **The homepage loads `data/collections/<collection_id>.json`** —
+`hidden-words.json` (generated from the raw corpus) and `garden-homepage-preview.json` (vendored
+byte-identically from the Garden-of-Wisdom producer export; see
+`docs/architecture/COLLECTION_IMPORTS.md`). The loaded collection is chosen by the `COLLECTIONS` allow-list in
+`js/quote-core.js` plus the `selectedCollection` localStorage key; cache keys are
+`dailyVerse:<collection_id>:<date>`.
 
-Until the collection contract lands (queue unit `H2B`), changing the corpus means changing both copies.
-Do not pretend the contract exists.
+`data/quotes_hidden_words.json` (153 records, `{text, source, author}`) remains the **canonical raw corpus**
+and is byte-frozen: it is the scrape output, the generator's input, and the file the experimental wallpaper
+still reads. `scripts/build_collections.py` derives both `data/collections/hidden-words.json` and
+`ios/widget/quotes_hidden_words.json` from it (one regeneration step — `make check-collections`); the Swift
+source `ios/widget/QuoteStore.swift` still reimplements the shape and still decodes the legacy `source` field,
+a recorded owner-gated follow-up, not a thing to "fix" without an owner decision. **Never claim to have built
+or tested the widget.**
+
+To change Hidden Words: edit the raw corpus, `make collections`, then
+`make validate validate-collections check-collections parity`.
 
 ## Experimental ambient surfaces (off the parity path)
 

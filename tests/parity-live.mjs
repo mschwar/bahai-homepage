@@ -162,24 +162,26 @@ if (reachable) {
   });
 
   // ---- 3. The shared core loaded and exposes its expected exports ----
+  // Includes the H2B-B collection surface (registry + loader + scoped cache keys).
   const EXPECTED_EXPORTS = [
     'MAX_QUOTE_WORDS', 'QUOTES_PATH', 'DEFAULT_AUTHOR', 'countWords', 'filterShort',
     'dayOfYear', 'selectForDate', 'getLocalDateKey', 'formatDateLabel', 'fetchQuotes',
     'createQuoteCache',
+    'COLLECTIONS', 'DEFAULT_COLLECTION_ID', 'SELECTED_COLLECTION_KEY', 'collectionById',
+    'loadCollection', 'applyEligibility', 'getSelectedCollectionId', 'setSelectedCollectionId',
+    'clearSelectedCollection', 'collectionCachePrefix', 'collectionLastKeyKey',
   ];
   await check('the shared core loaded (window.QuoteCore exposes its expected exports)', async () => {
-    const probe = await page.evaluate(() => {
+    const probe = await page.evaluate((expected) => {
       const c = window.QuoteCore;
       if (!c) return { present: false, missing: null, maxWords: null, path: null };
-      const expected = ['MAX_QUOTE_WORDS', 'QUOTES_PATH', 'DEFAULT_AUTHOR', 'countWords', 'filterShort',
-        'dayOfYear', 'selectForDate', 'getLocalDateKey', 'formatDateLabel', 'fetchQuotes', 'createQuoteCache'];
       return {
         present: true,
         missing: expected.filter(k => !(k in c)),
         maxWords: c.MAX_QUOTE_WORDS,
         path: c.QUOTES_PATH,
       };
-    });
+    }, EXPECTED_EXPORTS);
     if (!probe.present) throw new Error('window.QuoteCore is not defined on the deployed page');
     if (probe.missing.length) throw new Error(`QuoteCore is missing exports: ${probe.missing.join(', ')}`);
     console.log(`        QuoteCore present with all ${EXPECTED_EXPORTS.length} exports ` +

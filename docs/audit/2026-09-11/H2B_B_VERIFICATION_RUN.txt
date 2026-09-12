@@ -1,0 +1,136 @@
+# H2B-B verification run — 2026-09-12T05:19:15Z
+# base main 0283f62 · branch feat/h2b-collection-switching (working tree of the H2B-B change set)
+# (`git log --oneline -- docs/audit/2026-09-11/` names the commit this evidence landed in)
+
+## Frozen-file hashes: main (baseline) vs this branch (H2B-B)
+FILE                               MAIN                                                             BRANCH
+index.html                         7bfd0c66725d49b0b409da6f32850eecb66f224e717a48217c06cbd7f35ef397 CHANGED
+css/style.css                      5cb7e1fbe15454222f9c9edf2e5377ad620860099247a6c211312d16b3de69c1 unchanged
+css/wallpaper.css                  b1bdd5971a31ec89d20d9f35d99b15b4583478a2d4e4238918d07829444664c0 unchanged
+js/quote-core.js                   369cd564303f10cad8ca92a740952a88bd683f6e79a8e1af306214766d2c1dfb CHANGED
+js/script.js                       69ba4254b75cc2b19d267e6e47de76eae6b03ece200cef4ab1df55202995a666 CHANGED
+js/badi-init.js                    80eb5e3f455da4f55deabbfeaf58fd9d8da1d56523bdd2fcf56ce97485f30807 unchanged
+js/wallpaper.js                    8f0d62d46e0fb5ea116c2911f06175930f2ef77c12fad51150f49e8c6d48ec50 unchanged
+data/quotes_hidden_words.json      fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4 unchanged
+ios/widget/QuoteStore.swift        e188eca190a74fca34e4ee042d50a9be4723be67569307809b4604b350c4aaea unchanged
+ios/widget/quotes_hidden_words.json fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4 unchanged
+ios/widget/DailyVerseWidget.swift  672d73f8067428211a218a81418d3673bae7fec6cf4ddd65419c7b30575252af unchanged
+
+## Data files: legacy validator + collection validator + generator currency
+$ make validate
+python3 scripts/validate_quotes.py
+Quotes checked: 153
+Errors: 0
+Warnings: 0
+Duplicate texts: 0
+
+$ make validate-collections
+python3 scripts/validate_collection.py data/collections/hidden-words.json data/collections/garden-homepage-preview.json
+collection: data/collections/hidden-words.json
+  items: 153
+  errors: 0
+  warnings: 0
+collection: data/collections/garden-homepage-preview.json
+  items: 4
+  errors: 0
+  warnings: 0
+
+RESULT: PASS
+
+$ make check-collections
+python3 scripts/build_collections.py --check
+current  data/collections/hidden-words.json  sha256=758dd4aec3a900b75026db36b4835896a16212991f16fb057e1c16a4113bd7cf
+current  ios/widget/quotes_hidden_words.json  sha256=fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4
+
+RESULT: PASS — 2 derived file(s) verified current.
+
+$ shasum -a 256 data/collections/*.json
+85fa2f6b2882633a683b7449f9e4daf650f78b5ee28faf9e59dbff52222d6bd5  data/collections/garden-homepage-preview.json
+758dd4aec3a900b75026db36b4835896a16212991f16fb057e1c16a4113bd7cf  data/collections/hidden-words.json
+
+## Behavioral parity suite (full run, this branch)
+$ make parity
+node tests/parity.mjs
+
+## A. Deterministic day-of-year selection over the <=75-word subset
+      dayOfYear=166 shortSubsetLen=128 idx=38
+PASS  selects the expected verse for "today"
+PASS  selection is stable across reloads (same fixed day)
+      yesterday idx=37
+PASS  today is distinct from yesterday when dayOfYear differs
+
+## B. Today / yesterday relationship
+PASS  yesterday button reveals the yesterday section with yesterday's verse
+
+## C. Cache-by-date (collection-scoped Gregorian key)
+PASS  boots from cache when the quote fetch fails (offline cache-boot)
+PASS  after a fresh load, today's verse is cached under the collection-scoped key and lastKey is set
+
+## D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
+      gregKey=dailyVerse:hidden-words:2026-06-15  lastKey==2026-06-15  badiKey=absent  (wrinkle fixed & pinned)
+PASS  today quote is NOT written under the Badici-day key (wrinkle fixed; Gregorian key is authoritative for reads)
+
+## E. Theme persistence
+PASS  applies saved dark-mode on load, body carries exactly one theme class
+PASS  defaults to light-mode when no saved theme, exactly one theme class
+PASS  toggle flips the class and persists; reload to a saved theme leaves exactly one theme class
+
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+      attempts=[3,1] (accurate -> default sunset); date rendered, not blank
+PASS  declined location: downgrades to the default sunset instead of rendering nothing
+
+## G. Clipboard copy
+PASS  copy via clicking today's quote text writes "<text>\n— <author>" to navigator.clipboard
+PASS  the Copy button is visually hidden but still a real, enabled control
+PASS  keyboard activation of the visually-hidden Copy button writes the verse
+PASS  falls back to execCommand copy when navigator.clipboard rejects
+PASS  reports "Copy failed." when both paths fail
+
+## H. Reduced-motion scroll behavior
+PASS  uses behavior auto (instant) when prefers-reduced-motion: reduce
+PASS  uses behavior smooth when reduced-motion is not preferred
+
+## I. Source menu chrome (two real collections; D22/D23 a11y)
+PASS  sits below the theme toggle, starts closed, and offers exactly the two wired collections
+PASS  picking the already-selected collection just closes the menu and returns focus
+PASS  Escape and a click outside both close the source menu
+PASS  light page beige and verse face match the natalia dawn oracle; author is right-aligned
+
+## J. Second collection: the Garden-of-Wisdom preview (H2B-B)
+      collection items=153 eligible=128 (raw oracle 128)
+PASS  the generated Hidden Words collection is faithful to the canonical raw corpus
+      garden items=4 eligible=4 idx=2
+PASS  the vendored Garden payload is byte-identical to the recorded producer import
+PASS  selecting the Garden collection renders its own deterministic verse for today
+PASS  the Garden selection survives a reload
+PASS  cache keys are collection-scoped and never collide
+PASS  today and yesterday both come from the selected collection
+PASS  switching back to Hidden Words restores Hidden Words exactly
+
+## K. Fallback semantics (D27 follow-up: invalid clears, transient keeps)
+PASS  an unknown stored collection id falls back to Hidden Words, clears the bad value, and does not throw
+PASS  a structurally invalid collection (unrecognized schema_version) falls back and clears the selection
+PASS  a transient fetch failure of the chosen collection KEEPS the choice (D27)
+
+== RESULT: 34 passed, 0 failed ==
+
+## Wallpaper surface (shared JS changed -> off-parity-path check, per repo skill)
+$ make wallpaper-check
+node tests/wallpaper-check.mjs
+      paper corners rgb(239, 232, 214)
+PASS  e-ink paper fill is rgb(239, 232, 214) and flat
+      words=27 align=right font=italic 35px "Cormorant Garamond", Georgia, serif
+PASS  verse is ≤35 words and author is right-aligned Cormorant
+      png chars=209738
+PASS  Download PNG is a non-empty image/png data URL
+PASS  wallpaper.html has no page or console errors
+
+== RESULT: 4 passed, 0 failed ==
+
+## Import provenance; byte-identical to producer payload
+$ shasum -a 256 ~/Developer/Garden-of-Wisdom/exports/bahai-homepage-preview/v1/collection.json
+85fa2f6b2882633a683b7449f9e4daf650f78b5ee28faf9e59dbff52222d6bd5  /Users/mschwar/Developer/Garden-of-Wisdom/exports/bahai-homepage-preview/v1/collection.json
+$ cmp <producer> data/collections/garden-homepage-preview.json && echo IDENTICAL
+IDENTICAL
