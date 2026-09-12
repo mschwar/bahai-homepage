@@ -934,3 +934,59 @@ settled.
 
 *Source:* `bootstrap/packets/2026-09-11-h2b-collection-contract/prompts/01_H2B_COLLECTION_CONTRACT_ONLY.txt`
 (H2B-A); root `H2B_CONTRACT_HANDOFF.md`.
+
+## D27 — Review of the H2B-A contract (PR #25): pass, two follow-ups for H2B-B · 2026-09-11
+
+The review `docs/queue.md`'s H2B section names as still outstanding ("not yet reviewed or
+accepted"). This is that review — a pass verdict on the contract as written, not owner
+acceptance of the five unresolved decisions D26 already lists, which stay owner-gated.
+
+**Scope claim independently verified, not trusted.** `git diff bbdb390 422b0d0 -- index.html
+css/* js/* data/quotes_hidden_words.json ios/widget/*` returns zero lines across the whole PR.
+`make validate` (153/0/0/0) and `make parity` (24 passed, 0 failed) reproduce baseline exactly.
+
+**Schema judged complete enough for H2B-B to build against without redesign.** Spot-checked
+against real code: all 153 `source` strings in `data/quotes_hidden_words.json` match the
+slug-derivation pattern with zero exceptions; the shipped `data-source="hidden-words"` chrome
+already matches `collection_id`; `QuoteStore.swift` confirms the claimed `source`→`source_ref`
+Swift-side rename is real, not hypothetical. Cache-key scheme
+(`dailyVerse:<collection_id>:<date>`) is collision-safe by construction — `collection_id`'s
+`[a-z0-9-]+` restriction means the runtime never needs to re-parse a key apart.
+
+**One gap found, not in D26's five.** The "unavailable / invalid / empty collection" fallback
+conflates a structurally broken collection with a transient fetch/network failure — both
+currently clear the stored `selectedCollection` value. Once a second real collection ships, a
+visitor who chose it and opens the page offline loses that preference silently. Recommend: keep
+the stored value on fetch failure, clear it only when the collection is actually invalid. Should
+be resolved in or before H2B-B, not treated as settled by this contract as written.
+
+**Garden-of-Wisdom compatibility checked against Garden's live repo directly** (not just this
+contract's self-report): `docs/data/DATA_CONTRACT.md`, `docs/DECISIONS.md`, and the five actual
+rows (ids 3, 12, 15, 26, 30) Garden has already approved as its homepage preview donor set.
+Confirmed: `item_type` vocabulary is byte-identical (independent convergence); `source_ref` and
+`author` already share the same field name on both sides (smaller rename surface than the
+handoff implied); the `verification_state`/`verification_status` mismatch is real and exactly as
+described. Found but undocumented on either side: `tags` is a **shape** mismatch, not just a
+naming one — Garden stores it as a comma-separated string, this contract requires an array.
+Trivial to fix at export time, but neither doc's compatibility notes mention it. Data-quality
+reality check: all five approved donor rows are still `verification_status: unverified` (Garden's
+own queue already gates real export on this — not this contract's problem), and 2 of 5 carry
+`item_type: unknown` because Garden's heuristic never assigns `full-passage`/`paraphrase` at all
+(a Garden-side curation gap, not a schema-compatibility one).
+
+**Answer to the compatibility question the Wave 2 gate is waiting on:** yes — once Garden
+verifies its donor rows, every field move from Garden's CSV into this contract's JSON shape is a
+normal, already-anticipated export-time transform (rename, stringify, split-on-comma), not a
+homepage-specific hack. The one real cross-repo discrepancy is cosmetic, not structural.
+Recommend reconciling `verification_state`/`verification_status` now, before either side's export
+script or `scripts/validate_collection.py` gets written against the wrong name — neither repo has
+code depending on either name yet, so this is the cheapest point to fix it.
+
+**Verdict: pass, accept as merged.** Two items carry into H2B-B rather than block this PR: (1)
+split the fallback so a network hiccup doesn't erase a chosen collection, (2) reconcile the
+verification-field name across repos before code depends on either spelling.
+
+*Source:* review of PR #25 / `docs/architecture/COLLECTION_CONTRACT.md` against
+`js/quote-core.js`, `js/script.js`, `data/quotes_hidden_words.json`, `ios/widget/QuoteStore.swift`,
+and `~/Developer/Garden-of-Wisdom`'s live `docs/data/DATA_CONTRACT.md` /
+`docs/DECISIONS.md`, 2026-09-11.
