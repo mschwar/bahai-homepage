@@ -1090,3 +1090,43 @@ route-mocked unrecognized `schema_version`.
 two D27 follow-ups and decide the verification field name”); `docs/architecture/COLLECTION_CONTRACT.md`
 (D27); `bootstrap/packets/2026-09-11-h2b-collection-contract/prompts/02_H2B_IMPLEMENT_WITH_VERIFIED_GARDEN_EXPORT.txt`;
 Garden-of-Wisdom `GARDEN_HOMEPAGE_PREVIEW_EXPORT_HANDOFF.md`.
+
+## D29 — CI scope: canonical data files are excluded from the code formatters and the spell-checker · accepted 2026-09-11
+
+Owner decision, taken in-session when PR #26's first CI run went red on `JSON_PRETTIER` and
+`SPELL_CODESPELL`. This is the same class as **D10**, **D12** and **D17**: a check that had only ever
+produced a *vacuous pass* here (super-linter lints the changed set, and no earlier change had ever put a
+`data/` file into it) went red the first time it saw one, with findings that are consequences of what the
+files *are*, not defects in them. `.github/workflows/super-linter.yml` now sets
+`FILTER_REGEX_EXCLUDE: "(^|/)data/"`, with the rationale inline in that file.
+
+**Why the findings are not defects.**
+
+- `JSON_PRETTIER` wants the producer's `tags` arrays reflowed from multi-line to single-line. That is a
+  whitespace-only change (`json.loads` equality holds), but it would silently break the **byte-identity**
+  of the vendored Garden payload — the property the import's recorded SHA-256, its `cmp` evidence and the
+  parity suite's hash pin all rest on. A formatter must not be allowed to edit an audited import.
+- `SPELL_CODESPELL` rejects archaic scripture that is correct as written — `therefrom`, `wast`, `doest`
+  in the Hidden Words text. The text is canonical. It cannot be reworded to satisfy a dictionary, and
+  curating it is owner-gated research, not a lint fix.
+
+**What replaces them.** `make validate` (raw-corpus shape, 153/0/0/0), `make validate-collections` (the
+collection contract, incl. recognized `schema_version` and enum membership — stricter than the generic JSON
+check) and `make check-collections` (derived files current). Spell-check coverage of **prose** (markdownlint,
+and codespell over docs and code, which still runs) stays on: the exclusion is a path, not a category.
+
+**Recorded cost, not hidden.** The exclusion is not per-linter — super-linter applies
+`FILTER_REGEX_EXCLUDE` to every category — so a change touching *only* `data/` files leaves all categories
+reporting a vacuous pass, and GITLEAKS/CHECKOV have nothing to read in a canonical corpus. That is accepted
+because (a) the data checks of record above are stronger than the categories being skipped, and (b)
+GitGuardian scans every PR independently of super-linter (it ran on this PR). A change that touches `data/`
+**and** any other path still exercises every non-data category normally.
+
+**Also fixed in the same CI run, and not covered by this exemption:** `PYTHON_MYPY` reported
+`scripts/build_collections.py:88: error: Need type annotation for "item"`. That one was a real finding in a
+new file and was fixed by annotating it. `ruff check` (the single Python linter of record, D17) passes on
+all three new scripts.
+
+*Source:* owner decision in-session 2026-09-11 (option (a): narrow path exclusion, keep the vendored payload
+byte-identical and codespell on for docs/code); CI run of PR #26 (`run-lint`, job 103504526186);
+`docs/DECISIONS.md` D10/D12/D17; `docs/queue.md` C8.

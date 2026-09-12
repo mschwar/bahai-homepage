@@ -164,6 +164,15 @@ was added. H3 remains blocked behind R1.
    Pages rebuild). This is stated rather than implied — no live-run claim is made for it.
 5. **Theme-toggle screenshots are dark-on-light pairs only** (light default, dark after toggle); no OS-level
    dark-mode emulation was exercised beyond the parity suite's saved-theme path.
+6. **CI scope changed, by owner decision (D29).** PR #26's first CI run went red on `JSON_PRETTIER` and
+   `SPELL_CODESPELL`, both triggered by the new `data/` files for the first time. The owner chose a narrow path
+   exclusion (`FILTER_REGEX_EXCLUDE: "(^|/)data/"` in `.github/workflows/super-linter.yml`) rather than
+   reformatting the audited vendored payload or reworking canonical scripture, so `data/**` is no longer run
+   through the code formatters/spell-checker. The recorded cost (a change touching only `data/` leaves those
+   categories vacuous) and the substitute checks of record are stated in D29. A third red category,
+   `PYTHON_MYPY`, was a genuine finding in a new file and was fixed in `5079fdc`, not exempted.
+7. **`make parity-live` was not run** and no claim is made about it; it drives the *deployed* origin, which
+   will not carry this change until after merge and the Pages rebuild.
 
 ## STOP
 
