@@ -127,3 +127,30 @@ jobs:
           # `Black and Ruff are both enabled, and might conflict` warning.
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_RUFF_FORMAT: false
+          # ---- Canonical data files are not source, and not linted as if they were (D29) ----
+          # `data/**` holds canonical/source-of-truth data: the raw scraped Hidden Words
+          # corpus, and the collection files the page loads -- one of which is vendored
+          # BYTE-IDENTICAL from another repository, which is what makes that export
+          # auditable. Code formatters and a spell-checker are the wrong tools for that
+          # class of file, and each objected only once these files entered the changed set
+          # (the vacuous-pass pattern docs/queue.md C8 documents):
+          #   - Prettier-on-JSON wants the array layout reflowed. Complying is a
+          #     whitespace-only change, but it would silently break the byte-identity that
+          #     the import's recorded SHA-256 and the parity suite's hash pin rely on.
+          #   - codespell's default dictionary rejects archaic scripture that is correct as
+          #     written (an "un-to-thee" vocabulary the Hidden Words text uses throughout).
+          #     The text is canonical; it cannot be reworded to satisfy a dictionary.
+          #     (Spelling out those words in THIS comment is what re-triggered the check:
+          #     a word list inside a non-data file is still prose to codespell.)
+          # The checks of record for these files are stricter than what they replace:
+          # `make validate` (raw corpus shape), `make validate-collections` (the collection
+          # contract, incl. schema_version and enum membership) and `make check-collections`
+          # (derived files current). Excluding the path does mean a change that touches ONLY
+          # data files leaves the categories below reporting a vacuous pass -- deliberately,
+          # and the same substitution applies to GITLEAKS/CHECKOV, which have nothing to
+          # read in a canonical corpus. GitGuardian still scans the PR independently.
+          # The second alternative covers the iOS widget's bundled corpus copy: it is
+          # machine-generated from the same raw corpus by scripts/build_collections.py, so
+          # it carries the same canonical text and would trip exactly the same two checks
+          # the first time a regeneration actually changes it (the path is outside data/).
+          FILTER_REGEX_EXCLUDE: "(^|/)data/|(^|/)ios/widget/quotes_hidden_words\\.json$"

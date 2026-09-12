@@ -2,11 +2,12 @@
 
 **Live:** <https://mschwar.github.io/bahai-homepage/>
 
-A quiet, deterministic, **single-passage** daily-sacred-verse homepage: one Hidden Words passage per
-Gregorian day-of-year (drawn from the ≤75-word subset of the corpus), the Badíʿ date (location/sunset-aware
-when the browser permits, degrading gracefully when it does not), a light "Yesterday" recall, click-to-copy,
-and a persistent dark/light theme. It is static and client-side only, deployed on GitHub Pages, with
-**no backend, database, build step, auth, or runtime AI**.
+A quiet, deterministic, **single-passage** daily-sacred-verse homepage: one passage per Gregorian day-of-year
+(drawn from the ≤75-word subset of the selected collection — **The Hidden Words by default**, with a
+low-weight source menu offering one verified second collection), the Badíʿ date (location/sunset-aware when
+the browser permits, degrading gracefully when it does not), a light "Yesterday" recall, click-to-copy, and a
+persistent dark/light theme. It is static and client-side only, deployed on GitHub Pages, with **no backend,
+database, build step, auth, or runtime AI**.
 
 The product's job, in one line: *make encountering the Creative Word an ordinary, quiet part of opening a
 device* — without adding cognitive weight.
@@ -40,13 +41,19 @@ read-first order, commands, data-contract reality, autonomy boundary, and the fo
 
 | Path | Role |
 |---|---|
-| `index.html` | Page structure (today jumbotron, date panel, yesterday jumbotron) |
+| `index.html` | Page structure (today jumbotron, date panel, yesterday jumbotron, source menu) |
 | `css/style.css` | Styles, light/dark themes, reduced-motion handling |
-| `js/script.js` | Corpus fetch, day-of-year selection, caching, copy, theme, yesterday |
+| `js/quote-core.js` | Collection registry + loading, corpus fetch, day-of-year selection, caching (shared) |
+| `js/script.js` | Render, source menu wiring, collection persistence, copy, theme, yesterday |
 | `js/badi-init.js` | Badíʿ date initialisation (4 s timeout, graceful degradation) |
-| `data/quotes_hidden_words.json` | The live corpus — 153 passages, `{text, source, author}` |
-| `scripts/validate_quotes.py` | Data-shape validator (the only automated check today) |
-| `scripts/scrape_hidden_words.py` | Regenerates the corpus from bahai.org (dev-only tool) |
+| `data/collections/hidden-words.json` | The default collection the page loads — 153 passages, contract shape |
+| `data/collections/garden-homepage-preview.json` | The second collection — 4 verified Garden-of-Wisdom excerpts |
+| `data/quotes_hidden_words.json` | The canonical raw corpus (`{text, source, author}`) — generator input; still read by the wallpaper |
+| `scripts/validate_quotes.py` | Raw-corpus data-shape validator (153/0/0/0) |
+| `scripts/validate_collection.py` | Contract validator for collection files |
+| `scripts/build_collections.py` | Regenerates the derived collection + widget corpus files (dev-only) |
+| `scripts/import_collection.py` | SHA-256-gated import of a producer's collection payload |
+| `scripts/scrape_hidden_words.py` | Regenerates the raw corpus from bahai.org (dev-only tool) |
 | `.github/workflows/super-linter.yml` + `.github/linters/.markdown-lint.yml` | Super Linter on push/PR to `main` — hygiene only, does not gate or deploy (D10) |
 | `.nojekyll` | Required so Pages serves the raw JSON/JS without Jekyll processing |
 
@@ -95,12 +102,27 @@ Then open <http://localhost:8000/>.
 ## Validate it
 
 ```bash
-make validate
+make validate                  # the raw corpus (data/quotes_hidden_words.json)
 # equivalent, explicit:
 python3 scripts/validate_quotes.py data/quotes_hidden_words.json
+
+make validate-collections      # the collection files the page actually loads
+make check-collections         # are the derived collection files current?
 ```
 
-Expected output: `Quotes checked: 153` / `Errors: 0` / `Warnings: 0` / `Duplicate texts: 0`.
+Expected output: `Quotes checked: 153` / `Errors: 0` / `Warnings: 0` / `Duplicate texts: 0`, and
+`RESULT: PASS` from the collection validator.
+
+## Collections
+
+The page loads one collection at a time from `data/collections/<collection_id>.json`, chosen by the source
+menu (top-right, under the theme toggle). **The Hidden Words is the default**; the second entry,
+`Garden of Wisdom (preview)`, is a 4-item verified preview export produced by
+<https://github.com/mschwar/Garden-of-Wisdom> and vendored byte-identically — see
+`docs/architecture/COLLECTION_IMPORTS.md` and the contract in `docs/architecture/COLLECTION_CONTRACT.md`.
+Selection is `eligible[dayOfYear % eligible.length]` within the chosen collection, cache keys are
+collection-scoped, and the choice persists per browser. Adding a collection is a JSON file plus one registry
+entry in `js/quote-core.js` — not a new code path, and never a new on-page surface.
 
 ## Scrapers (dev-only — NOT runtime dependencies)
 
@@ -142,7 +164,8 @@ subdirectory of `main`.
 ### The root markdown map — every root `.md` has exactly one status
 
 Eight `.md` files sit at the repository root, and each is one of **live**, **bootstrap** or **historical** (queue
-unit `C2`, decision `D14`). Nothing at the root is undeclared. The three historical files were moved with
+unit `C2`, decision `D14`) — the three `H2B` additions declared by `D28`. Nothing at the root is undeclared.
+The three historical files were moved with
 `git mv` behind a SUPERSEDED banner (the D5 mechanism): nothing was deleted, and no frozen file was touched.
 
 | File (current path) | Status | Why it sits where it does |
@@ -152,6 +175,9 @@ unit `C2`, decision `D14`). Nothing at the root is undeclared. The three histori
 | `CONTRIBUTING.md` | **live** | GitHub reads `CONTRIBUTING.md` **only** at the repository root, so moving it would silently disable the contributing prompt. |
 | `SECURITY.md` | **live** | The same root-only rule governs GitHub's security-policy discovery. |
 | `START_HOMEPAGE_RETROFIT.md` | **bootstrap** | The retrofit seed's entry pointer. Its "first authorized task" is the executed Phase 0 archaeology prompt, so it is spent — it stays at the root as the bootstrap chain's first read, not as guidance. |
+| `START_H2B_COLLECTION_CONTRACT.md` | **bootstrap** | The `H2B` packet's entry pointer (same shape as the retrofit one). Spent once H2B-A ran; kept as that packet chain's first read. |
+| `H2B_CONTRACT_HANDOFF.md` | **historical** | H2B-A's closeout handoff (2026-09-11). A record of the contract phase, superseded as guidance by its acceptance (`D27`) and the implementation (`D28`). |
+| `H2B_IMPLEMENTATION_HANDOFF.md` | **historical** | H2B-B's closeout handoff (2026-09-11) — files changed, before/after parity, import hash, deviations. A record of a closed unit, not a live spec. |
 | `docs/history/AUDIT_NOTES.md` | **historical** | The 2026-01-31 reliability/a11y audit record, superseded by `docs/audit/2026-09-10/`. |
 | `docs/history/HANDOFF.md` | **historical** | The Phase 0 repo-archaeology closeout; its §8 owner questions were answered in `OWNER_DECISIONS.md`. |
 | `docs/history/PHASE1_HANDOFF.md` | **historical** | The Phase 1 / H1 closeout and its per-gate evidence — a record of a closed phase, not a live spec. |
@@ -164,7 +190,8 @@ construction, and never rewritten in place.
 Recorded, not scheduled — see `docs/queue.md` for the detail:
 
 - Multi-faith data integration — **abandoned; do not resurrect**.
-- Ruhi Book 1 memorization collection (`R1`) — **BLOCKED** behind the collection contract + rights review.
+- Ruhi Book 1 memorization collection (`R1`) — **BLOCKED** behind a rights/provenance review (the collection
+  contract half is closed, D28).
 - Font/CDN version pinning.
 - Reshaping `ios/widget/` into a real Xcode project.
 - Runtime AI, journaling, streaks, recommendation feeds — doctrine non-goals.

@@ -4,13 +4,13 @@
 // This is DEV tooling only. It is NOT part of the served site and adds no runtime
 // dependency. It drives the real page (index.html + js/script.js + js/badi-init.js)
 // in headless Chromium via Playwright, self-hosting a static HTTP server so the
-// page's fetch() of data/quotes_hidden_words.json works under a real origin.
+// page's fetch() of its collection files works under a real origin.
 //
-// Purpose: pin the CURRENT (pre-refactor) behavior so a later refactor can prove it
-// did not change anything. Coverage (docs/queue.md H2A contract):
+// Purpose: pin the product's behavior so a change can prove it altered nothing it
+// did not mean to. Coverage:
 //   A. deterministic day-of-year selection over the <=75-word subset
 //   B. today / yesterday relationship
-//   C. cache-by-date (Gregorian key) incl. boot-from-cache + lastKey
+//   C. cache-by-date (collection-scoped Gregorian key) incl. boot-from-cache + lastKey
 //   D. cache hygiene: today's verse is stored under the Gregorian key only; the Badíʿ-day
 //      key is NOT written (TECH_DEBT_AND_RISKS.md #7, fixed) so a cache hit can't mismatch
 //   E. theme persistence: body carries exactly one of light-mode/dark-mode (queue C7)
@@ -18,13 +18,25 @@
 //   G. clipboard copy (primary + execCommand fallback + failure); Copy button is
 //       visually hidden but still keyboard-reachable. Status reports Copied. / Copy failed.
 //   H. reduced-motion scroll behavior
-//   I. source-toggle placeholder: opens a two-item menu; pick / Escape / click-outside
-//       dismiss; corpus unchanged; light tokens + dark bg pinned
+//   I. source menu chrome: opens a two-collection menu; pick / Escape / click-outside
+//       dismiss; light tokens + dark bg pinned (D22/D23)
+//   J. collection switching (H2B-B): the Garden-of-Wisdom preview collection selects
+//       deterministically, persists, caches under its own scoped key, and switching
+//       back restores Hidden Words exactly
+//   K. fallback semantics (D27 follow-up): a structurally invalid selection is cleared
+//       and falls back; a *transient* fetch failure keeps the visitor's choice
+//
+// The Hidden Words oracle below reads the canonical RAW corpus
+// (data/quotes_hidden_words.json), not the generated collection file the page reads —
+// that independence is deliberate: it proves the generated collection is faithful to
+// the raw corpus rather than merely agreeing with itself. The Garden oracle reads the
+// vendored producer payload and pins its SHA-256 to the recorded import hash.
 //
 // Run:   node tests/parity.mjs   (uses the globally-installed playwright + bundled
 //                                Chromium; no package manifest is added to the repo)
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
+import { createHash } from 'node:crypto';
 import { extname, join, normalize } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
@@ -73,6 +85,12 @@ const YESTERDAY = new Date(TODAY); YESTERDAY.setDate(TODAY.getDate() - 1);
 function loadCorpus() {
   return readFile(join(ROOT, 'data/quotes_hidden_words.json'), 'utf8').then(JSON.parse);
 }
+function loadCollectionFile(id) {
+  return readFile(join(ROOT, 'data/collections', `${id}.json`), 'utf8').then(JSON.parse);
+}
+function sha256(text) {
+  return createHash('sha256').update(text).digest('hex');
+}
 const countWords = t => (t || '').trim().split(/\s+/).filter(Boolean).length;
 const dayOfYear = d => Math.floor((d - new Date(d.getFullYear(), 0, 0)) / 8.64e7);
 const shortQuotes = corpus => corpus.filter(q => countWords(q.text) <= 75);
@@ -81,6 +99,10 @@ const expectFor = (corpus, date) => {
   const s = shortQuotes(corpus);
   return s[dayOfYear(date) % s.length];
 };
+// Same oracle shape, applied to a collection file's own eligible subset.
+const eligibleOf = collection =>
+  collection.items.filter(i => countWords(i.text) <= collection.default_eligibility.max_words);
+const selectFrom = (items, date) => items[dayOfYear(date) % items.length];
 
 // Block the external Badici lib + fonts so the suite is fully deterministic/offline.
 async function blockExternal(page) {
@@ -134,11 +156,58 @@ async function loadPage(page, { badiInfo = null, captureScroll = false, reducedM
 const txt = (page, sel) => page.textContent(sel);
 const attr = (page, sel, name) => page.getAttribute(sel, name);
 
+// ---- Collection-switching helpers (H2B-B) ----
+// Record any uncaught page error so a fallback path can be proven not to throw.
+function trackPageErrors(page) {
+  const errors = [];
+  page.on('pageerror', e => errors.push(String(e && e.message ? e.message : e)));
+  return errors;
+}
+async function waitForVerse(page, expected, sel = '#quote-text') {
+  await page.waitForFunction(
+    ([s, want]) => {
+      const el = document.querySelector(s);
+      return el && el.textContent.trim() === want;
+    },
+    [sel, expected],
+    { timeout: 10000 }
+  );
+}
+// Open the source menu and pick a collection; resolves once the page has settled
+// on that selection (menu closed, aria-current moved).
+async function pickSource(page, id) {
+  await page.click('#source-toggle-button');
+  await page.click(`[data-source="${id}"]`);
+  await page.waitForFunction(
+    wanted => document.getElementById('source-menu').hidden &&
+      (document.querySelector(`[data-source="${wanted}"]`) || {}).getAttribute('aria-current') === 'true',
+    id,
+    { timeout: 10000 }
+  );
+}
+const storedCollection = page => page.evaluate(() => localStorage.getItem('selectedCollection'));
+
 const corpus = await loadCorpus();
 const shortLen = shortQuotes(corpus).length;
 const expToday = expectFor(corpus, TODAY);
 const expYest = expectFor(corpus, YESTERDAY);
 const TODAY_KEY = '2026-06-15';
+// Cache keys are collection-scoped (H2B-B / D28): dailyVerse:<collection_id>:<date>,
+// plus a per-collection lastKey record. script.js builds the prefix through
+// QuoteCore.collectionCachePrefix().
+const HW = 'hidden-words';
+const GARDEN = 'garden-homepage-preview';
+const scopedKey = (id, key) => `dailyVerse:${id}:${key}`;
+const lastKeyFor = id => `dailyVerse:lastKey:${id}`;
+const HW_TODAY_CACHE = scopedKey(HW, TODAY_KEY);
+// The raw corpus (test oracle) must stay byte-faithful to the generated collection.
+const hwCollection = await loadCollectionFile(HW);
+const gardenCollection = await loadCollectionFile(GARDEN);
+const gardenRaw = await readFile(join(ROOT, 'data/collections', `${GARDEN}.json`), 'utf8');
+const gardenEligible = eligibleOf(gardenCollection);
+const gardenToday = selectFrom(gardenEligible, TODAY);
+const gardenYest = selectFrom(gardenEligible, YESTERDAY);
+const GARDEN_IMPORT_SHA256 = '85fa2f6b2882633a683b7449f9e4daf650f78b5ee28faf9e59dbff52222d6bd5';
 // saveCachedQuote prepends CACHE_PREFIX ('dailyVerse:') to the key, so the Badici-day
 // wrinkle stores today's quote under dailyVerse:badi:<year>-<month>-<day>.
 const BADI_KEY = 'dailyVerse:badi:182-Núr-4';
@@ -201,17 +270,17 @@ await run('B. Today / yesterday relationship', [
   }],
 ]);
 
-await run('C. Cache-by-date (Gregorian key)', [
+await run('C. Cache-by-date (collection-scoped Gregorian key)', [
   ['boots from cache when the quote fetch fails (offline cache-boot)', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
-    const sentinel = { text: 'CACHED QUOTE SENTINEL FOR PARITY', author: 'Test', source: 'Test Source' };
+    const sentinel = { text: 'CACHED QUOTE SENTINEL FOR PARITY', author: 'Test', source_ref: 'Test Source' };
     await blockExternal(page); await fixClock(page);
     await page.addInitScript(({ key, quote }) => localStorage.setItem(key, JSON.stringify(quote)), {
-      key: `dailyVerse:${TODAY_KEY}`, quote: sentinel,
+      key: HW_TODAY_CACHE, quote: sentinel,
     });
-    // Simulate offline: the corpus fetch must fail.
-    await page.route('**/data/quotes_hidden_words.json', r => r.abort());
+    // Simulate offline: the collection fetch must fail.
+    await page.route('**/data/collections/hidden-words.json', r => r.abort());
     await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
     await page.waitForFunction(() => document.getElementById('quote-text').textContent !== 'Loading Sacred Verse…');
     const got = (await txt(page, '#quote-text')).trim();
@@ -221,16 +290,16 @@ await run('C. Cache-by-date (Gregorian key)', [
     if (!status.includes('Unable to load verses')) throw new Error(`expected load-error status, got: ${status}`);
     await ctx.close();
   }],
-  ['after a fresh load, today\'s verse is cached under dailyVerse:<todayKey> and lastKey is set', async () => {
+  ['after a fresh load, today\'s verse is cached under the collection-scoped key and lastKey is set', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page);
-    const cached = await page.evaluate((key) => localStorage.getItem(key), `dailyVerse:${TODAY_KEY}`);
-    if (!cached) throw new Error('today not cached under Gregorian key');
+    const cached = await page.evaluate((key) => localStorage.getItem(key), HW_TODAY_CACHE);
+    if (!cached) throw new Error(`today not cached under ${HW_TODAY_CACHE}`);
     const parsed = JSON.parse(cached);
     if (parsed.text !== expToday.text) throw new Error('cached today mismatch');
     if (parsed.text !== (await txt(page, '#quote-text')).trim()) throw new Error('cached != rendered');
-    const last = await page.evaluate(() => localStorage.getItem('dailyVerse:lastKey'));
+    const last = await page.evaluate((k) => localStorage.getItem(k), lastKeyFor(HW));
     if (last !== TODAY_KEY) throw new Error(`lastKey expected ${TODAY_KEY}, got ${last}`);
     await ctx.close();
   }],
@@ -241,10 +310,10 @@ await run('D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)', [
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page, { badiInfo: { bDay: 4, bMonthMeaning: 'Light', bMonthNameAr: 'Núr', bYear: 182, bEraAbbrev: 'BE' } });
-    const gregKey = `dailyVerse:${TODAY_KEY}`;
+    const gregKey = HW_TODAY_CACHE;
     const greg = JSON.parse(await page.evaluate(k => localStorage.getItem(k), gregKey));
     const badi = await page.evaluate(k => localStorage.getItem(k), BADI_KEY);
-    const last = await page.evaluate(() => localStorage.getItem('dailyVerse:lastKey'));
+    const last = await page.evaluate(k => localStorage.getItem(k), lastKeyFor(HW));
     // The wrinkle (TECH_DEBT_AND_RISKS.md #7) wrote today's verse ALSO under the Badíʿ-day key,
     // and lastKey ended up pointing there. Nothing ever reads that key, and a later Badíʿ cache
     // hit could render a mismatched verse. The fix (option (a)) stops writing it entirely; the
@@ -480,8 +549,8 @@ await run('H. Reduced-motion scroll behavior', [
   }],
 ]);
 
-await run('I. Source-toggle placeholder (chrome only; does not switch corpus)', [
-  ['sits below the theme toggle and starts closed', async () => {
+await run('I. Source menu chrome (two real collections; D22/D23 a11y)', [
+  ['sits below the theme toggle, starts closed, and offers exactly the two wired collections', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page);
@@ -495,32 +564,40 @@ await run('I. Source-toggle placeholder (chrome only; does not switch corpus)', 
         sourceBelowTheme: sr.top >= tr.bottom - 1,
         menuHidden: menu.hidden === true,
         expanded: source.getAttribute('aria-expanded'),
-        options: [...menu.querySelectorAll('[data-source]')].map(el => el.getAttribute('data-source'))
+        options: [...menu.querySelectorAll('[data-source]')].map(el => ({
+          id: el.getAttribute('data-source'),
+          label: el.textContent.trim(),
+          current: el.getAttribute('aria-current')
+        }))
       };
     });
     if (!layout.sourceBelowTheme) throw new Error('source toggle must sit below the theme toggle');
     if (!layout.menuHidden || layout.expanded !== 'false') {
       throw new Error(`menu should start closed, hidden=${layout.menuHidden} aria-expanded=${layout.expanded}`);
     }
-    if (layout.options.join(',') !== 'hidden-words,coming-later') {
-      throw new Error(`expected placeholder options hidden-words,coming-later; got ${layout.options.join(',')}`);
+    if (layout.options.map(o => o.id).join(',') !== `${HW},${GARDEN}`) {
+      throw new Error(`expected wired options ${HW},${GARDEN}; got ${layout.options.map(o => o.id).join(',')}`);
+    }
+    // The menu is the only place a label is shown to the visitor: it must not drift
+    // from the collection file's own `label` (the descriptor is the source of truth).
+    const expectedLabels = { [HW]: hwCollection.label, [GARDEN]: gardenCollection.label };
+    for (const opt of layout.options) {
+      if (opt.label !== expectedLabels[opt.id]) {
+        throw new Error(`menu label for ${opt.id} is ${JSON.stringify(opt.label)}, collection label is ${JSON.stringify(expectedLabels[opt.id])}`);
+      }
+    }
+    const current = layout.options.filter(o => o.current === 'true').map(o => o.id);
+    if (current.join(',') !== HW) {
+      throw new Error(`Hidden Words must be the default current source; aria-current=true on: ${current.join(',')}`);
     }
     await ctx.close();
   }],
-  ['clicking the toggle opens the menu; picking an option closes it without changing the verse', async () => {
+  ['picking the already-selected collection just closes the menu and returns focus', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page);
     const before = (await txt(page, '#quote-text')).trim();
-    await page.click('#source-toggle-button');
-    const opened = await page.evaluate(() => ({
-      hidden: document.getElementById('source-menu').hidden,
-      expanded: document.getElementById('source-toggle-button').getAttribute('aria-expanded')
-    }));
-    if (opened.hidden || opened.expanded !== 'true') {
-      throw new Error(`menu should open, hidden=${opened.hidden} aria-expanded=${opened.expanded}`);
-    }
-    await page.click('[data-source="coming-later"]');
+    await pickSource(page, HW);
     const afterPick = await page.evaluate(() => ({
       hidden: document.getElementById('source-menu').hidden,
       expanded: document.getElementById('source-toggle-button').getAttribute('aria-expanded'),
@@ -531,7 +608,7 @@ await run('I. Source-toggle placeholder (chrome only; does not switch corpus)', 
       throw new Error(`menu should close after pick, hidden=${afterPick.hidden} aria-expanded=${afterPick.expanded}`);
     }
     if (afterPick.verse !== before) {
-      throw new Error('placeholder pick must not change the verse');
+      throw new Error('re-selecting the current collection must not change the verse');
     }
     if (afterPick.focus !== 'source-toggle-button') {
       throw new Error(`after pick, focus should return to the toggle, got ${afterPick.focus}`);
@@ -597,6 +674,181 @@ await run('I. Source-toggle placeholder (chrome only; does not switch corpus)', 
       throw new Error(`expected dark bg rgb(26, 38, 57) (#1A2639), got ${darkBg}`);
     }
     await darkCtx.close();
+    await ctx.close();
+  }],
+]);
+
+await run('J. Second collection: the Garden-of-Wisdom preview (H2B-B)', [
+  ['the generated Hidden Words collection is faithful to the canonical raw corpus', async () => {
+    const rawEligible = shortQuotes(corpus).map(q => q.text);
+    const fileEligible = eligibleOf(hwCollection).map(i => i.text);
+    if (fileEligible.length !== rawEligible.length) {
+      throw new Error(`eligible count drift: raw corpus ${rawEligible.length}, collection file ${fileEligible.length}`);
+    }
+    for (let i = 0; i < rawEligible.length; i++) {
+      if (fileEligible[i] !== rawEligible[i]) {
+        throw new Error(`item ${i} drifted between raw corpus and collection file: ${fileEligible[i].slice(0, 40)}`);
+      }
+    }
+    if (hwCollection.collection_id !== HW || hwCollection.schema_version !== 1 || hwCollection.version !== 1) {
+      throw new Error('Hidden Words collection header is not the contract shape (id/schema_version/version)');
+    }
+    for (const item of hwCollection.items) {
+      for (const field of ['item_id', 'text', 'source_ref', 'item_type', 'verification_state']) {
+        if (item[field] === undefined) throw new Error(`item ${item.item_id} is missing ${field}`);
+      }
+    }
+    console.log(`      collection items=${hwCollection.items.length} eligible=${fileEligible.length} (raw oracle ${shortLen})`);
+  }],
+  ['the vendored Garden payload is byte-identical to the recorded producer import', async () => {
+    const digest = sha256(gardenRaw);
+    if (digest !== GARDEN_IMPORT_SHA256) {
+      throw new Error(`vendored Garden payload hash ${digest} != recorded import hash ${GARDEN_IMPORT_SHA256}`);
+    }
+    if (gardenCollection.collection_id !== GARDEN) throw new Error('unexpected collection_id');
+    if (gardenEligible.length !== 4) throw new Error(`expected 4 eligible Garden items, got ${gardenEligible.length}`);
+    if (gardenToday.text === expToday.text) {
+      throw new Error('oracle problem: Garden and Hidden Words agree on TODAY, so the divergence test would be vacuous — pick a different fixed date');
+    }
+    console.log(`      garden items=${gardenCollection.items.length} eligible=${gardenEligible.length} idx=${dayOfYear(TODAY) % gardenEligible.length}`);
+  }],
+  ['selecting the Garden collection renders its own deterministic verse for today', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const errors = trackPageErrors(page);
+    await loadPage(page);
+    await pickSource(page, GARDEN);
+    await waitForVerse(page, gardenToday.text);
+    if ((await storedCollection(page)) !== GARDEN) {
+      throw new Error('selectedCollection was not persisted on pick');
+    }
+    const author = (await txt(page, '#quote-author')).trim();
+    const citation = (await txt(page, '#quote-source-full')).trim();
+    if (author !== gardenToday.author) throw new Error(`Garden author mismatch: ${author}`);
+    if (citation !== gardenToday.source_ref) throw new Error(`Garden citation mismatch: ${citation}`);
+    if (errors.length) throw new Error(`page errors during switch: ${errors.join(' | ')}`);
+    await ctx.close();
+  }],
+  ['the Garden selection survives a reload', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    await pickSource(page, GARDEN);
+    await waitForVerse(page, gardenToday.text);
+    if ((await storedCollection(page)) !== GARDEN) throw new Error('selectedCollection not stored');
+    await page.reload({ waitUntil: 'networkidle' });
+    await waitForVerse(page, gardenToday.text);
+    const current = await page.evaluate(() => {
+      const el = document.querySelector('[data-source][aria-current="true"]');
+      return el && el.getAttribute('data-source');
+    });
+    if (current !== GARDEN) throw new Error(`after reload aria-current should be ${GARDEN}, got ${current}`);
+    await ctx.close();
+  }],
+  ['cache keys are collection-scoped and never collide', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    await pickSource(page, GARDEN);
+    await waitForVerse(page, gardenToday.text);
+    const store = await page.evaluate(() => ({ ...localStorage }));
+    const hw = store[HW_TODAY_CACHE] && JSON.parse(store[HW_TODAY_CACHE]);
+    const gp = store[scopedKey(GARDEN, TODAY_KEY)] && JSON.parse(store[scopedKey(GARDEN, TODAY_KEY)]);
+    if (!hw || hw.text !== expToday.text) throw new Error('Hidden Words cache missing/wrong after switching to Garden');
+    if (!gp || gp.text !== gardenToday.text) throw new Error('Garden cache missing/wrong');
+    if (hw.text === gp.text) throw new Error('the two collections cached the same verse — keys collided');
+    if (store[lastKeyFor(HW)] !== TODAY_KEY) throw new Error('Hidden Words lastKey wrong');
+    if (store[lastKeyFor(GARDEN)] !== TODAY_KEY) throw new Error('Garden lastKey wrong');
+    if (store[TODAY_KEY] !== undefined || store[`dailyVerse:${TODAY_KEY}`] !== undefined) {
+      throw new Error('an unscoped legacy cache key was written');
+    }
+    await ctx.close();
+  }],
+  ['today and yesterday both come from the selected collection', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    await pickSource(page, GARDEN);
+    await waitForVerse(page, gardenToday.text);
+    await page.click('#yesterday-button');
+    await waitForVerse(page, gardenYest.text, '#quote-text-yesterday');
+    if (gardenYest.text === expYest.text) throw new Error('Garden yesterday equals Hidden Words yesterday — not from the selected collection');
+    await ctx.close();
+  }],
+  ['switching back to Hidden Words restores Hidden Words exactly', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const errors = trackPageErrors(page);
+    await loadPage(page);
+    await pickSource(page, GARDEN);
+    await waitForVerse(page, gardenToday.text);
+    await pickSource(page, HW);
+    await waitForVerse(page, expToday.text);
+    const citation = (await txt(page, '#quote-source-full')).trim();
+    if (citation !== expToday.source) throw new Error(`Hidden Words citation mismatch after switching back: ${citation}`);
+    if ((await storedCollection(page)) !== HW) throw new Error('selectedCollection should be hidden-words');
+    if (errors.length) throw new Error(`page errors: ${errors.join(' | ')}`);
+    await ctx.close();
+  }],
+]);
+
+await run('K. Fallback semantics (D27 follow-up: invalid clears, transient keeps)', [
+  ['an unknown stored collection id falls back to Hidden Words, clears the bad value, and does not throw', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const errors = trackPageErrors(page);
+    await blockExternal(page); await fixClock(page);
+    await page.addInitScript(() => localStorage.setItem('selectedCollection', 'not-a-real-collection'));
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+    await waitForVerse(page, expToday.text);
+    if ((await storedCollection(page)) !== null) throw new Error('an unknown collection id must be cleared from storage');
+    const status = (await txt(page, '#status-message')).trim();
+    if (!status.includes('is unavailable')) throw new Error(`expected an 'unavailable' status, got: ${status}`);
+    const current = await page.evaluate(() => {
+      const el = document.querySelector('[data-source][aria-current="true"]');
+      return el && el.getAttribute('data-source');
+    });
+    if (current !== HW) throw new Error(`aria-current should fall back to ${HW}, got ${current}`);
+    if (errors.length) throw new Error(`page errors: ${errors.join(' | ')}`);
+    await ctx.close();
+  }],
+  ['a structurally invalid collection (unrecognized schema_version) falls back and clears the selection', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const errors = trackPageErrors(page);
+    await blockExternal(page); await fixClock(page);
+    await page.addInitScript(() => localStorage.setItem('selectedCollection', 'garden-homepage-preview'));
+    await page.route('**/data/collections/garden-homepage-preview.json', r => r.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ collection_id: 'garden-homepage-preview', schema_version: 99, items: [] })
+    }));
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+    await waitForVerse(page, expToday.text);
+    if ((await storedCollection(page)) !== null) {
+      throw new Error('a structurally invalid collection must be cleared from storage');
+    }
+    const status = (await txt(page, '#status-message')).trim();
+    if (!status.includes('is unavailable')) throw new Error(`expected an 'unavailable' status, got: ${status}`);
+    if (errors.length) throw new Error(`page errors: ${errors.join(' | ')}`);
+    await ctx.close();
+  }],
+  ['a transient fetch failure of the chosen collection KEEPS the choice (D27)', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const errors = trackPageErrors(page);
+    await blockExternal(page); await fixClock(page);
+    await page.addInitScript(() => localStorage.setItem('selectedCollection', 'garden-homepage-preview'));
+    await page.route('**/data/collections/garden-homepage-preview.json', r => r.abort());
+    await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
+    // Hidden Words is what renders (it is healthy), but the visitor's choice survives.
+    await waitForVerse(page, expToday.text);
+    if ((await storedCollection(page)) !== GARDEN) {
+      throw new Error('a transient fetch failure must NOT erase the stored collection choice');
+    }
+    const status = (await txt(page, '#status-message')).trim();
+    if (!status.includes('could not be loaded')) throw new Error(`expected a transient-failure status, got: ${status}`);
+    if (errors.length) throw new Error(`page errors: ${errors.join(' | ')}`);
     await ctx.close();
   }],
 ]);

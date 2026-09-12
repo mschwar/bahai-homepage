@@ -990,3 +990,153 @@ verification-field name across repos before code depends on either spelling.
 `js/quote-core.js`, `js/script.js`, `data/quotes_hidden_words.json`, `ios/widget/QuoteStore.swift`,
 and `~/Developer/Garden-of-Wisdom`'s live `docs/data/DATA_CONTRACT.md` /
 `docs/DECISIONS.md`, 2026-09-11.
+
+## D28 — H2B-B executed: the collection contract is wired, second collection live, D26 decisions resolved · accepted 2026-09-11
+
+Owner-authorized product change. Touches frozen files (`index.html`, `js/quote-core.js`,
+`js/script.js`), which `AGENTS.md` puts behind owner sign-off; the owner's in-session
+instruction to execute H2B-B against the named producer payload is that authorization, and this
+entry records its scope and limits. It resolves the five decisions D26 left open, carries the two
+D27 follow-ups, and canonicalizes the verification field name across repos.
+
+**The second collection is real, and it is a producer payload — not hand-authored here.** Owner
+supplied `mschwar/Garden-of-Wisdom → exports/bahai-homepage-preview/v1/collection.json`
+(commit `affa328`, merged `8405856`). It is vendored **byte-identically** at
+`data/collections/garden-homepage-preview.json` (sha256
+`85fa2f6b2882633a683b7449f9e4daf650f78b5ee28faf9e59dbff52222d6bd5`), imported through
+`scripts/import_collection.py --expected-sha256`, which refuses a payload whose hash does not
+match. No verified passage text was retyped or edited in this repo. `collection_id`
+`garden-homepage-preview`, label `Garden of Wisdom (preview)`, 4 items (`garden-3`, `garden-12`,
+`garden-15`, `garden-26`), all `item_type: excerpt`, all `verification_state: verified`.
+Provenance appended to `docs/architecture/COLLECTION_IMPORTS.md`.
+
+**D26 decision 1 — new path, not in-place migration.** Resolved as: **new path.** The runtime
+loads `data/collections/<collection_id>.json` for *every* collection, including Hidden Words;
+`data/quotes_hidden_words.json` stays byte-identical and is not migrated. Rationale: in-place
+migration is a breaking shape change to a frozen file that would simultaneously move the parity
+oracle, the wallpaper's read path, the iOS bundle's expectations and the documented
+`make validate` contract (153/0/0/0) — for no product benefit. Instead the raw corpus remains the
+canonical scrape output and `scripts/build_collections.py` derives the contract-shaped
+`data/collections/hidden-words.json` from it. The legacy file is retained deliberately and is
+still read by the wallpaper surface (`js/wallpaper.js`). Trading a second derived file for a
+breaking frozen-file diff is the trade the contract explicitly left to the owner.
+
+**D26 decision 2 — `verification_state: "verified"` for all 153 Hidden Words items: yes.** The
+corpus is the product's own already-shipped, trusted bahai.org text; calling it `unverified` would
+misstate its provenance.
+
+**D26 decision 3 — `item_type: "full-passage"` for all 153 items: yes.** Each Hidden Words item is
+a complete numbered passage, not an excerpt.
+
+**D26 decision 4 — the verification field name is `verification_state`. This is the canonical
+spelling and it is now closed, not live.** Decided before either side's validator hardened a
+spelling. Basis: the contract (accepted, D27) already uses `verification_state`, and the producer
+payload the owner supplied *already emits* `verification_state` — it was mapped from Garden's CSV
+column `verification_status` at export time on the producer side. So the wire format is settled by
+an existing artifact. Garden's own CSV column stays `verification_status` **internally**; renaming
+324 rows is churn in a repo that owns its own schema, and the mapping is a one-way, producer-side
+translation recorded in `docs/architecture/COLLECTION_IMPORTS.md`. No homepage code reads, writes
+or accepts `verification_status`. A future producer must emit `verification_state`.
+
+**D26 decision 5 — the regeneration script lives in this repo** (`scripts/build_collections.py`),
+because the repo whose corpus is canonical should own the emission of its derived copies; Garden
+is a data producer, not a tooling host. It emits **both** `data/collections/hidden-words.json` and
+`ios/widget/quotes_hidden_words.json` from the one raw corpus, so tech-debt #4 now has a
+regeneration step instead of two hand-maintained copies. Scope limit, stated plainly: the widget
+**data** is regenerated, the widget **source** is not touched — `QuoteStore.swift` still decodes
+the legacy `source` field, and its `source` → `source_ref` rename remains a separate, owner-gated
+unit, because `ios/widget/` cannot be built or tested in-repo (no `.xcodeproj`) and `AGENTS.md`
+forbids modifying it without an owner decision.
+
+**D27 follow-up 1 — the fallback conflation is split.** `QuoteCore.loadCollection` classifies
+failure and the page acts on the class: a *structurally* invalid collection (unknown id, bad JSON,
+unrecognized `schema_version`, mismatched `collection_id`, no eligible items) **clears**
+`selectedCollection` so the failure does not repeat; a *transient* fetch failure **keeps** the
+visitor's choice, so a network blip no longer silently discards a deliberate selection. Either way
+Hidden Words renders (the page is never left on "No verse available"), with the existing inline
+status pattern — no new banner/dialog. Both halves are pinned by parity section K.
+
+**D27 follow-up 2 — the verification field name.** Closed above (decision 4).
+
+**Runtime semantics, as implemented.** Registry is an allow-list in `js/quote-core.js`
+(`COLLECTIONS`), so a corrupted `selectedCollection` value can never cause a fetch of an arbitrary
+path. Cache keys are collection-scoped: `dailyVerse:<collection_id>:<date>` and
+`dailyVerse:lastKey:<collection_id>`; old unscoped keys are never migrated, they simply stop being
+read. Selection is unchanged (`eligible[dayOfYear % eligible.length]`) and is computed over the
+collection's eligible subset via a declarative rule object (`{"max_words": 75}`), an unrecognized
+rule shape being refused rather than guessed. Today and yesterday always come from the same
+selected collection. Hidden Words remains the default and the selector stays a two-item
+disclosure — no dashboard, feed, search or browse surface was added, and no Garden-specific logic
+lives in the core (Garden is one registry entry and one JSON file).
+
+**Parity and validation.** `make parity` is **34 passed, 0 failed** (24 before this unit; the two
+re-pinned assertions are the cache-key scheme and the menu's second option, plus 10 new
+assertions across sections J and K). Sections A–H — the Hidden Words behavior — are unchanged and
+green. `make validate` is 153/0/0/0 (legacy corpus contract untouched); `make validate-collections`
+passes on both collection files and was shown to fail on three malformed inputs; `make
+check-collections` confirms both derived files are current; `make wallpaper-check` is 4/4 (the
+wallpaper is on the shared-JS blast radius). Frozen-file hashes before/after are recorded in
+`docs/audit/2026-09-11/H2B_B_VERIFICATION_RUN.txt`: `css/*`, `js/badi-init.js`, `js/wallpaper.js`,
+`data/quotes_hidden_words.json` and all three `ios/widget/` files are **byte-identical**; only
+`index.html`, `js/quote-core.js` and `js/script.js` changed.
+
+**Deliberate deviation from the contract's test-fixture proposal.** The contract proposed a
+synthetic `tests/fixtures/fixture-a.json`. It was **not** created: the owner supplied a real second
+collection, and the H2B-B packet forbids adding a third. The negative cases the fixture was meant
+to exercise are covered against the real files instead — an unknown `collection_id`, and a
+route-mocked unrecognized `schema_version`.
+
+*Source:* owner instruction in-session 2026-09-11 (“Run H2B-B … resolve D26 decisions. Carry the
+two D27 follow-ups and decide the verification field name”); `docs/architecture/COLLECTION_CONTRACT.md`
+(D27); `bootstrap/packets/2026-09-11-h2b-collection-contract/prompts/02_H2B_IMPLEMENT_WITH_VERIFIED_GARDEN_EXPORT.txt`;
+Garden-of-Wisdom `GARDEN_HOMEPAGE_PREVIEW_EXPORT_HANDOFF.md`.
+
+## D29 — CI scope: canonical data files are excluded from the code formatters and the spell-checker · accepted 2026-09-11
+
+Owner decision, taken in-session when PR #26's first CI run went red on `JSON_PRETTIER` and
+`SPELL_CODESPELL`. This is the same class as **D10**, **D12** and **D17**: a check that had only ever
+produced a *vacuous pass* here (super-linter lints the changed set, and no earlier change had ever put a
+`data/` file into it) went red the first time it saw one, with findings that are consequences of what the
+files *are*, not defects in them. `.github/workflows/super-linter.yml` now sets
+`FILTER_REGEX_EXCLUDE: "(^|/)data/|(^|/)ios/widget/quotes_hidden_words\.json$"`, with the rationale inline in
+that file.
+
+**One extension beyond `data/`, disclosed.** The filter also covers `ios/widget/quotes_hidden_words.json`, the
+iOS widget's bundled corpus copy. It is not under `data/`, but it is the *same* canonical text — machine-
+generated from the same raw corpus by `scripts/build_collections.py` — so it would trip the identical two
+checks the first time a corpus regeneration actually changes it. Excluding it now avoids leaving a guaranteed
+repeat of this red CI behind; the owner's decision covers the class (canonical corpus text), and this is the
+same class. Vetoing it is a one-line revert.
+
+**Why the findings are not defects.**
+
+- `JSON_PRETTIER` wants the producer's `tags` arrays reflowed from multi-line to single-line. That is a
+  whitespace-only change (`json.loads` equality holds), but it would silently break the **byte-identity**
+  of the vendored Garden payload — the property the import's recorded SHA-256, its `cmp` evidence and the
+  parity suite's hash pin all rest on. A formatter must not be allowed to edit an audited import.
+- `SPELL_CODESPELL` rejects archaic scripture that is correct as written — the "unto thee",
+  "-eth"-and-"thou"-class archaisms the Hidden Words text uses throughout. The text is canonical. It cannot be
+  reworded to satisfy a dictionary, and curating it is owner-gated research, not a lint fix. (Quoting those
+  exact words in a doc, as a first draft of this entry did, re-triggers the check: outside `data/` the
+  exclusion does not apply, and rightly so — that is prose.)
+
+**What replaces them.** `make validate` (raw-corpus shape, 153/0/0/0), `make validate-collections` (the
+collection contract, incl. recognized `schema_version` and enum membership — stricter than the generic JSON
+check) and `make check-collections` (derived files current). Spell-check coverage of **prose** (markdownlint,
+and codespell over docs and code, which still runs) stays on: the exclusion is a path, not a category.
+
+**Recorded cost, not hidden.** The exclusion is not per-linter — super-linter applies
+`FILTER_REGEX_EXCLUDE` to every category — so a change touching *only* `data/` files leaves all categories
+reporting a vacuous pass, and GITLEAKS/CHECKOV have nothing to read in a canonical corpus. That is accepted
+because (a) the data checks of record above are stronger than the categories being skipped, and (b)
+GitGuardian scans every PR independently of super-linter (it ran on this PR). A change that touches `data/`
+**and** any other path still exercises every non-data category normally.
+
+**Also fixed in the same CI run, and not covered by this exemption:** `PYTHON_MYPY` reported
+`scripts/build_collections.py:88: error: Need type annotation for "item"`. That one was a real finding in a
+new file and was fixed by annotating it. `ruff check` (the single Python linter of record, D17) passes on
+all three new scripts.
+
+*Source:* owner decision in-session 2026-09-11 (option (a): narrow path exclusion, keep the vendored payload
+byte-identical and codespell on for docs/code); CI run of PR #26 (`run-lint`, job 103504526186);
+`docs/DECISIONS.md` D10/D12/D17; `docs/queue.md` C8.

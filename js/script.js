@@ -1,19 +1,23 @@
 // js/script.js – integrated
 
 /* -------------------------  CONSTANTS  -------------------------- */
-// Selection + caching come from the shared core (js/quote-core.js), loaded
-// before this file. Only page-specific values are declared here.
+// Selection + caching + the collection registry come from the shared core
+// (js/quote-core.js), loaded before this file. Only page-specific values live here.
 const {
   DEFAULT_AUTHOR,
-  filterShort,
+  DEFAULT_COLLECTION_ID,
   selectForDate,
   getLocalDateKey,
-  fetchQuotes,
+  loadCollection,
+  getSelectedCollectionId,
+  setSelectedCollectionId,
+  clearSelectedCollection,
+  collectionById,
+  collectionCachePrefix,
+  collectionLastKeyKey,
   createQuoteCache
 } = window.QuoteCore;
 
-const CACHE_PREFIX = 'dailyVerse:';
-const CACHE_LAST_KEY = 'dailyVerse:lastKey';
 const COPY_STATUS_TIMEOUT_MS = 1600;
 
 /* -------------------------  DOM HOOKS  -------------------------- */
@@ -63,8 +67,10 @@ dom.themeToggleBtn?.addEventListener('click', () => {
   );
 });
 
-/* ----------------------  SOURCE TOGGLE (placeholder)  ----------- */
-/* Chrome only: the menu does not change the corpus. Wiring is H2B. */
+/* ---------------------  SOURCE MENU (H2B-B)  -------------------- */
+/* The menu lists QuoteCore.COLLECTIONS (hidden-words is the default); picking one
+   switches the corpus in place. No page reload, no settings surface: the same
+   two-button disclosure chrome shipped by D22/D23, now wired. */
 function setSourceMenu(open) {
   if (!dom.sourceMenu || !dom.sourceToggleBtn) return;
   const wasOpen = !dom.sourceMenu.hidden;
@@ -73,6 +79,19 @@ function setSourceMenu(open) {
   dom.sourceMenu.hidden = !open;
   dom.sourceToggleBtn.setAttribute('aria-expanded', open ? 'true' : 'false');
   if (!open && wasOpen && focusWasInMenu) dom.sourceToggleBtn.focus();
+}
+
+function setCurrentSource(collectionId) {
+  if (!dom.sourceMenu) return;
+  dom.sourceMenu.querySelectorAll('[data-source]').forEach((button) => {
+    if (button.getAttribute('data-source') === collectionId) button.setAttribute('aria-current', 'true');
+    else button.removeAttribute('aria-current');
+  });
+}
+
+function collectionLabel(collectionId) {
+  const meta = collectionById(collectionId);
+  return meta ? meta.label : collectionId;
 }
 
 dom.sourceToggleBtn?.addEventListener('click', (event) => {
@@ -91,7 +110,13 @@ dom.sourceToggle?.addEventListener('focusout', (event) => {
 dom.sourceMenu?.addEventListener('click', (event) => {
   const option = event.target.closest('[data-source]');
   if (!option) return;
+  const picked = option.getAttribute('data-source');
   setSourceMenu(false);
+  if (picked === currentCollectionId) return;
+  // Persist before loading: a collection that turns out to be only *transiently*
+  // unavailable must keep the visitor's choice (D27).
+  setSelectedCollectionId(picked);
+  initPage(picked);
 });
 
 document.addEventListener('click', () => setSourceMenu(false));
@@ -102,10 +127,14 @@ document.addEventListener('keydown', (event) => {
 });
 
 /* ----------------------  CACHE (shared core)  ------------------- */
-// Namespace-narrowed view of the shared cache: reads/writes `dailyVerse:<key>`
-// and records `dailyVerse:lastKey`, exactly as the inline implementation did.
-const { read: readCachedQuote, save: saveCachedQuote } =
-  createQuoteCache(CACHE_PREFIX, CACHE_LAST_KEY);
+// Collection-scoped view of the shared cache: reads/writes
+// `dailyVerse:<collection_id>:<date>` and records `dailyVerse:lastKey:<collection_id>`.
+function cacheFor(collectionId) {
+  return createQuoteCache(
+    collectionCachePrefix(collectionId),
+    collectionLastKeyKey(collectionId)
+  );
+}
 
 /* ----------------------  RENDER HELPERS  ------------------------ */
 function renderQuote(obj, suffix = '') {
@@ -126,7 +155,7 @@ function renderQuote(obj, suffix = '') {
 
   txt.textContent = obj.text;
   auth.textContent = obj.author || DEFAULT_AUTHOR;
-  if (src) src.textContent = obj.source || 'The Hidden Words';
+  if (src) src.textContent = obj.source_ref || obj.source || '';
 }
 
 function renderGregorian(d, elId) {
@@ -165,24 +194,32 @@ function setButtonEnabled(button, enabled) {
 }
 
 /* --------------------------  STATE  ----------------------------- */
-let quotes = [];
+let currentCollectionId = null;
 let todayObj = null;
 let yestObj = null;
 let badiInitialized = false;
 
 /* ----------------------  INITIALISE PAGE  ----------------------- */
-function bootFromCache() {
-  const todayKey = getLocalDateKey(new Date());
-  const cached = readCachedQuote(todayKey);
-  if (cached) {
-    todayObj = cached;
-    renderQuote(cached, '');
-    setButtonEnabled(dom.copyButton, true);
-  }
-  return todayKey;
+// Load one collection and render its today/yesterday within it (never mixed: both
+// always come from the same currently-selected collection). Rethrows the classified
+// error from QuoteCore.loadCollection so the caller can decide about the stored choice.
+async function showCollection(collectionId, today, yest, todayKey) {
+  const loaded = await loadCollection(collectionId);
+  currentCollectionId = loaded.id;
+  todayObj = selectForDate(loaded.items, today);
+  yestObj = selectForDate(loaded.items, yest);
+
+  renderQuote(todayObj, '');
+  renderQuote(yestObj, '-yesterday');
+  cacheFor(loaded.id).save(todayKey, todayObj);
+
+  setButtonEnabled(dom.copyButton, true);
+  setButtonEnabled(dom.copyButtonYesterday, true);
+  setButtonEnabled(dom.yesterdayButton, true);
+  setCurrentSource(loaded.id);
 }
 
-async function initPage() {
+async function initPage(collectionId) {
   setStatus('');
   setButtonEnabled(dom.copyButton, false);
   setButtonEnabled(dom.copyButtonYesterday, false);
@@ -191,29 +228,50 @@ async function initPage() {
   const today = new Date();
   const yest = new Date();
   yest.setDate(yest.getDate() - 1);
-
-  const todayKey = bootFromCache();
+  const todayKey = getLocalDateKey(today);
   renderGregorian(today, 'gregorianDatePanel');
 
-  try {
-    const all = await fetchQuotes();
-    quotes = filterShort(all);
-    if (!quotes.length) throw new Error('No quotes remain after filtering.');
+  const targetId = collectionId || getSelectedCollectionId() || DEFAULT_COLLECTION_ID;
 
-    todayObj = selectForDate(quotes, today);
-    yestObj = selectForDate(quotes, yest);
-
-    renderQuote(todayObj, '');
-    renderQuote(yestObj, '-yesterday');
-    saveCachedQuote(todayKey, todayObj);
-
+  // Boot from the selected collection's own cache first — the Gregorian key is the only
+  // authoritative read, and this is what keeps an offline visitor's verse on screen.
+  const cached = cacheFor(targetId).read(todayKey);
+  if (cached) {
+    todayObj = cached;
+    renderQuote(cached, '');
     setButtonEnabled(dom.copyButton, true);
-    setButtonEnabled(dom.copyButtonYesterday, true);
-    setButtonEnabled(dom.yesterdayButton, true);
+  }
+
+  try {
+    await showCollection(targetId, today, yest, todayKey);
   } catch (error) {
-    console.error('Quote load failed:', error);
-    if (!todayObj) renderQuote(null, '');
-    setStatus('Unable to load verses. Check your connection and try again.', { showRetry: true });
+    console.error(`Collection load failed (${targetId}):`, error);
+    const structural = error && error.kind === 'invalid';
+    // D27 follow-up: a structurally broken collection is cleared so the failure does not
+    // repeat on every load; a transient fetch failure KEEPS the visitor's choice.
+    if (structural) clearSelectedCollection();
+
+    if (targetId === DEFAULT_COLLECTION_ID) {
+      if (!todayObj) renderQuote(null, '');
+      setStatus('Unable to load verses. Check your connection and try again.', { showRetry: true });
+      return;
+    }
+
+    // A second collection failed but Hidden Words is still healthy: the page must never be
+    // left on "No verse available" (contract). Reuse the existing inline status pattern.
+    setStatus(
+      structural
+        ? `“${collectionLabel(targetId)}” is unavailable. Showing The Hidden Words.`
+        : `“${collectionLabel(targetId)}” could not be loaded. Showing The Hidden Words.`,
+      { showRetry: !structural }
+    );
+    try {
+      await showCollection(DEFAULT_COLLECTION_ID, today, yest, todayKey);
+    } catch (fallbackError) {
+      console.error('Hidden Words fallback failed:', fallbackError);
+      if (!todayObj) renderQuote(null, '');
+      setStatus('Unable to load verses. Check your connection and try again.', { showRetry: true });
+    }
   }
 }
 
