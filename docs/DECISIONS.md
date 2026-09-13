@@ -1140,3 +1140,71 @@ all three new scripts.
 *Source:* owner decision in-session 2026-09-11 (option (a): narrow path exclusion, keep the vendored payload
 byte-identical and codespell on for docs/code); CI run of PR #26 (`run-lint`, job 103504526186);
 `docs/DECISIONS.md` D10/D12/D17; `docs/queue.md` C8.
+
+## D30 — R1 review resolution: strict designated-memorization set, neutral-label publication, 21 eligible passages · accepted 2026-09-13
+
+Closes the rights/scope review that `docs/queue.md` R1 has carried since D6. The owner adjudicated the review
+packet (`docs/architecture/R1_RUHI_BOOK1_REVIEW_PACKET.md`) against the authoritative research
+(`docs/architecture/R1_RESEARCH_FINDINGS.md`) in-session on 2026-09-13, accepting option **(a)** on each of the
+six decision items. This is a rights/provenance/curation judgment — the class `AGENTS.md` reserves for the
+owner; the research underneath it was agent-drafted. **No `data/*` or `index.html` change is made in this
+review**, per item F(a): the payload and the registry wiring are the next unit, `H3`.
+
+**A(a) · Selection scope — strict designated-memorization set.** `R1` ships exactly the passages Book 1 asks
+students to commit to memory, enumerated with a citation each — **not** the forbidden "all direct quotations in
+Book 1". The explicit guard stands unchanged: no additive "commonly memorized" set, no drift back to the full
+quotation set.
+
+**B(b) · Publication posture — serve authoritative Scripture only, neutral public label.** The shipped verse
+text is authoritative Bahá'í Scripture already public on `bahai.org` — the same class of content the homepage
+already serves for the Hidden Words. The served `label`/selector surface stays **neutral**; the "Book 1
+memorization" designation is carried in provenance/description **only**, never in the shipped UI label. The
+copyrighted Ruhi Institute workbook **framing/instructional text** is never reproduced in the repo or on the
+served site. This is the standing `rights_note` of record for R1.
+
+**C(a) · Eligibility — ship only designated passages ≤75 words; no schema bump.** The contract's only rule
+shape (`{"max_words": 75}`) is kept; `schema_version` is not bumped. **One designated passage is excluded on
+this rule and recorded, not silently dropped:** `RUHI-B01-U02-S08-Q03`, the 118-word 'Abdu'l-Bahá passage
+(Selections from the Writings of 'Abdu'l-Bahá no. 22.1), from Unit 2 Section 8. It is an **applied decision**
+under C(a), not an open question. Excluding an over-length passage with a recorded exception is exactly what
+option (c) — the unrecorded exclusion — was rejected for.
+
+**D(a) · Authors — explicit `author` on every item.** The designated set is inherently multi-author
+(Bahá'u'lláh and 'Abdu'l-Bahá), so the homepage item sets `author` explicitly rather than leaning on the Hidden
+Words default or on `source_ref`.
+
+**E(a) · Item identity/source — derive from the ledger's 71 verified `RUHI-B01` quotes.** One homepage item per
+**unique passage** (content identity); every `appearing_in` occurrence is mapped back via `upstream_id` →
+ledger quote id (and the non-text-revealing `quote_key`). This is what answers the queue's "map to
+`bahai-quote-ledger`; distinguish occurrence identity from passage/content identity" clause. No designated
+passage is missing from the ledger — a would-be gap would have become a new research+verification item, not a
+silent one.
+
+**F(a) · Timing — close R1 with this entry; defer the payload to `H3`.** The collection payload + the registry
+wiring are an agent deliverable against this decision. R1 is the owner's decision record; the served branch
+stays clean until `H3` builds and vendors the file under the contract's hash-gated import path.
+
+**Research outcome (R1.1–R1.3), AUTHORITATIVE and verified.** The designated set was pinned directly from the
+official Ruhi Institute Book 1 full-text PDF — `RUHI0010_RLS_BK1_EN_4.1.2.PE_FullText_20200520.pdf`, edition
+**4.1.2.PE (2020-05-20)**, live at `ruhi.org` and matching the ledger's `RUHI-B01` edition exactly. **22
+designated passages** were located across **Unit 1** (Sections 1, 3, 5, 7, 9) and **Unit 2** (Sections 7, 8, 9),
+each under an explicit memorize / learn-by-heart / commit-to-memory directive. **21 are ≤75 words (eligible);
+1 is not** (the 118-word passage above, excluded under C(a)). All 22 map to verified `RUHI-B01` ledger quotes —
+**0 missing from the ledger**. Every verse's text and citation was verified against the official PDF **and** the
+`bahai.org` Reference Library: confidence tier **A**, **no unverifiable items**. The 21 eligible passages span
+multiple authors (Bahá'u'lláh and 'Abdu'l-Bahá), which is what D(a) exists to attribute correctly.
+
+**Evidence.** `docs/architecture/R1_RESEARCH_FINDINGS.md` (the authoritative per-passage table with
+unit/section, directive, author, word count, ledger `upstream_id`, citation and `source_url`, plus the
+verification detail and the recorded ineligible row) and `docs/architecture/R1_RUHI_BOOK1_REVIEW_PACKET.md`
+(the decision items this entry resolves). **No file under `index.html` / `css/*` / `js/*` / `data/*` /
+`ios/widget/*` was touched by this decision** — R1 stays a documentation/decision record only.
+
+**What this closes and what it opens.** `docs/queue.md` R1 moves from `BLOCKED` to closed on this entry; `H3`
+(the first real additional collection) moves from `BLOCKED (behind R1)` to **open / agent-executable**, still
+owing the actual payload + registry wiring and a day-of-year selection check with Hidden Words parity
+unchanged.
+
+*Source:* owner adjudication in-session 2026-09-13 (options A(a), B(b), C(a), D(a), E(a), F(a) of the packet);
+`docs/architecture/R1_RUHI_BOOK1_REVIEW_PACKET.md`; `docs/architecture/R1_RESEARCH_FINDINGS.md`;
+`docs/queue.md` R1; D6 (the block this closes), D27/D28 (the collection contract R1's H2B half rode on).

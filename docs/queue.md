@@ -18,19 +18,21 @@ Canonical forward plan for `bahai-homepage`. Supersedes `PROJECT_ROADMAP.md` and
 
 ## Priority order
 
-Open units in execution order; closed units are listed in their own sections. **No scheduled unit is open
-now.** `H2B` closed 2026-09-11 (D28); the next unit that could be scheduled is `R1`, which is owner-gated and
-still blocked on a rights/provenance review.
+Open units in execution order; closed units are listed in their own sections. `R1`'s rights/scope review passed
+2026-09-13 (**D30**), so the next unit is **`H3`** — the first real additional collection, now agent-executable.
+`H2B` closed 2026-09-11 (D28).
 
 | # | Unit | What it is | Gate |
 |---|---|---|---|
-| — | *(none open)* | `H2B` is done; `R1`/`H3` are blocked (below) | — |
+| 1 | `H3` | Ship the verified Ruhi memorization export as the first real additional collection (payload + registry wiring) | agent (R1 review passed, D30) |
 
-`R1` is BLOCKED (human) behind a rights/provenance review; `H3` is BLOCKED behind `R1`. `H2B`'s half of
-`R1`'s block is now satisfied — the collection contract exists and a real second collection is wired — but the
-rights/provenance half is untouched by H2B-B and remains the gate.
+`R1` is CLOSED (2026-09-13, **D30**): the owner accepted the strict designated-memorization set (A(a)), the
+neutral-label publication posture (B(b)), the ≤75-word eligibility rule with the recorded 118-word exclusion
+(C(a)), explicit authors (D(a)), ledger-derived item identity (E(a)), and deferral of the payload to `H3`
+(F(a)). `H3` is now the open next unit; both `R1`'s halves (H2B's collection contract + the rights/provenance
+review) are satisfied.
 
-Closed: `H1`, `H2A`, `H2B`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
+Closed: `H1`, `H2A`, `H2B`, `R1`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
 
 ---
 
@@ -190,26 +192,50 @@ back to Hidden Words). Import provenance: `docs/architecture/COLLECTION_IMPORTS.
 two-item menu (`The Hidden Words` / `Coming later`). It now lists the two real collections and switches the
 corpus in place, with no page reload and no new surface.
 
-## R1 — Ruhi Book 1 memorization collection · **BLOCKED** · gate: human
+## R1 — Ruhi Book 1 memorization collection · **done** · gate: human (rights/scope adjudicated) · closed 2026-09-13
 
-Blocked by a **rights/provenance review**. H2B's collection contract — the other half — is now satisfied
-(D28): a versioned, provenance-carrying export shape exists in code and in a second, real collection.
-**No timeline** (owner decision Q4) — the remaining gate is the rights review, not a date.
+**Closed 2026-09-13 by decision D30.** The rights/provenance review passed and the owner accepted, in-session,
+all six decision items of the review packet: the strict designated-memorization set (A(a)), the neutral-label
+publication posture serving authoritative Scripture only (B(b)), the ≤75-word eligibility rule with the single
+118-word passage `RUHI-B01-U02-S08-Q03` excluded and **recorded** (C(a)), explicit `author` on every item
+(D(a)), items derived from the ledger's 71 verified `RUHI-B01` quotes one-per-unique-passage with occurrences
+mapped via `upstream_id` (E(a)), and the payload deferred to `H3` (F(a)).
 
-Research task: determine which Book 1 passages are actually designated for memorization; map to
-`bahai-quote-ledger`; distinguish occurrence identity from passage/content identity; verify authoritative
-citations and text; document selection criteria; review redistribution/copyright; emit a versioned export
-conforming to the homepage collection contract.
+**Resolution, in one paragraph.** R1.1–R1.3 are complete and AUTHORITATIVE: the designated set was pinned from
+the official Ruhi Institute Book 1 full-text PDF (`RUHI0010_RLS_BK1_EN_4.1.2.PE_FullText_20200520.pdf`, edition
+4.1.2.PE 2020-05-20, live at `ruhi.org`), yielding **22 designated passages** across Unit 1 (Sections 1, 3, 5,
+7, 9) and Unit 2 (Sections 7, 8, 9). **21 are ≤75 words and eligible; 1 is not** and is excluded under C(a). All
+22 map to verified `RUHI-B01` ledger quotes (**0 missing**), every verse verified against the official PDF **and**
+the `bahai.org` Reference Library (confidence tier **A**, no unverifiable items). The eligible 21 span multiple
+authors (Bahá'u'lláh and 'Abdu'l-Bahá).
 
-**Explicit guard:** do **not** substitute "all direct quotations in Book 1". Confirmed: no Ruhi data exists
-in this repo (correctly absent).
+**Rights posture of record (B(b), standing `rights_note`).** The verse text is authoritative Bahá'í Scripture
+already public on `bahai.org` — the same class of content the homepage already serves for the Hidden Words. The
+copyrighted Ruhi Foundation workbook **framing/instructional text** is never reproduced in this repo or on the
+served site. The shipped `label` stays neutral; the "Book 1 memorization" designation lives in
+provenance/description only.
 
-**Unblock evidence required:** a recorded rights/provenance review outcome. (H2B contract + second-collection
-evidence: closed, `docs/DECISIONS.md` D28.)
+**Explicit guard, still not negotiable:** do **not** substitute "all direct quotations in Book 1". Confirmed: **no
+Ruhi data was added to `data/` (or anywhere else) by this review** — R1 closed as a documentation/decision
+record; the payload is `H3`'s deliverable.
 
-## H3 — first real additional collection · **BLOCKED (behind R1)** · gate: agent after R1 passes
+**Evidence:** the two `docs/architecture/R1_*` files —
+`docs/architecture/R1_RUHI_BOOK1_REVIEW_PACKET.md` (the six decision items the owner adjudicated) and
+`docs/architecture/R1_RESEARCH_FINDINGS.md` (the authoritative per-passage table: unit/section, directive,
+author, word count, ledger `upstream_id`, citation + `source_url`, verification detail, and the recorded
+ineligible row) — plus `docs/DECISIONS.md` **D30**. (H2B contract + second-collection evidence: closed,
+`docs/DECISIONS.md` D28.)
 
-Add the verified Ruhi memorization export as a real collection; exercise the selector in normal daily use.
+## H3 — first real additional collection · **OPEN** · gate: agent (R1 review passed 2026-09-13, D30)
+
+Add the verified Ruhi memorization export as a real collection; exercise the selector in normal daily use. R1's
+review passed (D30), so this unit is now agent-executable — the remaining work is the payload itself plus the
+registry wiring, not any rights/scope judgment. **What to build:** the versioned export conforming to
+`COLLECTION_CONTRACT.md` (explicit `author` per item, `default_eligibility: {"max_words": 75}`,
+`verification_state: verified`, `upstream_id` = ledger quote id, neutral `label`, `rights_note` per D30), vendored
+byte-identically via `scripts/import_collection.py --expected-sha256`, then the registry entry and
+`[data-source]` wiring. The 21-passage eligible set and the excluded 118-word row are fixed by
+`docs/architecture/R1_RESEARCH_FINDINGS.md`; do not re-derive them.
 **Evidence:** the loaded collection + a day-of-year selection check + Hidden Words parity unchanged.
 
 ---

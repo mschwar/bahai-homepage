@@ -1,10 +1,13 @@
 # R1 — Ruhi Book 1 memorization collection: review packet
 
-**Status:** DRAFT review gate for owner judgment. `docs/queue.md` R1 is BLOCKED behind this
-review. **No verse text is included in this packet on purpose** — the entire `main` branch is
-publicly served (GitHub Pages, `build_type: legacy`, path `/`), and this review's first job is to
-settle the rights posture before any payload touches that branch. Verse text is resolved only in
-`R1`'s export step / `H3`, after the review passes.
+**Status: RESOLVED — owner accepted all six decision items (A(a), B(b), C(a), D(a), E(a), F(a)) on
+2026-09-13; recorded as `docs/DECISIONS.md` D30.** With this, `docs/queue.md` R1 is closed and `H3` (the
+first real additional collection) is the unblocked next unit. The applied C(a) outcome is that the single
+over-length designated passage (`RUHI-B01-U02-S08-Q03`, 118 words) is **excluded and recorded**, not silently
+dropped — see §4. **No verse text is included in this packet on purpose** — the entire `main` branch is
+publicly served (GitHub Pages, `build_type: legacy`, path `/`), and this review settled the rights posture
+before any payload touches that branch. Verse text is resolved only in `R1`'s export step / `H3`, after the
+review passes.
 
 **Owner gate: human.** Producing the decision entry and the collection payload is a
 rights/provenance/curation judgment, which `AGENTS.md` reserves for the owner — an agent does the
@@ -198,6 +201,23 @@ next free D-number) naming the answer to each item in §2 above, **(2)** the pin
 from R1.1 with citations, and **(3)** a `rights_note` and `provenance_note` statement of record.
 `R1` then closes and `H3` becomes the unblocked next unit. Until then, R1 stays `BLOCKED` and
 **no** collection payload or `data/*`/`index.html` change is made.
+
+**Exit gate — CLOSED (2026-09-13).** All three deliverables exist: **(1)** decision entry
+`docs/DECISIONS.md` **D30**, recording the owner's acceptance of A(a), B(b), C(a), D(a), E(a), F(a);
+**(2)** the pinned designated set — `docs/architecture/R1_RESEARCH_FINDINGS.md`, 22 passages across Unit 1
+(Sections 1, 3, 5, 7, 9) and Unit 2 (Sections 7, 8, 9), each with its book directive and citation, all
+verified to confidence tier A; **(3)** the `rights_note` of record (B(b)): verse text = authoritative
+Scripture already public on `bahai.org`, neutral shipped `label`, Ruhi workbook framing never reproduced.
+
+**Applied C(a) exclusion, recorded not silent.** Of the 22 designated passages, **21 are ≤75 words and
+eligible**; the single over-length one — `RUHI-B01-U02-S08-Q03`, the 118-word 'Abdu'l-Bahá passage
+(Selections from the Writings of 'Abdu'l-Bahá no. 22.1) — is **excluded under C(a)** and recorded here and in
+the findings file. No schema bump was taken.
+
+**What closes and what opens.** `R1` closes; `H3` is the unblocked, agent-executable next unit (payload + the
+registry/`[data-source]` wiring, then a day-of-year selection check with Hidden Words parity unchanged). **No
+collection payload or `data/*`/`index.html` change was made by this review** — that remains `H3`'s work, under
+D30.
 
 ---
 
