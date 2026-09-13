@@ -1208,3 +1208,59 @@ unchanged.
 *Source:* owner adjudication in-session 2026-09-13 (options A(a), B(b), C(a), D(a), E(a), F(a) of the packet);
 `docs/architecture/R1_RUHI_BOOK1_REVIEW_PACKET.md`; `docs/architecture/R1_RESEARCH_FINDINGS.md`;
 `docs/queue.md` R1; D6 (the block this closes), D27/D28 (the collection contract R1's H2B half rode on).
+
+## D31 — H3: the first real additional collection (Words of the Spirit) is wired and verifiably live · accepted 2026-09-14
+
+Executes the R1 decision (D30) into the product: the Ruhi Book 1 designated-memorization set now ships to
+the served site as **Words of the Spirit**, a third selectable collection — the payload D30 item F(a)
+deferred to `H3`. D30 already settled every rights/scope judgment (A–F); this entry records the payload
+decision D30 left to H3's authoring: the neutral `label`, the `collection_id`, and the `item_type`
+classification.
+
+**What shipped.**
+
+- `data/collections/words-of-the-spirit.json` — **21 items**, the Ruhi Book 1 designated-memorization set
+  (`R1_RESEARCH_FINDINGS.md`), each ≤75 words, `verification_state: verified` (confidence A: official Ruhi
+  Book 1 PDF edition 4.1.2.PE 2020-05-20 + bahai.org Reference Library), explicit `author` on every item
+  (D30 D(a)), `upstream_id` = ledger quote id on every item (D30 E(a)), `tags: []`. Vendored **byte-identically**
+  from producer repo `mschwar/bahai-quote-ledger` commit `fde6955` via
+  `scripts/import_collection.py --expected-sha256`; the byte-identity and the recorded producer hash are pinned
+  in `tests/parity.mjs` section J2.
+- **Neutral `label`/`collection_id` (D30 B(b))**: `collection_id: "words-of-the-spirit"`, `label: "Words of
+  the Spirit"`. The "Book 1 memorization" designation lives in `description`/`provenance_note` only — never in
+  the shipped selector surface. The `source-menu` button label equals the file's `label` exactly (pinned by a
+  parity assertion).
+- **Registry + selector wiring**: one registry entry in `js/quote-core.js`'s `COLLECTIONS` allow-list and one
+  `[data-source]` button in `index.html` — the documented "JSON file + registry entry + button" shape, no new
+  code path, no new surface, selector still a low-weight disclosure.
+- **Recorded exclusion standing** (D30 C(a)): `RUHI-B01-U02-S08-Q03` (118 words) is **not** shipped; a parity
+  assertion proves it is absent.
+
+**Decision items H3 closed (deferred from D30's "decide the collection_id/label"):**
+
+| Item | Choice | Rationale |
+|---|---|---|
+| `collection_id` | `words-of-the-spirit` | Stable, `[a-z0-9-]+`, URL/localStorage-safe; describes content, not the course. |
+| `label` | `Words of the Spirit` | Neutral, never names the Ruhi course (D30 B(b)); fits the selector width alongside the other two. |
+| `item_type` per item | `full-passage` for the 5 standalone passages (Hidden Words Arabic/Persian; Short Obligatory Prayer), `excerpt` for the 16 short passages drawn from a larger work (Gleanings, Advent, Paris, Tablets, Will-and-Testament, Long Obligatory Prayer) | The contract's `full-passage`/`excerpt` dichotomy; all 21 are the exact ≤75-word designated set — nothing re-derived. |
+
+**Evidence (2026-09-13/14):** `docs/audit/2026-09-13/H3_BASELINE_MAIN_RUN.txt` (main @ `07de08a`:
+`make validate` 153/0/0/0; `make validate-collections` PASS 153+4; `make check-collections` PASS; `make parity`
+**34 passed, 0 failed**) and `docs/audit/2026-09-13/H3_CHANGED_RUN.txt` (`make validate` 153/0/0/0;
+`make validate-collections` PASS 153+4+21; `make check-collections` PASS; `make parity` **39 passed, 0 failed**
+— five assertions *added*, not re-pinned; `make wallpaper-check` 4/0). Frozen-file hash table in the changed
+run: only `index.html` and `js/quote-core.js` moved from `main`, plus the new `data/collections/words-of-the-spirit.json`;
+`css/*`, `js/script.js`, `js/badi-init.js`, `js/wallpaper.js`, `data/quotes_hidden_words.json`,
+`data/collections/{hidden-words,garden-homepage-preview}.json` and `ios/widget/*` unchanged. Byte-identity
+of the vendored payload proven by `cmp` against the producer export and pinned by the parity hash.
+
+**What this closes and what it opens.** `docs/queue.md` H3 closes (`done`); the priority table drops to zero open
+units — the homepage is ahead of its queue. The wallpaper still defaults to Hidden Words by design (D3; it is
+not wired to the selector), and `ios/widget/*` remains an unchanged, unbuildable-in-repo surface whose
+`source`→`source_ref` rename stays a recorded owner-gated follow-up (D28). No candidate unit is opened by this
+work; the vendor-library dependency pin remains the unscheduled tech-debt #9.
+
+*Source:* execution of `docs/queue.md` H3 under `docs/DECISIONS.md` D30; producer export
+`mschwar/bahai-quote-ledger` @ `fde6955`; `docs/architecture/R1_RESEARCH_FINDINGS.md`;
+`docs/architecture/COLLECTION_IMPORTS.md` (words-of-the-spirit row); `tests/parity.mjs` sections I + J2;
+`docs/audit/2026-09-13/H3_*.txt`.

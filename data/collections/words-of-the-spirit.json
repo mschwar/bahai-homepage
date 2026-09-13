@@ -1,0 +1,246 @@
+{
+  "collection_id": "words-of-the-spirit",
+  "label": "Words of the Spirit",
+  "version": 1,
+  "schema_version": 1,
+  "description": "Twenty-one brief passages from the Bahá’í Writings — short prayers and verses for reflection and memorization on the life of the spirit. Each passage is authoritative Scripture, verified against bahai.org.",
+  "producer": "bahai-quote-ledger",
+  "provenance_note": "Designated-memorization set from Ruhi Institute Book 1, ‘Reflections on the Life of the Spirit’ (edition 4.1.2.PE, 2020-05-20). The 21 passages of ≤75 words that Book 1 asks students to commit to memory; the single >75-word designated passage is excluded and recorded (docs/architecture/R1_RESEARCH_FINDINGS.md). Each item is one per unique passage (content identity), derived from the ledger’s 71 verified RUHI-B01 quotes and mapped back via upstream_id. Verse text and citation verified against the official Book 1 PDF and the Bahá’í Reference Library / bahai.org documents (confidence A). Producer repo: mschwar/bahai-quote-ledger.",
+  "rights_note": "Verse text is authoritative Bahá’í Scripture already public on bahai.org — the same class of content the homepage serves for the Hidden Words. The served label is neutral and never names the Ruhi Institute course; Ruhi workbook framing/instructional text is never reproduced here or on the served site. (D30 B(b), standing rights note.)",
+  "default_eligibility": {
+    "max_words": 75
+  },
+  "items": [
+    {
+      "item_id": "RUHI-B01-U01-S01-Q01",
+      "text": "The betterment of the world can be accomplished through pure and goodly deeds, through commendable and seemly conduct.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Advent of Divine Justice, par. 39",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/shoghi-effendi/advent-divine-justice/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S01-Q01"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S01-Q02",
+      "text": "Beware, O people of Bahá, lest ye walk in the ways of them whose words differ from their deeds.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXXXIX, par. 8",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S01-Q02"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S01-Q03",
+      "text": "O Son of Being! Bring thyself to account each day ere thou art summoned to a reckoning…",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Hidden Words, Arabic no. 31",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/hidden-words/",
+      "item_type": "full-passage",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S01-Q03"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S03-Q01",
+      "text": "Truthfulness is the foundation of all human virtues.",
+      "author": "‘Abdu’l-Bahá",
+      "source_ref": "The Advent of Divine Justice, par. 40",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/shoghi-effendi/advent-divine-justice/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S03-Q01"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S03-Q02",
+      "text": "Without truthfulness progress and success, in all the worlds of God, are impossible for any soul.",
+      "author": "‘Abdu’l-Bahá",
+      "source_ref": "The Advent of Divine Justice, par. 40 (Ibid.)",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/shoghi-effendi/advent-divine-justice/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S03-Q02"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S03-Q03",
+      "text": "Beautify your tongues, O people, with truthfulness, and adorn your souls with the ornament of honesty.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXXXVI, par. 6",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S03-Q03"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S03-Q04",
+      "text": "Let your eye be chaste, your hand faithful, your tongue truthful and your heart enlightened.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Tablets of Bahá’u’lláh, Lawḥ-i-Ḥikmat, no. 9.5",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/tablets-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S03-Q04"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S03-Q05",
+      "text": "They who dwell within the tabernacle of God, and are established upon the seats of everlasting glory, will refuse, though they be dying of hunger, to stretch their hands and seize unlawfully the property of their neighbor, however vile and worthless he may be.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXXXVII, par. 3",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S03-Q05"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S05-Q01",
+      "text": "A kindly tongue is the lodestone of the hearts of men. It is the bread of the spirit, it clotheth the words with meaning, it is the fountain of the light of wisdom and understanding.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXXXII, par. 5",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S05-Q01"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S05-Q02",
+      "text": "O ye beloved of the Lord! In this sacred Dispensation, conflict and contention are in no wise permitted. Every aggressor deprives himself of God’s grace.",
+      "author": "‘Abdu’l-Bahá",
+      "source_ref": "The Will and Testament of ‘Abdu’l-Bahá, p. 26",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/abdul-baha/will-testament-abdul-baha/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S05-Q02"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S05-Q03",
+      "text": "Nothing whatever can, in this Day, inflict a greater harm upon this Cause than dissension and strife, contention, estrangement and apathy, among the loved ones of God.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, V, par. 5",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S05-Q03"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S05-Q04",
+      "text": "Do not be content with showing friendship in words alone, let your heart burn with loving kindness for all who may cross your path.",
+      "author": "‘Abdu’l-Bahá",
+      "source_ref": "Paris Talks, no. 1.7 (talk 16–17 Oct 1911)",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/abdul-baha/paris-talks/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S05-Q04"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S05-Q05",
+      "text": "When a thought of war comes, oppose it by a stronger thought of peace. A thought of hatred must be destroyed by a more powerful thought of love.",
+      "author": "‘Abdu’l-Bahá",
+      "source_ref": "Paris Talks, no. 6.7 (talk 21 Oct 1911)",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/abdul-baha/paris-talks/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S05-Q05"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S07-Q01",
+      "text": "…backbiting quencheth the light of the heart, and extinguisheth the life of the soul.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, CXXV, par. 3",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S07-Q01"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S07-Q02",
+      "text": "Breathe not the sins of others so long as thou art thyself a sinner.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Hidden Words, Arabic no. 27",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/hidden-words/",
+      "item_type": "full-passage",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S07-Q02"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S07-Q03",
+      "text": "Speak no evil, that thou mayest not hear it spoken unto thee, and magnify not the faults of others that thine own faults may not appear great…",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Hidden Words, Persian no. 44",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/hidden-words/",
+      "item_type": "full-passage",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S07-Q03"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S07-Q04",
+      "text": "O Son of Being! How couldst thou forget thine own faults and busy thyself with the faults of others?",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Hidden Words, Arabic no. 26",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/hidden-words/",
+      "item_type": "full-passage",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S07-Q04"
+    },
+    {
+      "item_id": "RUHI-B01-U01-S09-Q01",
+      "text": "Immerse yourselves in the ocean of My words, that ye may unravel its secrets, and discover all the pearls of wisdom that lie hid in its depths.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "Gleanings from the Writings of Bahá’u’lláh, LXX, par. 2",
+      "source_url": "https://www.bahai.org/library/authoritative-texts/bahaullah/gleanings-writings-bahaullah/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U01-S09-Q01"
+    },
+    {
+      "item_id": "RUHI-B01-U02-S07-Q01",
+      "text": "O God, my God! Look not upon my hopes and my doings, nay rather look upon Thy will that hath encompassed the heavens and the earth. By Thy Most Great Name, O Thou Lord of all nations! I have desired only what Thou didst desire, and love only what Thou dost love.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Long Obligatory Prayer (Bahá’í Prayers, pp. 8–9)",
+      "source_url": "https://www.bahai.org/documents/bahaullah/obligatory-prayers/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U02-S07-Q01"
+    },
+    {
+      "item_id": "RUHI-B01-U02-S07-Q02",
+      "text": "Too high art Thou for the praise of those who are nigh unto Thee to ascend unto the heaven of Thy nearness, or for the birds of the hearts of them who are devoted to Thee to attain to the door of Thy gate. I testify that Thou hast been sanctified above all attributes and holy above all names. No God is there but Thee, the Most Exalted, the All-Glorious.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Long Obligatory Prayer (Bahá’í Prayers, p. 12)",
+      "source_url": "https://www.bahai.org/documents/bahaullah/obligatory-prayers/",
+      "item_type": "excerpt",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U02-S07-Q02"
+    },
+    {
+      "item_id": "RUHI-B01-U02-S09-Q03",
+      "text": "I bear witness, O my God, that Thou hast created me to know Thee and to worship Thee. I testify, at this moment, to my powerlessness and to Thy might, to my poverty and to Thy wealth. There is none other God but Thee, the Help in Peril, the Self-Subsisting.",
+      "author": "Bahá’u’lláh",
+      "source_ref": "The Short Obligatory Prayer (Bahá’í Prayers, p. 4)",
+      "source_url": "https://www.bahai.org/documents/bahaullah/obligatory-prayers/",
+      "item_type": "full-passage",
+      "verification_state": "verified",
+      "tags": [],
+      "upstream_id": "RUHI-B01-U02-S09-Q03"
+    }
+  ]
+}

@@ -34,7 +34,7 @@ python3 scripts/import_collection.py \
   --expected-sha256 85fa2f6b2882633a683b7449f9e4daf650f78b5ee28faf9e59dbff52222d6bd5
 ```
 
-Notes carried from the producer handoff, not papered over (its "contract friction" §90):
+**Notes carried from the producer handoff, not papered over (its "contract friction" §90):**
 
 1. The producer's CSV column is `verification_status`; the contract's field is
    `verification_state`. The mapping is applied **at export time on the producer side**,
@@ -45,3 +45,38 @@ Notes carried from the producer handoff, not papered over (its "contract frictio
    the producer's export mapping, not from its raw rows.
 4. The producer export contains 4 items, not the 5 the owner approved, because donor
    `30` failed verification and substitution was forbidden.
+
+## words-of-the-spirit
+
+| Field | Value |
+|---|---|
+| Local path | `data/collections/words-of-the-spirit.json` |
+| Producer repo | `mschwar/bahai-quote-ledger` |
+| Producer path | `exports/bahai-homepage-ruhi/words-of-the-spirit-v1.collection.json` |
+| Producer commit | `fde6955dae5f88911f4782ba836f40b1603acfe3` (`fde6955`) |
+| SHA-256 | `1bdb71125f3f66d114ad4a039819029af56194a4e7840d24342e28f855c4660a` |
+| Imported | 2026-09-13 by queue unit H3 (D30) |
+| Producers | `R1_RESEARCH_FINDINGS.md` (authoritative 21-passage eligible set) → ledger export (owned by producer repo) |
+| Contents | 21 items — the Ruhi Book 1 designated-memorization set, ≤75 words each, neutral label per D30 B(b) |
+| `verification_state` | all `verified` (confidence A: official Ruhi Book 1 PDF 4.1.2.PE 2020-05-20 + bahai.org Reference Library) |
+| `item_type` | full-passage (5 Hidden Words / Short Obligatory Prayer) + excerpt (16) — all 21 ≤75 words |
+| `upstream_id` | ledger quote id (`RUHI-B01-U0…-Q…`) for every item |
+| Excluded | `RUHI-B01-U02-S08-Q03` (118 words, over the 75 cap; D30 C(a) recorded exclusion, NOT shipped) |
+| Authors | explicit on every item (Bahá'u'lláh and 'Abdu'l-Bahá; D30 D(a)) |
+| Tags | empty `[]` on all items (no curation metadata; contract default) |
+| Menu label | `Words of the Spirit` (neutral surface; the "Book 1 memorization" designation lives in provenance/description only, never the shipped UI) |
+
+Import command (reproducible):
+
+```bash
+python3 scripts/import_collection.py \
+  --source ~/bahai-quote-ledger/exports/bahai-homepage-ruhi/words-of-the-spirit-v1.collection.json \
+  --expected-sha256 1bdb71125f3f66d114ad4a039819029af56194a4e7840d24342e28f855c4660a
+```
+
+**Provenance/rights notes carried from D30.** The verse text is authoritative Bahá'í
+Scripture already public on `bahai.org` — the same class of content the homepage serves for
+the Hidden Words. The served `label` stays neutral and never names the Ruhi course; the
+copyrighted Ruhi Foundation workbook framing/instructional text is never reproduced in this
+repo or on the served site. The single >75-word designated passage (`RUHI-B01-U02-S08-Q03`)
+is a recorded exclusion under D30 C(a), not a silent gap.

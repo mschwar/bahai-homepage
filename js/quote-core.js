@@ -88,6 +88,11 @@
       id: 'garden-homepage-preview',
       label: 'Garden of Wisdom (preview)',
       path: 'data/collections/garden-homepage-preview.json'
+    },
+    {
+      id: 'words-of-the-spirit',
+      label: 'Words of the Spirit',
+      path: 'data/collections/words-of-the-spirit.json'
     }
   ];
   var DEFAULT_COLLECTION_ID = 'hidden-words';
