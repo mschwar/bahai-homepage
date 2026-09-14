@@ -18,21 +18,21 @@ Canonical forward plan for `bahai-homepage`. Supersedes `PROJECT_ROADMAP.md` and
 
 ## Priority order
 
-Open units in execution order; closed units are listed in their own sections. `R1`'s rights/scope review passed
-2026-09-13 (**D30**), so the next unit is **`H3`** — the first real additional collection, now agent-executable.
-`H2B` closed 2026-09-11 (D28).
+Open units in execution order; closed units are listed in their own sections. `H3` closed 2026-09-14 (D31) —
+**there are no open queue units**; the homepage is ahead of its plan. `R1`'s review passed 2026-09-13 (D30)
+and its payload shipped as part of H3.
 
 | # | Unit | What it is | Gate |
 |---|---|---|---|
-| 1 | `H3` | Ship the verified Ruhi memorization export as the first real additional collection (payload + registry wiring) | agent (R1 review passed, D30) |
+| — | *(none open)* | — | — |
 
 `R1` is CLOSED (2026-09-13, **D30**): the owner accepted the strict designated-memorization set (A(a)), the
 neutral-label publication posture (B(b)), the ≤75-word eligibility rule with the recorded 118-word exclusion
 (C(a)), explicit authors (D(a)), ledger-derived item identity (E(a)), and deferral of the payload to `H3`
-(F(a)). `H3` is now the open next unit; both `R1`'s halves (H2B's collection contract + the rights/provenance
-review) are satisfied.
+(F(a)). Both `R1`'s halves (H2B's collection contract + the rights/provenance review) are satisfied, and the
+deferred payload shipped as `H3` (D31).
 
-Closed: `H1`, `H2A`, `H2B`, `R1`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
+Closed: `H1`, `H2A`, `H2B`, `R1`, `H3`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
 
 ---
 
@@ -226,7 +226,7 @@ author, word count, ledger `upstream_id`, citation + `source_url`, verification 
 ineligible row) — plus `docs/DECISIONS.md` **D30**. (H2B contract + second-collection evidence: closed,
 `docs/DECISIONS.md` D28.)
 
-## H3 — first real additional collection · **OPEN** · gate: agent (R1 review passed 2026-09-13, D30)
+## H3 — first real additional collection · **done** · gate: agent (R1 review passed 2026-09-13, D30; executed 2026-09-14, D31)
 
 Add the verified Ruhi memorization export as a real collection; exercise the selector in normal daily use. R1's
 review passed (D30), so this unit is now agent-executable — the remaining work is the payload itself plus the
@@ -237,6 +237,17 @@ byte-identically via `scripts/import_collection.py --expected-sha256`, then the 
 `[data-source]` wiring. The 21-passage eligible set and the excluded 118-word row are fixed by
 `docs/architecture/R1_RESEARCH_FINDINGS.md`; do not re-derive them.
 **Evidence:** the loaded collection + a day-of-year selection check + Hidden Words parity unchanged.
+
+**Closed 2026-09-14 (D31).** The verified Ruhi memorization export ships as **`words-of-the-spirit`** —
+21 items (the D30 C(a) eligible set, ≤75 words each, `verification_state: verified`, explicit `author`,
+`upstream_id` = ledger quote id, `tags: []`), a neutral `label`/`collection_id` per D30 B(b), vendored
+**byte-identically** from producer repo `mschwar/bahai-quote-ledger` @ `fde6955` and pinned in
+`tests/parity.mjs` section J2. Wired as one registry entry in `js/quote-core.js` + one `[data-source]` button
+in `index.html` (label equal to the file's `label`, pinned). The excluded 118-word passage is absent (pinned).
+**Evidence:** `docs/audit/2026-09-13/H3_BASELINE_MAIN_RUN.txt` (main `07de08a`: `make parity` 34/0) and
+`H3_CHANGED_RUN.txt` (`make validate` 153/0/0/0, `make validate-collections` PASS 153+4+21,
+`make check-collections` PASS, `make parity` **39/0**, `make wallpaper-check` 4/0, frozen-file hash table).
+Decision: `docs/DECISIONS.md` **D31**. With this the priority table has **no open units**.
 
 ---
 

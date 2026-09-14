@@ -197,6 +197,7 @@ const TODAY_KEY = '2026-06-15';
 // QuoteCore.collectionCachePrefix().
 const HW = 'hidden-words';
 const GARDEN = 'garden-homepage-preview';
+const WORDS = 'words-of-the-spirit';
 const scopedKey = (id, key) => `dailyVerse:${id}:${key}`;
 const lastKeyFor = id => `dailyVerse:lastKey:${id}`;
 const HW_TODAY_CACHE = scopedKey(HW, TODAY_KEY);
@@ -208,6 +209,15 @@ const gardenEligible = eligibleOf(gardenCollection);
 const gardenToday = selectFrom(gardenEligible, TODAY);
 const gardenYest = selectFrom(gardenEligible, YESTERDAY);
 const GARDEN_IMPORT_SHA256 = '85fa2f6b2882633a683b7449f9e4daf650f78b5ee28faf9e59dbff52222d6bd5';
+// H3: the first real additional collection (Ruhi Book 1 memorization, neutral label).
+// Verified 21-passage set; byte-identical to the producer export (~/bahai-quote-ledger,
+// exports/bahai-homepage-ruhi/words-of-the-spirit-v1.collection.json).
+const wordsCollection = await loadCollectionFile(WORDS);
+const wordsRaw = await readFile(join(ROOT, 'data/collections', `${WORDS}.json`), 'utf8');
+const wordsEligible = eligibleOf(wordsCollection);
+const wordsToday = selectFrom(wordsEligible, TODAY);
+const wordsYest = selectFrom(wordsEligible, YESTERDAY);
+const WORDS_IMPORT_SHA256 = '1bdb71125f3f66d114ad4a039819029af56194a4e7840d24342e28f855c4660a';
 // saveCachedQuote prepends CACHE_PREFIX ('dailyVerse:') to the key, so the Badici-day
 // wrinkle stores today's quote under dailyVerse:badi:<year>-<month>-<day>.
 const BADI_KEY = 'dailyVerse:badi:182-Núr-4';
@@ -549,8 +559,8 @@ await run('H. Reduced-motion scroll behavior', [
   }],
 ]);
 
-await run('I. Source menu chrome (two real collections; D22/D23 a11y)', [
-  ['sits below the theme toggle, starts closed, and offers exactly the two wired collections', async () => {
+await run('I. Source menu chrome (three real collections; D22/D23 a11y)', [
+  ['sits below the theme toggle, starts closed, and offers exactly the three wired collections', async () => {
     const ctx = await browser.newContext();
     const page = await ctx.newPage();
     await loadPage(page);
@@ -575,12 +585,12 @@ await run('I. Source menu chrome (two real collections; D22/D23 a11y)', [
     if (!layout.menuHidden || layout.expanded !== 'false') {
       throw new Error(`menu should start closed, hidden=${layout.menuHidden} aria-expanded=${layout.expanded}`);
     }
-    if (layout.options.map(o => o.id).join(',') !== `${HW},${GARDEN}`) {
-      throw new Error(`expected wired options ${HW},${GARDEN}; got ${layout.options.map(o => o.id).join(',')}`);
+    if (layout.options.map(o => o.id).join(',') !== `${HW},${GARDEN},${WORDS}`) {
+      throw new Error(`expected wired options ${HW},${GARDEN},${WORDS}; got ${layout.options.map(o => o.id).join(',')}`);
     }
     // The menu is the only place a label is shown to the visitor: it must not drift
     // from the collection file's own `label` (the descriptor is the source of truth).
-    const expectedLabels = { [HW]: hwCollection.label, [GARDEN]: gardenCollection.label };
+    const expectedLabels = { [HW]: hwCollection.label, [GARDEN]: gardenCollection.label, [WORDS]: wordsCollection.label };
     for (const opt of layout.options) {
       if (opt.label !== expectedLabels[opt.id]) {
         throw new Error(`menu label for ${opt.id} is ${JSON.stringify(opt.label)}, collection label is ${JSON.stringify(expectedLabels[opt.id])}`);
@@ -782,6 +792,103 @@ await run('J. Second collection: the Garden-of-Wisdom preview (H2B-B)', [
     await loadPage(page);
     await pickSource(page, GARDEN);
     await waitForVerse(page, gardenToday.text);
+    await pickSource(page, HW);
+    await waitForVerse(page, expToday.text);
+    const citation = (await txt(page, '#quote-source-full')).trim();
+    if (citation !== expToday.source) throw new Error(`Hidden Words citation mismatch after switching back: ${citation}`);
+    if ((await storedCollection(page)) !== HW) throw new Error('selectedCollection should be hidden-words');
+    if (errors.length) throw new Error(`page errors: ${errors.join(' | ')}`);
+    await ctx.close();
+  }],
+]);
+
+await run('J2. First real additional collection: Words of the Spirit, the Ruhi B1 memorization set (H3)', [
+  ['the vendored Words of the Spirit payload is byte-identical to the recorded producer import (21 eligible passages)', async () => {
+    const digest = sha256(wordsRaw);
+    if (digest !== WORDS_IMPORT_SHA256) {
+      throw new Error(`vendored Words payload hash ${digest} != recorded import hash ${WORDS_IMPORT_SHA256}`);
+    }
+    if (wordsCollection.collection_id !== WORDS) throw new Error('unexpected collection_id');
+    if (wordsCollection.label !== 'Words of the Spirit') throw new Error('label drifted; the menu label must match');
+    if (wordsCollection.default_eligibility.max_words !== 75) throw new Error('eligibility must be max_words 75');
+    if (wordsCollection.items.length !== 21) throw new Error(`expected 21 items, got ${wordsCollection.items.length}`);
+    if (wordsEligible.length !== 21) throw new Error(`all 21 items must be eligible (<=75 words), got ${wordsEligible.length}`);
+    // D(a): every item sets author explicitly (the set is multi-author, so no DEFAULT_AUTHOR fallback is legal here).
+    for (const item of wordsCollection.items) {
+      if (!item.author) throw new Error(`item ${item.item_id} has no explicit author (D(a) violation)`);
+    }
+    // D30 C(a): the 118-word excluded passage must not be present.
+    const excluded = wordsCollection.items.find(i => i.item_id === 'RUHI-B01-U02-S08-Q03');
+    if (excluded) throw new Error('the excluded 118-word passage must not ship');
+    const emptyTags = wordsCollection.items.every(i => Array.isArray(i.tags) && i.tags.length === 0);
+    if (!emptyTags) throw new Error('this collection carries no curation tags (array is empty)');
+    console.log(`      words items=${wordsCollection.items.length} eligible=${wordsEligible.length} idx=${dayOfYear(TODAY) % wordsEligible.length}`);
+  }],
+  ['selecting Words of the Spirit renders its own deterministic verse for today', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const errors = trackPageErrors(page);
+    await loadPage(page);
+    await pickSource(page, WORDS);
+    await waitForVerse(page, wordsToday.text);
+    if ((await storedCollection(page)) !== WORDS) throw new Error('selectedCollection was not persisted on pick');
+    const author = (await txt(page, '#quote-author')).trim();
+    const citation = (await txt(page, '#quote-source-full')).trim();
+    if (author !== wordsToday.author) throw new Error(`Words author mismatch: ${author}`);
+    if (citation !== wordsToday.source_ref) throw new Error(`Words citation mismatch: ${citation}`);
+    // D30 B(b) neutral label surface: the menu must never expose the Ruhi course name.
+    const menuLabels = await page.evaluate(() => [...document.querySelectorAll('[data-source]')].map(b => b.textContent.trim()));
+    for (const label of menuLabels) {
+      if (/ruhi|book ?1|course/i.test(label)) throw new Error(`neutral-label violation: menu shows ${label}`);
+    }
+    if (errors.length) throw new Error(`page errors during switch: ${errors.join(' | ')}`);
+    await ctx.close();
+  }],
+  ['today and yesterday come from the Words-of-the-Spirit collection, not a sibling', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    await pickSource(page, WORDS);
+    await waitForVerse(page, wordsToday.text);
+    await page.click('#yesterday-button');
+    await waitForVerse(page, wordsYest.text, '#quote-text-yesterday');
+    if (wordsToday.text === wordsYest.text) throw new Error('oracle: today and yesterday must differ in this collection');
+    if (wordsToday.text === expToday.text) throw new Error('oracle: Words today collides with Hidden Words today — divergence test vacuous');
+    await ctx.close();
+  }],
+  ['the Words selection survives a reload and cache keys stay collection-scoped', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    await loadPage(page);
+    await pickSource(page, WORDS);
+    await waitForVerse(page, wordsToday.text);
+    await page.reload({ waitUntil: 'networkidle' });
+    await waitForVerse(page, wordsToday.text);
+    const current = await page.evaluate(() => {
+      const el = document.querySelector('[data-source][aria-current="true"]');
+      return el && el.getAttribute('data-source');
+    });
+    if (current !== WORDS) throw new Error(`after reload aria-current should be ${WORDS}, got ${current}`);
+    const store = await page.evaluate(() => ({ ...localStorage }));
+    const wk = store[scopedKey(WORDS, TODAY_KEY)] && JSON.parse(store[scopedKey(WORDS, TODAY_KEY)]);
+    if (!wk || wk.text !== wordsToday.text) throw new Error('Words cache missing/wrong');
+    if (store[lastKeyFor(WORDS)] !== TODAY_KEY) throw new Error('Words lastKey wrong');
+    // the three collections never collide: all three scoped keys hold distinct verse text
+    const hw = store[scopedKey(HW, TODAY_KEY)] && JSON.parse(store[scopedKey(HW, TODAY_KEY)]);
+    const gp = store[scopedKey(GARDEN, TODAY_KEY)] && JSON.parse(store[scopedKey(GARDEN, TODAY_KEY)]);
+    if (hw && gp) {
+      const set = new Set([hw.text, gp.text, wk.text]);
+      if (set.size !== 3) throw new Error('collection caches collided across the three collections');
+    }
+    await ctx.close();
+  }],
+  ['switching back to Hidden Words restores Hidden Words exactly from Words', async () => {
+    const ctx = await browser.newContext();
+    const page = await ctx.newPage();
+    const errors = trackPageErrors(page);
+    await loadPage(page);
+    await pickSource(page, WORDS);
+    await waitForVerse(page, wordsToday.text);
     await pickSource(page, HW);
     await waitForVerse(page, expToday.text);
     const citation = (await txt(page, '#quote-source-full')).trim();

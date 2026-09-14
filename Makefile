@@ -11,7 +11,7 @@ validate:
 
 # Contract validation for the collection files the page actually loads (H2B-B).
 validate-collections:
-	$(PYTHON) scripts/validate_collection.py data/collections/hidden-words.json data/collections/garden-homepage-preview.json
+	$(PYTHON) scripts/validate_collection.py data/collections/hidden-words.json data/collections/garden-homepage-preview.json data/collections/words-of-the-spirit.json
 
 # Regenerate the derived collection files from the canonical raw corpus (dev-only).
 # `check-collections` verifies they are current without writing (CI-friendly).

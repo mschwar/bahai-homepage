@@ -1,0 +1,103 @@
+=== H3 CHANGED-SET RUN ===
+--- make validate ---
+python3 scripts/validate_quotes.py
+Quotes checked: 153
+Errors: 0
+Warnings: 0
+Duplicate texts: 0
+--- make validate-collections ---
+python3 scripts/validate_collection.py data/collections/hidden-words.json data/collections/garden-homepage-preview.json data/collections/words-of-the-spirit.json
+collection: data/collections/hidden-words.json
+  items: 153
+  errors: 0
+  warnings: 0
+collection: data/collections/garden-homepage-preview.json
+  items: 4
+  errors: 0
+  warnings: 0
+collection: data/collections/words-of-the-spirit.json
+  items: 21
+  errors: 0
+  warnings: 0
+
+RESULT: PASS
+--- make check-collections ---
+python3 scripts/build_collections.py --check
+current  data/collections/hidden-words.json  sha256=758dd4aec3a900b75026db36b4835896a16212991f16fb057e1c16a4113bd7cf
+current  ios/widget/quotes_hidden_words.json  sha256=fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4
+
+RESULT: PASS — 2 derived file(s) verified current.
+--- make parity ---
+node tests/parity.mjs
+
+## A. Deterministic day-of-year selection over the <=75-word subset
+      dayOfYear=166 shortSubsetLen=128 idx=38
+PASS  selects the expected verse for "today"
+PASS  selection is stable across reloads (same fixed day)
+      yesterday idx=37
+PASS  today is distinct from yesterday when dayOfYear differs
+
+## B. Today / yesterday relationship
+PASS  yesterday button reveals the yesterday section with yesterday's verse
+
+## C. Cache-by-date (collection-scoped Gregorian key)
+PASS  boots from cache when the quote fetch fails (offline cache-boot)
+PASS  after a fresh load, today's verse is cached under the collection-scoped key and lastKey is set
+
+## D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
+      gregKey=dailyVerse:hidden-words:2026-06-15  lastKey==2026-06-15  badiKey=absent  (wrinkle fixed & pinned)
+PASS  today quote is NOT written under the Badici-day key (wrinkle fixed; Gregorian key is authoritative for reads)
+
+## E. Theme persistence
+PASS  applies saved dark-mode on load, body carries exactly one theme class
+PASS  defaults to light-mode when no saved theme, exactly one theme class
+PASS  toggle flips the class and persists; reload to a saved theme leaves exactly one theme class
+
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+      attempts=[3,1] (accurate -> default sunset); date rendered, not blank
+PASS  declined location: downgrades to the default sunset instead of rendering nothing
+
+## G. Clipboard copy
+PASS  copy via clicking today's quote text writes "<text>\n— <author>" to navigator.clipboard
+PASS  the Copy button is visually hidden but still a real, enabled control
+PASS  keyboard activation of the visually-hidden Copy button writes the verse
+PASS  falls back to execCommand copy when navigator.clipboard rejects
+PASS  reports "Copy failed." when both paths fail
+
+## H. Reduced-motion scroll behavior
+PASS  uses behavior auto (instant) when prefers-reduced-motion: reduce
+PASS  uses behavior smooth when reduced-motion is not preferred
+
+## I. Source menu chrome (three real collections; D22/D23 a11y)
+PASS  sits below the theme toggle, starts closed, and offers exactly the three wired collections
+PASS  picking the already-selected collection just closes the menu and returns focus
+PASS  Escape and a click outside both close the source menu
+PASS  light page beige and verse face match the natalia dawn oracle; author is right-aligned
+
+## J. Second collection: the Garden-of-Wisdom preview (H2B-B)
+      collection items=153 eligible=128 (raw oracle 128)
+PASS  the generated Hidden Words collection is faithful to the canonical raw corpus
+      garden items=4 eligible=4 idx=2
+PASS  the vendored Garden payload is byte-identical to the recorded producer import
+PASS  selecting the Garden collection renders its own deterministic verse for today
+PASS  the Garden selection survives a reload
+PASS  cache keys are collection-scoped and never collide
+PASS  today and yesterday both come from the selected collection
+PASS  switching back to Hidden Words restores Hidden Words exactly
+
+## J2. First real additional collection: Words of the Spirit, the Ruhi B1 memorization set (H3)
+      words items=21 eligible=21 idx=19
+PASS  the vendored Words of the Spirit payload is byte-identical to the recorded producer import (21 eligible passages)
+PASS  selecting Words of the Spirit renders its own deterministic verse for today
+PASS  today and yesterday come from the Words-of-the-Spirit collection, not a sibling
+PASS  the Words selection survives a reload and cache keys stay collection-scoped
+PASS  switching back to Hidden Words restores Hidden Words exactly from Words
+
+## K. Fallback semantics (D27 follow-up: invalid clears, transient keeps)
+PASS  an unknown stored collection id falls back to Hidden Words, clears the bad value, and does not throw
+PASS  a structurally invalid collection (unrecognized schema_version) falls back and clears the selection
+PASS  a transient fetch failure of the chosen collection KEEPS the choice (D27)
+
+== RESULT: 39 passed, 0 failed ==
