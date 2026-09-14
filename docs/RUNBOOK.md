@@ -146,6 +146,20 @@ can never make the hermetic suite intermittently red. **Run it after any deploy.
 to help adjudicate `C9`: `node tests/parity-live.mjs --geolocation` (grant geolocation at a fixed
 coordinate) and the same command with `--no-coords` (permission granted, no position supplied).
 
+`make parity-live` drives only the **default** collection (The Hidden Words), so after H3 it must be paired
+with a per-collection live check for the two non-default surfaces. `tests/collections-live-check.mjs`
+(pre-registered `selectedCollection` in a fresh context, one per collection) asserts each of
+`garden-homepage-preview` and `words-of-the-spirit` settles, renders the verse equal to the local collection
+oracle (`applyEligibility` + `selectForDate` for the real current date), exposes its `[data-source]` button,
+and produces no page error — run it after any collection deploy.
+
+**Last live verification (H3 readiness, run id `H3-READINESS-LIVE-20260913`):** all three collections
+verified on the deployed origin with `make parity-live` (4/0/3, Badíʿ RESOLVED) and
+`tests/collections-live-check.mjs` (garden 4/4 oracle idx 0, words-of-the-spirit 21/21 oracle idx 4), plus
+deployed-vs-local byte identity for `js/quote-core.js` and all three payloads and the per-collection
+`aria-current` marking — clean closeout, no blocking issues. Recorded verbatim in
+`docs/audit/2026-09-13/H3_READINESS_LIVE_RUN.txt`.
+
 ## 4 · Regenerate the corpus (dev-only)
 
 ```bash

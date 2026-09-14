@@ -1,0 +1,86 @@
+=== H3 READINESS — LIVE DEPLOYED-SITE VERIFICATION (all three collections) ===
+run id:    H3-READINESS-LIVE-20260913
+unit:      H3 — first real additional collection (words-of-the-spirit)
+scope:     Stage V / readiness pass on the DEPLOYED origin after the H3 ship (#27, 3485ffb)
+           Verifies all three collections render end-to-end on the live site.
+command:   make parity-live   (alias: node tests/parity-live.mjs)  +  node tests/collections-live-check.mjs
+cwd:       /Users/mschwar/Developer/bahai-homepage
+date:      2026-09-14T00:42:06Z
+origin:    https://mschwar.github.io/bahai-homepage/
+head:      3485ffbb3fa163d662116c6f001093cab01b4d8d (origin/main)
+playwright: 1.59.1
+node:      v26.0.0
+deployed-vs-local byte identity (sha256): MATCH for js/quote-core.js, and all three
+  data/collections/*.json payloads (hidden-words, garden-homepage-preview, words-of-the-spirit).
+=== raw output ===
+
+--- node tests/parity-live.mjs  (default collection: The Hidden Words) ---
+== LIVE PARITY — deployed origin ==
+origin:      https://mschwar.github.io/bahai-homepage/
+date:        Sun Sep 13 2026 18:40:48 GMT-0600 (Mountain Daylight Time) (dayOfYear 256, short-subset len 128, idx 0)
+geolocation: NOT granted (plain visitor)
+
+        #quote-text settled: "O Son of Spirit! My first counsel is this: Possess a pure, k"…
+PASS    the homepage reaches a settled state (#quote-text leaves its loading placeholder)
+        verse == oracle (idx 0): "O Son of Spirit! My first counsel is this: Possess a pure, k"…
+PASS    the rendered verse matches the local oracle for the real current date
+        QuoteCore present with all 22 exports (MAX_QUOTE_WORDS=75, QUOTES_PATH=data/quotes_hidden_words.json)
+PASS    the shared core loaded (window.QuoteCore exposes its expected exports)
+REPORT  Badíʿ element state: RESOLVED
+        #badiDate == "Day 7, `Izzat (might)183 B.E."
+        innerHTML == "Day 7, `Izzat (might)<br>183 B.E."
+        childNodes == [#text, BR, #text] (expected two-line shape)
+        #gregorianDatePanel == "Sunday, September 13, 2026"
+REPORT  console errors/warnings observed (2)
+        [error] Mixed Content: The page at 'https://mschwar.github.io/bahai-homepage/' was loaded over HTTPS, but requested an insecure XMLHttpRequest endpoint 'http://ipinfo.io/geo?json'. This request has been blocked; the content must be served over HTTPS. — https://wondrous-badi.today/scripts/BadiDateToday.v1.js
+        [warning] Badíʿ date: no location after 4000 ms; retrying with the default sunset time. — https://mschwar.github.io/bahai-homepage/js/badi-init.js
+REPORT  failed requests observed (1 unique)
+        http://ipinfo.io/geo?json — mixed-content
+        page errors: 0
+PASS    no uncaught page error
+
+== RESULT: 4 passed, 0 failed, 3 reported ==
+   (REPORT lines are observations, not assertions: the Badíʿ outcome depends on the
+    geolocation permission, and C9 is closed — a declined visitor now gets the default sunset.)
+exit code 0
+
+--- node tests/collections-live-check.mjs  (non-default collections, via selectedCollection) ---
+== LIVE COLLECTIONS CHECK — deployed origin ==
+origin: https://mschwar.github.io/bahai-homepage/
+date:   Sun Sep 13 2026 18:41:33 GMT-0600 (Mountain Daylight Time) (dayOfYear 256)
+
+--- collection: garden-homepage-preview ---
+    local oracle: items=4 eligible=4 idx=0
+PASS    [garden-homepage-preview] homepage settles (#quote-text leaves placeholder)
+        verse == collection oracle: "The earth is but one country, and mankind its citizens."…
+PASS    [garden-homepage-preview] rendered verse matches the collection oracle
+        [data-source="garden-homepage-preview"] found (aria-pressed=null)
+PASS    [garden-homepage-preview] source selector marks it selected
+        page errors: 0
+PASS    [garden-homepage-preview] no uncaught page error
+--- collection: words-of-the-spirit ---
+    local oracle: items=21 eligible=21 idx=4
+PASS    [words-of-the-spirit] homepage settles (#quote-text leaves placeholder)
+        verse == collection oracle: "Without truthfulness progress and success, in all the worlds"…
+PASS    [words-of-the-spirit] rendered verse matches the collection oracle
+        [data-source="words-of-the-spirit"] found (aria-pressed=null)
+PASS    [words-of-the-spirit] source selector marks it selected
+        page errors: 0
+PASS    [words-of-the-spirit] no uncaught page error
+
+== RESULT: PASS (0 failed) — 2 collections verified on the live origin ==
+exit code 0
+
+--- deployed origin selected-state marking (aria-current) per collection ---
+selected=words-of-the-spirit  aria-current={"hidden-words":null,"garden-homepage-preview":null,"words-of-the-spirit":"true"}  verse="Without truthfulness progress and succes…"
+selected=garden-homepage-preview  aria-current={"hidden-words":null,"garden-homepage-preview":"true","words-of-the-spirit":null}  verse="The earth is but one country, and mankin…"
+selected=hidden-words  aria-current={"hidden-words":"true","garden-homepage-preview":null,"words-of-the-spirit":null}  verse="O Son of Spirit! My first counsel is thi…"
+
+=== RESULT SUMMARY ===
+All three collections render a verse on the LIVE origin and match the local selection oracle:
+  The Hidden Words         (default)    — make parity-live, 4/0/3, Badíʿ RESOLVED (default sunset, C9 fix)
+  Garden of Wisdom (preview)            — collections-live-check PASS, oracle idx 0
+  Words of the Spirit                   — collections-live-check PASS, oracle idx 4
+Badíʿ date RESOLVED with the two-line label; the ipinfo mixed-content block is the KNOWN C9
+by-design observation (declined-location visitor gets the default sunset), not a regression.
+No blocking issues. Clean H3 readiness closeout.
