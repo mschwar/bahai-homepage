@@ -1264,3 +1264,65 @@ work; the vendor-library dependency pin remains the unscheduled tech-debt #9.
 `mschwar/bahai-quote-ledger` @ `fde6955`; `docs/architecture/R1_RESEARCH_FINDINGS.md`;
 `docs/architecture/COLLECTION_IMPORTS.md` (words-of-the-spirit row); `tests/parity.mjs` sections I + J2;
 `docs/audit/2026-09-13/H3_*.txt`.
+
+## D32 — V1: responsive typesetting / visual normalization is an owner-authorized frozen-file product change, contract-tested · accepted 2026-09-15
+
+The owner requested the responsive-typesetting / visual-normalization pass on 2026-09-15 and instructed that it
+be implemented, committed, pushed and opened as a pull request for agent review (PR #28,
+`feat/v1-responsive-typesetting`). This entry is the authorization record `AGENTS.md` requires for a **change to
+a frozen file**: without it, the only record of the owner's decision is a run record inside the PR's own diff,
+which that document itself concedes is not the ledger, and the repo's precedent (D22) records every such change
+as a numbered entry.
+
+**Authorized scope.** Exactly two frozen files moved.
+
+- `index.html` — the Google Fonts request adds the real Source Sans Pro 300 face (`Source+Sans+Pro:300,400,700`).
+- `css/style.css` — five bounded tokens (`--quote-size`, `--quote-leading`, `--quote-measure`, `--author-size`,
+  `--hero-inline-padding`); the fixed `700px` / `90%` hero composition becomes `min(88vw, clamp(43rem,45vw,80rem))`;
+  `min-height:100dvh` with a `100vh` fallback; the passage set directly from `--quote-size`; the author set in
+  Source Sans Pro 300 at a fluid secondary size; `font-synthesis:none` on passage and author; `text-wrap:pretty`;
+  removal of the mobile-wide `body` font-size reductions.
+
+Non-runtime additions: `tests/visual-contract.mjs`, the `visual-contract` / `visual-contract-live` `Makefile`
+targets, and `docs/architecture/VISUAL_CONTRACT.md`.
+
+**Limits of the authorization — what it does NOT cover.** No other frozen file moved: `css/wallpaper.css`,
+`js/*`, `data/quotes_hidden_words.json`, `data/collections/*` and `ios/widget/*` are unchanged (hash table in
+the changed-run record). It does not authorize self-hosted fonts, JavaScript DPR scaling, any wallpaper or iOS
+widget change, any collection/selection behavior change, or any CI configuration change. Because `VALIDATE_CSS`,
+`VALIDATE_HTML`, `VALIDATE_HTML_PRETTIER` and the JavaScript categories remain off (C8, D12), a green `run-lint`
+carries **no information** about the two files this change touches; the substitute checks of record for a
+frozen-file change are `make parity` (must stay unchanged) and `make visual-contract`.
+
+| Item | Choice | Rationale |
+|---|---|---|
+| Composition | Fluid bounded measure pinned as a relation, not pixels | The pre-V1 fixed `700px` ceiling made the composition itself change across screens; a relation assertion fails a fixed-ceiling revert at every matrix viewport, where a pixel snapshot only caught the extremes. |
+| Attribution | Source Sans Pro 300 with `font-synthesis:none`, plus an asserted per-theme legibility floor | Weight 300 is the requested hierarchy, but "recedes" must not mean "fades into the background": the suite asserts a WCAG contrast ratio of at least 4.5:1 in light and in dark. |
+| `dvh` | `100dvh` with `100vh` fallback, documented as a progressive enhancement, deliberately not asserted | Headless Chromium reports the same value for `innerHeight` and `100dvh`, so an assertion here would be vacuous; recorded instead as the explicit limit of the full-view claim. |
+| Evidence location | Screenshots go to `VISUAL_EVIDENCE_DIR`, recommended outside the repo | `main` is the publicly served branch, so committing PNGs makes them reachable by URL; committing audit images needs its own explicit reason. |
+
+**Foreign-QA outcome (PR #28).** A separate reviewer executed the browser gates the authoring environment could
+not run and returned REQUEST CHANGES on two points, both fixed in this PR rather than deferred: the missing
+ledger entry (this decision), and a visual contract that asserted geometry only and therefore could not falsify
+the repo's recorded "visible but the same colour as its background" defect class. The follow-up added the
+per-theme contrast assertion, the relational composition assertion, a fixed Playwright clock, and `PRE-CHECK`
+labels on the two source greps (a byte match cannot tell a real 300 face from a synthesized one).
+
+**Evidence (2026-09-15):** `docs/audit/2026-09-15/V1_BASELINE_MAIN_RUN.txt` (main @ `7a1346e`: `make validate`
+153 checked / 0 errors / 0 warnings / 0 duplicates; `make validate-collections` PASS; `make check-collections`
+PASS, 2 derived files current; `make parity` **39 passed, 0 failed**), `V1_CHANGED_RUN.txt` (the same gates at
+the merged head plus `make visual-contract` **13 passed, 0 failed** and `make visual-contract-live`
+**13 passed, 0 failed**; `make wallpaper-check` 4/0 — `css/style.css` is not in the wallpaper's blast radius,
+which loads only `css/wallpaper.css`; parity still **39/0**, i.e. V1 added and re-pinned no parity assertion,
+because its proof lives in the separate visual-contract suite), and `V1_FOREIGN_QA_RUN.txt` (the review packet,
+its teeth probes, and this follow-up's two mutation probes). Frozen-file hash table: only `index.html` and
+`css/style.css` moved from `main`.
+
+**What this closes and what it opens.** `docs/queue.md` V1 closes (`done`) and the priority table returns to
+zero open units. Two limits are carried forward as *recorded*, not re-opened: the `dvh` claim stays unasserted
+by design (above, and `VISUAL_CONTRACT.md` invariant 5), and the served-site static-analysis gap stays C8/D12.
+No candidate unit is opened by this work.
+
+*Source:* owner instruction 2026-09-15; PR #28; the foreign-QA review packet and its teeth probes;
+`docs/architecture/VISUAL_CONTRACT.md`; `tests/visual-contract.mjs`; `docs/audit/2026-09-15/V1_*.txt`; D12, D22,
+D31 (precedent and context).

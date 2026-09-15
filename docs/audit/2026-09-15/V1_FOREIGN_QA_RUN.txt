@@ -1,0 +1,150 @@
+=== V1 FOREIGN QA RUN — PR #28 review packet, teeth probes, and the follow-up that closed it ===
+
+review run id  : deleg_e8126841 / sa-0-b10ed97c (independent reviewer, isolated worktree)
+PR             : mschwar/bahai-homepage #28 — "V1: normalize responsive typesetting and author hierarchy"
+reviewed head  : 2a7eb57bfb4adb7a9390ec71b00ca28ca532edc9  (branch feat/v1-responsive-typesetting)
+base           : main
+review worktree: /Users/mschwar/v1-review
+reviewer verdict: REQUEST CHANGES
+recorded       : 2026-09-15
+
+
+--- 1. GATES THE AUTHORITY RAN AT 2a7eb57 (raw) ---------------------------------
+
+node --check tests/visual-contract.mjs ....................... exit 0
+make validate ................................................ exit 0  (153 checked / 0 errors / 0 warnings / 0 duplicates)
+make validate-collections .................................... exit 0  (hidden-words 0 err; garden-homepage-preview 4 items 0 err; words-of-the-spirit 21 items 0 err; RESULT: PASS)
+make check-collections ....................................... exit 0  (RESULT: PASS — 2 derived file(s) verified current)
+make parity .................................................. exit 0  (== RESULT: 39 passed, 0 failed ==)
+make visual-contract ......................................... exit 0  (== VISUAL CONTRACT RESULT: 13 passed, 0 failed (structural) ==)
+make visual-contract-live .................................... exit 0  (== VISUAL CONTRACT RESULT: 13 passed, 0 failed (live fonts) ==)
+make wallpaper-check ......................................... exit 0  (== RESULT: 4 passed, 0 failed ==)
+gh pr checks 28 .............................................. all pass (run-lint 2m1s; Analyze actions/javascript-typescript/python; CodeQL; GitGuardian; 7 "Linted:" entries)
+
+Parity count 39 is UNCHANGED against main's 39 (docs/audit/2026-09-13/H3_CHANGED_RUN.txt), i.e. V1 added and
+re-pinned no parity assertion. V1's proof lives in the separate tests/visual-contract.mjs suite.
+
+Frozen-file hash table at 2a7eb57 (main vs head): only index.html and css/style.css CHANGED; css/wallpaper.css,
+js/{script,quote-core,badi-init,wallpaper}.js, data/quotes_hidden_words.json, ios/widget/* unchanged.
+
+
+--- 2. REVIEWER FINDINGS (as returned) -------------------------------------------
+
+MAJOR  Frozen-file product change with no owner-authorization entry in the append-only decision ledger.
+       docs/DECISIONS.md ended at D31; the only record of the 2026-09-15 authorization was a run record inside
+       the PR's own diff, which itself states it "is an execution record, not a substitute for the append-only
+       decision ledger." Precedent: D22 records every frozen-file change as a numbered entry.
+MAJOR  The new visual contract asserted geometry only. `grep -niE 'contrast|color|luminance|dark|theme'
+       tests/visual-contract.mjs` returned nothing: no legibility assertion and no dark-theme case, so the
+       suite could not falsify this repo's recorded "visible but the same colour as its background" defect
+       class, while VISUAL_CONTRACT.md invariant 2 promises the attribution "remains substantial enough to read".
+MINOR  V1 was not a queue unit, so the queue's "contract + gate" entry rule was bypassed; no docs/queue.md
+       closure existed.
+MINOR  The 100dvh half of the claim was not independently pinned: `hero.height >= viewport.height - 1` passes
+       identically under the 100vh fallback, because headless Chromium reports innerHeight == 100dvh.
+MINOR  Layout assertions had teeth only at the extremes: with the pre-PR fixed composition restored but the
+       weight/font-synthesis bits kept, 6 of 9 cases still PASSed (1280x800, 1440x900 1x/2x, 1920x1080 1x/2x) —
+       exactly the mid-range laptops the change was about.
+MINOR  Determinism: no Playwright clock install and no Badíʿ stub, unlike tests/parity.mjs.
+MINOR  Two assertions encoded today's pixel values rather than relationships (`<= 37.61`; measure 15..36.2em).
+MINOR  The handoff and contract recommended VISUAL_EVIDENCE_DIR=docs/audit/2026-09-15/V1, i.e. committing PNGs
+       into the publicly served branch.
+NIT    The two suite-level checks are source-byte greps that cannot tell a real 300 face from a synthesized one.
+NIT    run-lint is vacuous with respect to the changed product files (VALIDATE_CSS/HTML/HTML_PRETTIER/JAVASCRIPT_*
+       are all off — standing C8/D12, not introduced by this PR; no action taken inside the PR).
+
+Reviewer's must-fix-before-merge list: (1) append the owner-authorization entry to docs/DECISIONS.md;
+(2) add the legibility assertion and run the matrix in both themes; (3) run the browser gates from the merge
+host and record the raw tails under docs/audit/2026-09-15/.
+
+
+--- 3. TEETH PROOF AT 2a7eb57 (reviewer's probes) ---------------------------------
+
+BEFORE, PR head:                make visual-contract -> exit 0, 13 passed / 0 failed
+REVERT the production fix:      git checkout main -- css/style.css index.html
+                                make visual-contract -> exit 2, "3 passed, 10 failed"
+                                failing: both source greps; all 8 cases "author weight=400, expected 300"
+RESTORE:                        git checkout HEAD -- css/style.css index.html
+                                make visual-contract -> exit 0, 13 passed / 0 failed
+                                cmp against saved copy -> RESTORED-IDENTICAL; git status --short -> empty
+
+EXTENDED PROBE (reviewer's own temporary mutation, also reverted): pre-PR fixed composition restored while
+KEEPING font-weight:300 and font-synthesis:none ->
+                                make visual-contract -> exit 2, "10 passed, 3 failed"
+                                FAIL phone-390x844-3x  "quote font-size=19.5px outside 20..38px"
+                                FAIL large-2560x1440-2x "wrapper/viewport ratio=0.273 outside 0.30..0.90"
+                                FAIL 4k-3840x2160-1x   "wrapper/viewport ratio=0.182 outside 0.30..0.90"
+                        => only 3 of 8 cases detected the reverted composition (finding MINOR above).
+
+
+--- 4. FOLLOW-UP PROBES AFTER THE FIXES (this record's own mutations) --------------
+
+The fixes were made in the same isolated worktree, with css/style.css backed up and restored byte-identically
+after every mutation (asserted in the probe script). Probe script: /tmp/v1-teeth-capture.py.
+
+MUTATION A — pre-PR composition restored, V1 weights KEPT (the same mutation the reviewer ran):
+    make visual-contract -> exit 2, "5 passed, 8 failed (structural)"
+    every one of the 8 matrix cases now FAILs, including the mid-range laptops that previously passed:
+        FAIL laptop-1280x800-1x    wrapper width=700.0px, expected 688.0px from min(88vw, clamp(43rem,45vw,80rem)) at root 16px
+        FAIL laptop-1440x900-1x    wrapper width=700.0px, expected 688.0px from min(88vw, clamp(43rem,45vw,80rem)) at root 16px
+        FAIL laptop-1440x900-2x    wrapper width=700.0px, expected 688.0px from min(88vw, clamp(43rem,45vw,80rem)) at root 16px
+        FAIL desktop-1920x1080-1x  wrapper width=700.0px, expected 864.0px from min(88vw, clamp(43rem,45vw,80rem)) at root 16px
+        FAIL desktop-1920x1080-2x  wrapper width=700.0px, expected 864.0px from min(88vw, clamp(43rem,45vw,80rem)) at root 16px
+        (plus phone-390x844-3x, large-2560x1440-2x, 4k-3840x2160-1x)
+    => teeth moved from 3/8 to 8/8. Full output: /tmp/v1-teeth-A-composition.txt
+
+MUTATION B — light --text-color-light set equal to --bg-color (#f7f4f0), i.e. the exact defect class the
+review said the suite could not see:
+    make visual-contract -> exit 2, "5 passed, 8 failed (structural)"
+    every one of the 8 matrix cases FAILs:
+        light-theme attribution contrast=1.00:1 < 4.5:1 (rgb(247, 244, 240) on rgb(247, 244, 240))
+    => the new legibility assertion has teeth. Full output: /tmp/v1-teeth-B-contrast.txt
+
+RESTORE VERIFICATION after both mutations:
+    restored byte-identical=True   (css/style.css == pre-probe copy)
+    git status --short -> " M tests/visual-contract.mjs"  (only the intended test-file edit)
+
+Measured contrast at the fixed head (all matrix cases, both themes, from the visual-contract run):
+    light: passage 13.88:1, attribution 7.52:1        dark: passage 12.85:1, attribution 8.72:1
+    i.e. the product already satisfied the new floor; no frozen-file change was needed to pass it.
+
+
+--- 5. RESOLUTION MAP (finding -> action taken in this PR) ------------------------
+
+MAJOR ledger entry missing      -> appended "## D32 — V1: ..." to docs/DECISIONS.md (append-only, next free
+                                   number; names the frozen files, the authorized scope, its limits, and the
+                                   evidence), plus a docs/queue.md V1 closure section and the priority-table
+                                   and Closed: lines updated.
+MAJOR no legibility/dark assert -> tests/visual-contract.mjs now resolves the computed colour against the first
+                                   opaque ancestor background, composites translucent text first, waits for the
+                                   CSS transition to settle, and asserts WCAG >= 4.5:1 for passage and
+                                   attribution in BOTH themes; dark screenshots added when
+                                   VISUAL_EVIDENCE_DIR is set. VISUAL_CONTRACT.md invariant 2 now states the
+                                   ratio as the requirement.
+MINOR no queue closure          -> docs/queue.md V1 section added; summary paragraph and Closed: list updated.
+MINOR 100dvh not pinned         -> recorded honestly as the explicit limit of the claim (VISUAL_CONTRACT.md
+                                   invariant 5 + a non-goal + the D32 table row) instead of a vacuous
+                                   assertion. Not re-opened as a candidate.
+MINOR teeth only at extremes    -> a relational composition assertion
+                                   (width == min(88vw, clamp(43rem,45vw,80rem))) now fails the fixed-ceiling
+                                   revert at all 8 viewports (mutation A above).
+MINOR determinism               -> page.clock.install({ time: new Date(2026, 5, 15, 12, 0, 0) }) before goto.
+MINOR brittle pixel literals    -> the 4K cap is derived from the 2.35rem token and the measured root
+                                   font-size instead of the literal 37.61.
+MINOR evidence path in repo     -> both docs now recommend an out-of-git VISUAL_EVIDENCE_DIR and say why
+                                   (main is the publicly served branch), with the reasoning in D32.
+NIT source greps not rendering  -> the two checks are renamed "... PRE-CHECK (source grep, not rendering) ..."
+                                   and VISUAL_CONTRACT.md explains what only --live-fonts can prove.
+NIT run-lint vacuous here       -> no action inside this PR (standing C8/D12, owner-gated); recorded as an
+                                   explicit limit in D32 and the queue entry so the merge note does not cite
+                                   run-lint as evidence about index.html or css/style.css.
+
+
+--- 6. POST-FIX GATE RUN (merge host) ---------------------------------------------
+
+See docs/audit/2026-09-15/V1_CHANGED_RUN.txt — captured at the final content of the branch, with the
+frozen-file hash table: node --check exit 0; make validate 153/0/0/0; make validate-collections PASS;
+make check-collections PASS; make parity 39/0 (unchanged); make visual-contract 13/0;
+make visual-contract-live 13/0; make wallpaper-check 4/0; only index.html and css/style.css CHANGED.
+
+The authoring environment's OPEN browser gate is therefore closed by a real run, not by assertion.

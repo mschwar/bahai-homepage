@@ -1,0 +1,238 @@
+=== V1 CHANGED RUN ===
+branch : feat/v1-responsive-typesetting
+head   : 2a7eb57bfb4adb7a9390ec71b00ca28ca532edc9  (working tree content; committed immediately after capture)
+base   : main = 7a1346efbeae160cfb7af3449c673cd0da35507d
+host   : Darwin arm64 / node v26.0.0
+captured: 2026-09-15T23:18:11Z (UTC)
+
+--- node --check tests/visual-contract.mjs ---
+exit=0
+
+--- make validate ---
+python3 scripts/validate_quotes.py
+Quotes checked: 153
+Errors: 0
+Warnings: 0
+Duplicate texts: 0
+exit=0
+
+--- make validate-collections ---
+python3 scripts/validate_collection.py data/collections/hidden-words.json data/collections/garden-homepage-preview.json data/collections/words-of-the-spirit.json
+collection: data/collections/hidden-words.json
+  items: 153
+  errors: 0
+  warnings: 0
+collection: data/collections/garden-homepage-preview.json
+  items: 4
+  errors: 0
+  warnings: 0
+collection: data/collections/words-of-the-spirit.json
+  items: 21
+  errors: 0
+  warnings: 0
+
+RESULT: PASS
+exit=0
+
+--- make check-collections ---
+python3 scripts/build_collections.py --check
+current  data/collections/hidden-words.json  sha256=758dd4aec3a900b75026db36b4835896a16212991f16fb057e1c16a4113bd7cf
+current  ios/widget/quotes_hidden_words.json  sha256=fdcd492d5d0bd1dbf8f7326a81f5da7bd5ba2356c804f392115496e1fefaaea4
+
+RESULT: PASS — 2 derived file(s) verified current.
+exit=0
+
+--- make parity ---
+node tests/parity.mjs
+
+## A. Deterministic day-of-year selection over the <=75-word subset
+      dayOfYear=166 shortSubsetLen=128 idx=38
+PASS  selects the expected verse for "today"
+PASS  selection is stable across reloads (same fixed day)
+      yesterday idx=37
+PASS  today is distinct from yesterday when dayOfYear differs
+
+## B. Today / yesterday relationship
+PASS  yesterday button reveals the yesterday section with yesterday's verse
+
+## C. Cache-by-date (collection-scoped Gregorian key)
+PASS  boots from cache when the quote fetch fails (offline cache-boot)
+PASS  after a fresh load, today's verse is cached under the collection-scoped key and lastKey is set
+
+## D. Badici-day-cache wrinkle (TECH_DEBT_AND_RISKS.md #7)
+      gregKey=dailyVerse:hidden-words:2026-06-15  lastKey==2026-06-15  badiKey=absent  (wrinkle fixed & pinned)
+PASS  today quote is NOT written under the Badici-day key (wrinkle fixed; Gregorian key is authoritative for reads)
+
+## E. Theme persistence
+PASS  applies saved dark-mode on load, body carries exactly one theme class
+PASS  defaults to light-mode when no saved theme, exactly one theme class
+PASS  toggle flips the class and persists; reload to a saved theme leaves exactly one theme class
+
+## F. Badici fallback / graceful degradation
+PASS  shows unavailable text + guidance when the external lib is unreachable
+PASS  renders the Badici date when the lib resolves (happy path)
+      attempts=[3,1] (accurate -> default sunset); date rendered, not blank
+PASS  declined location: downgrades to the default sunset instead of rendering nothing
+
+## G. Clipboard copy
+PASS  copy via clicking today's quote text writes "<text>\n— <author>" to navigator.clipboard
+PASS  the Copy button is visually hidden but still a real, enabled control
+PASS  keyboard activation of the visually-hidden Copy button writes the verse
+PASS  falls back to execCommand copy when navigator.clipboard rejects
+PASS  reports "Copy failed." when both paths fail
+
+## H. Reduced-motion scroll behavior
+PASS  uses behavior auto (instant) when prefers-reduced-motion: reduce
+PASS  uses behavior smooth when reduced-motion is not preferred
+
+## I. Source menu chrome (three real collections; D22/D23 a11y)
+PASS  sits below the theme toggle, starts closed, and offers exactly the three wired collections
+PASS  picking the already-selected collection just closes the menu and returns focus
+PASS  Escape and a click outside both close the source menu
+PASS  light page beige and verse face match the natalia dawn oracle; author is right-aligned
+
+## J. Second collection: the Garden-of-Wisdom preview (H2B-B)
+      collection items=153 eligible=128 (raw oracle 128)
+PASS  the generated Hidden Words collection is faithful to the canonical raw corpus
+      garden items=4 eligible=4 idx=2
+PASS  the vendored Garden payload is byte-identical to the recorded producer import
+PASS  selecting the Garden collection renders its own deterministic verse for today
+PASS  the Garden selection survives a reload
+PASS  cache keys are collection-scoped and never collide
+PASS  today and yesterday both come from the selected collection
+PASS  switching back to Hidden Words restores Hidden Words exactly
+
+## J2. First real additional collection: Words of the Spirit, the Ruhi B1 memorization set (H3)
+      words items=21 eligible=21 idx=19
+PASS  the vendored Words of the Spirit payload is byte-identical to the recorded producer import (21 eligible passages)
+PASS  selecting Words of the Spirit renders its own deterministic verse for today
+PASS  today and yesterday come from the Words-of-the-Spirit collection, not a sibling
+PASS  the Words selection survives a reload and cache keys stay collection-scoped
+PASS  switching back to Hidden Words restores Hidden Words exactly from Words
+
+## K. Fallback semantics (D27 follow-up: invalid clears, transient keeps)
+PASS  an unknown stored collection id falls back to Hidden Words, clears the bad value, and does not throw
+PASS  a structurally invalid collection (unrecognized schema_version) falls back and clears the selection
+PASS  a transient fetch failure of the chosen collection KEEPS the choice (D27)
+
+== RESULT: 39 passed, 0 failed ==
+exit=0
+
+--- make visual-contract ---
+node tests/visual-contract.mjs
+PASS  PRE-CHECK (source grep, not rendering): font request includes the real Source Sans Pro 300 face
+PASS  PRE-CHECK (source grep, not rendering): quote and attribution disable synthetic font weights
+      width=343.2px (88.0vw), measure=15.9em, quote=21.6px, dpr=3; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  phone-390x844-3x: visual contract
+      width=688.0px (53.8vw), measure=26.9em, quote=25.6px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  laptop-1280x800-1x: visual contract
+      width=688.0px (47.8vw), measure=25.9em, quote=26.6px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  laptop-1440x900-1x: visual contract
+      width=688.0px (47.8vw), measure=25.9em, quote=26.6px, dpr=2; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  laptop-1440x900-2x: visual contract
+      width=864.0px (45.0vw), measure=30.4em, quote=28.4px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  desktop-1920x1080-1x: visual contract
+      width=864.0px (45.0vw), measure=30.4em, quote=28.4px, dpr=2; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  desktop-1920x1080-2x: visual contract
+      width=1152.0px (45.0vw), measure=36.0em, quote=32.0px, dpr=2; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  large-2560x1440-2x: visual contract
+      width=1280.0px (33.3vw), measure=34.0em, quote=37.6px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  4k-3840x2160-1x: visual contract
+PASS  CSS geometry is invariant between 1x and 2x at 1440x900
+PASS  CSS geometry is invariant between 1x and 2x at 1920x1080
+PASS  fluid quote scale grows monotonically and caps
+
+== VISUAL CONTRACT RESULT: 13 passed, 0 failed (structural) ==
+exit=0
+
+--- make visual-contract-live ---
+node tests/visual-contract.mjs --live-fonts
+PASS  PRE-CHECK (source grep, not rendering): font request includes the real Source Sans Pro 300 face
+PASS  PRE-CHECK (source grep, not rendering): quote and attribution disable synthetic font weights
+      width=343.2px (88.0vw), measure=15.9em, quote=21.6px, dpr=3; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  phone-390x844-3x: visual contract
+      width=688.0px (53.8vw), measure=26.9em, quote=25.6px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  laptop-1280x800-1x: visual contract
+      width=688.0px (47.8vw), measure=25.9em, quote=26.6px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  laptop-1440x900-1x: visual contract
+      width=688.0px (47.8vw), measure=25.9em, quote=26.6px, dpr=2; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  laptop-1440x900-2x: visual contract
+      width=864.0px (45.0vw), measure=30.4em, quote=28.4px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  desktop-1920x1080-1x: visual contract
+      width=864.0px (45.0vw), measure=30.4em, quote=28.4px, dpr=2; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  desktop-1920x1080-2x: visual contract
+      width=1152.0px (45.0vw), measure=36.0em, quote=32.0px, dpr=2; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  large-2560x1440-2x: visual contract
+      width=1280.0px (33.3vw), measure=34.0em, quote=37.6px, dpr=1; contrast light 13.88/7.52:1, dark 12.85/8.72:1 (passage/attribution)
+PASS  4k-3840x2160-1x: visual contract
+PASS  CSS geometry is invariant between 1x and 2x at 1440x900
+PASS  CSS geometry is invariant between 1x and 2x at 1920x1080
+PASS  fluid quote scale grows monotonically and caps
+
+== VISUAL CONTRACT RESULT: 13 passed, 0 failed (live fonts) ==
+exit=0
+
+--- make wallpaper-check ---
+node tests/wallpaper-check.mjs
+      paper corners rgb(239, 232, 214)
+PASS  e-ink paper fill is rgb(239, 232, 214) and flat
+      words=32 align=right font=italic 35px "Cormorant Garamond", Georgia, serif
+PASS  verse is ≤35 words and author is right-aligned Cormorant
+      png chars=208434
+PASS  Download PNG is a non-empty image/png data URL
+PASS  wallpaper.html has no page or console errors
+
+== RESULT: 4 passed, 0 failed ==
+exit=0
+
+--- frozen-file hash table (main vs working tree) ---
+CHANGED   css/style.css
+          main=5cb7e1fbe1545422
+          head=c9ee42597cde0dd4
+unchanged css/wallpaper.css
+          main=b1bdd5971a31ec89
+          head=b1bdd5971a31ec89
+unchanged data/quotes_hidden_words.json
+          main=fdcd492d5d0bd1db
+          head=fdcd492d5d0bd1db
+CHANGED   index.html
+          main=570706d48b09cbea
+          head=5fba8a91b2e0b889
+unchanged ios/widget/DailyVerseWidget.swift
+          main=672d73f806742821
+          head=672d73f806742821
+unchanged ios/widget/QuoteStore.swift
+          main=e188eca190a74fca
+          head=e188eca190a74fca
+unchanged ios/widget/quotes_hidden_words.json
+          main=fdcd492d5d0bd1db
+          head=fdcd492d5d0bd1db
+unchanged js/badi-init.js
+          main=80eb5e3f455da4f5
+          head=80eb5e3f455da4f5
+unchanged js/quote-core.js
+          main=686f7302d8f6c81d
+          head=686f7302d8f6c81d
+unchanged js/script.js
+          main=69ba4254b75cc2b1
+          head=69ba4254b75cc2b1
+unchanged js/wallpaper.js
+          main=8f0d62d46e0fb5ea
+          head=8f0d62d46e0fb5ea
+
+--- full changed set vs main (name-status, working tree) ---
+M	Makefile
+M	css/style.css
+M	docs/DECISIONS.md
+A	docs/architecture/VISUAL_CONTRACT.md
+A	docs/audit/2026-09-15/V1_IMPLEMENTATION_HANDOFF.md
+M	docs/queue.md
+M	index.html
+A	tests/visual-contract.mjs
+
+--- git status --short ---
+ M docs/DECISIONS.md
+ M docs/architecture/VISUAL_CONTRACT.md
+ M docs/queue.md
+ M tests/visual-contract.mjs
+?? docs/audit/2026-09-15/V1_CHANGED_RUN.txt

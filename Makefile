@@ -1,7 +1,7 @@
 PYTHON ?= python3
 NODE  ?= node
 
-.PHONY: validate validate-collections collections check-collections parity parity-live wallpaper-check
+.PHONY: validate validate-collections collections check-collections parity parity-live visual-contract visual-contract-live wallpaper-check
 
 # Legacy corpus validator (shipped contract: 153 checked / 0 errors / 0 warnings /
 # 0 duplicates). Unchanged by H2B-B — the raw corpus is still the canonical scrape
@@ -41,6 +41,16 @@ parity:
 # Run it after any deploy — see docs/RUNBOOK.md §3.1.
 parity-live:
 	$(NODE) tests/parity-live.mjs
+
+# Responsive-typesetting contract (V1). Default mode is structural and
+# deterministic: it blocks external fonts but proves the CSS composition across
+# viewport and device-pixel-ratio changes. The live-font mode additionally requires
+# Google Fonts to resolve and verifies the requested Cormorant / Source Sans weights.
+visual-contract:
+	$(NODE) tests/visual-contract.mjs
+
+visual-contract-live:
+	$(NODE) tests/visual-contract.mjs --live-fonts
 
 # Experimental e-ink lock-screen PNG (D25). DEV-ONLY: same global playwright
 # as `parity`. Unlike `parity` it does not abort Google Fonts or unpkg, because

@@ -1,5 +1,11 @@
 /*  THEME ROOTS  ---------------------------------------------------------- */
 :root{
+  /* Responsive typesetting contract (V1). */
+  --quote-size:clamp(1.35rem,calc(1.1rem + 1vmin),2.35rem);
+  --quote-leading:1.5;
+  --quote-measure:clamp(43rem,45vw,80rem);
+  --author-size:clamp(1.15rem,calc(.98rem + .82vmin),2.15rem);
+  --hero-inline-padding:clamp(1.25rem,5vw,6rem);
   /* Light page beige from aunt-natalia dawn --color-bg (#f7f4f0); was #EFEBE9. */
   --bg-color:#f7f4f0; --text-color:#1A2639; --text-color-light:rgba(26,38,57,.8);
   --panel-buttons-bg:#0E1B30; --panel-buttons-text:#EFEBE9;
@@ -49,17 +55,18 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
 
 /*  JUMBOTRONS  ----------------------------------------------------------- */
 .quote-jumbotron{
-  min-height:100vh;display:flex;flex-direction:column;justify-content:center;align-items:center;
-  padding:40px 20px;background:var(--bg-color)}
+  min-height:100vh;min-height:100dvh;display:flex;flex-direction:column;justify-content:center;align-items:center;
+  padding:clamp(2rem,6vh,5rem) var(--hero-inline-padding);background:var(--bg-color)}
 /* .quote-jumbotron{display:flex} otherwise beats the UA [hidden] rule (equal specificity). */
 .quote-jumbotron[hidden]{display:none}
-.quote-content-wrapper{max-width:700px;width:90%;text-align:left}
+.quote-content-wrapper{width:min(88vw,var(--quote-measure));text-align:left}
 #quote-text,#quote-text-yesterday{
-  font-family:'Cormorant Garamond',Georgia,serif;font-size:1.5em;font-weight:400;line-height:1.55;
-  margin-bottom:2.5em;white-space:pre-line;cursor:pointer}
+  font-family:'Cormorant Garamond',Georgia,serif;font-size:var(--quote-size);font-weight:400;line-height:var(--quote-leading);
+  font-synthesis:none;text-wrap:pretty;margin-bottom:2.5em;white-space:pre-line;cursor:pointer}
 .attribution-line{text-align:right}
 .quote-author{
-  font-family:'Source Sans Pro',sans-serif;font-size:1.4em;font-weight:400;color:var(--text-color-light)}
+  font-family:'Source Sans Pro',sans-serif;font-size:var(--author-size);font-weight:300;font-synthesis:none;
+  color:var(--text-color-light)}
 /* Copy chrome is clipped, not display:none, so keyboard/AT still reach the control. */
 .visually-hidden{
   position:absolute!important;width:1px!important;height:1px!important;
@@ -141,12 +148,10 @@ body.dark-mode .icon-sun{display:inline} body.dark-mode .icon-moon{display:none}
 
 /*  MOBILE  --------------------------------------------------------------- */
 @media(max-width:768px){
-  body{font-size:13.5px}
   .panel-date{padding:15px 0}
   .panel-buttons-yesterday{padding:22px 0}
 }
 @media(max-width:480px){
-  body{font-size:13px}
   .buttons-layout-centered{flex-direction:column;gap:10px}
   .panel-date{padding:12px 0}
   .panel-buttons-yesterday{padding:18px 0}
