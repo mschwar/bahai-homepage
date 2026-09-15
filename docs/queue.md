@@ -18,9 +18,9 @@ Canonical forward plan for `bahai-homepage`. Supersedes `PROJECT_ROADMAP.md` and
 
 ## Priority order
 
-Open units in execution order; closed units are listed in their own sections. `H3` closed 2026-09-14 (D31) —
-**there are no open queue units**; the homepage is ahead of its plan. `R1`'s review passed 2026-09-13 (D30)
-and its payload shipped as part of H3.
+Open units in execution order; closed units are listed in their own sections. `V1` closed 2026-09-15 (D32) and
+`H3` closed 2026-09-14 (D31) — **there are no open queue units**; the homepage is ahead of its plan. `R1`'s
+review passed 2026-09-13 (D30) and its payload shipped as part of H3.
 
 | # | Unit | What it is | Gate |
 |---|---|---|---|
@@ -32,7 +32,7 @@ neutral-label publication posture (B(b)), the ≤75-word eligibility rule with t
 (F(a)). Both `R1`'s halves (H2B's collection contract + the rights/provenance review) are satisfied, and the
 deferred payload shipped as `H3` (D31).
 
-Closed: `H1`, `H2A`, `H2B`, `R1`, `H3`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
+Closed: `H1`, `H2A`, `H2B`, `R1`, `H3`, `V1`, `C1`, `C2`, `C3`, `C4`, `C5`, `C6`, `C7`, `C8`, `C9`, `C10`, `C11`, `C12`.
 
 ---
 
@@ -248,6 +248,32 @@ in `index.html` (label equal to the file's `label`, pinned). The excluded 118-wo
 `H3_CHANGED_RUN.txt` (`make validate` 153/0/0/0, `make validate-collections` PASS 153+4+21,
 `make check-collections` PASS, `make parity` **39/0**, `make wallpaper-check` 4/0, frozen-file hash table).
 Decision: `docs/DECISIONS.md` **D31**. With this the priority table has **no open units**.
+
+## V1 — responsive typesetting / visual normalization · **done** · gate: human (owner-authorized 2026-09-15, D32)
+
+Owner-requested pass on the frozen visual files: turn the hero composition into a small responsive typesetting
+system — passage hierarchy, bounded measure, whitespace and type scale moving together — instead of independent
+fixed values (`700px`, `90%`, body-relative `em`, then a mobile `body` shrink). The attribution stays
+Source Sans Pro 300 but must remain legible, not merely present.
+**What shipped:** five bounded tokens, a fluid bounded measure, `100dvh` with a `100vh` fallback,
+`font-synthesis:none`, and removal of the mobile-wide `body` font-size reductions, all in `css/style.css`;
+`index.html` requests the real Source Sans Pro 300 face; plus non-runtime tooling — `tests/visual-contract.mjs`,
+the `visual-contract` / `visual-contract-live` `Makefile` targets, and `docs/architecture/VISUAL_CONTRACT.md`.
+**Not authorized by this unit:** any other frozen file, self-hosted fonts, JavaScript DPR scaling, wallpaper or
+iOS widget changes, collection/selection behavior, or CI configuration.
+
+**Evidence:** `docs/audit/2026-09-15/V1_BASELINE_MAIN_RUN.txt` (main `7a1346e`: `make validate` 153/0/0/0,
+`make validate-collections` PASS, `make check-collections` PASS, `make parity` **39/0**),
+`V1_CHANGED_RUN.txt` (`make validate` 153/0/0/0, `make validate-collections` PASS, `make check-collections`
+PASS, `make parity` **39/0 unchanged** — no parity assertion added or re-pinned, since V1's proof lives in the
+separate visual-contract suite — `make visual-contract` **13/0**, `make visual-contract-live` **13/0**,
+`make wallpaper-check` 4/0; frozen-file hash table: only `index.html` and `css/style.css` moved from `main`),
+and `V1_FOREIGN_QA_RUN.txt` (the foreign review packet plus the teeth and mutation probes, including the
+`REQUEST CHANGES` findings this unit resolved before merge).
+Two limits are recorded rather than re-opened: the `dvh` claim is a documented progressive enhancement that
+headless Chromium cannot distinguish from the `vh` fallback, and the served-site static-analysis gap stays
+`C8`/D12 — so a green `run-lint` is **not** evidence about these two files.
+Decision: `docs/DECISIONS.md` **D32**. With this the priority table again has **no open units**.
 
 ---
 

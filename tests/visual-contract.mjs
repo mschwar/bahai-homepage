@@ -2,15 +2,17 @@
 // V1 responsive-typesetting / visual-normalization contract.
 //
 // Default mode is structural and deterministic: external fonts and the Badíʿ vendor
-// are blocked. It proves that layout is expressed in CSS pixels and relationships,
-// not physical pixels, across representative viewport sizes and DPRs.
+// are blocked and "now" is pinned, so layout results are reproducible across runs.
+// It proves that layout is expressed in CSS pixels and relationships, not physical
+// pixels, across representative viewport sizes and DPRs.
 //
 // `--live-fonts` leaves Google Fonts reachable and additionally requires the exact
 // requested Cormorant Garamond 400 and Source Sans Pro 300 faces to load. This mode
 // is intentionally network-dependent and must not replace the hermetic structural run.
 //
-// Optional evidence:
-//   VISUAL_EVIDENCE_DIR=docs/audit/2026-09-15/V1 node tests/visual-contract.mjs --live-fonts
+// Optional evidence (write screenshots OUTSIDE the repo by default — `main` is publicly
+// served, so committing PNGs into docs/audit/ needs its own explicit reason):
+//   VISUAL_EVIDENCE_DIR=/tmp/v1-evidence node tests/visual-contract.mjs --live-fonts
 
 import { createServer } from 'node:http';
 import { mkdir, readFile } from 'node:fs/promises';
@@ -21,6 +23,11 @@ import { chromium } from 'playwright';
 const ROOT = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const LIVE_FONTS = process.argv.includes('--live-fonts');
 const EVIDENCE_DIR = process.env.VISUAL_EVIDENCE_DIR || '';
+
+// Pin "now" so day-of-year selection, cache keys and any date-derived text cannot vary
+// between runs (the same reason tests/parity.mjs fixes the clock).
+const TODAY = new Date(2026, 5, 15, 12, 0, 0);
+
 const MIME = {
   '.html': 'text/html',
   '.js': 'application/javascript',
@@ -72,6 +79,71 @@ function assert(condition, message) {
 const close = (a, b, tolerance = 0.75) => Math.abs(a - b) <= tolerance;
 const countWords = text => (text || '').trim().split(/\s+/).filter(Boolean).length;
 
+// Wait until a CSS transition has settled: two consecutive polls agree. A theme swap
+// animates (body{transition:background .3s,color .3s}), so reading colours immediately
+// after the class change lands mid-interpolation and yields a meaningless ratio.
+async function settled(page, selector) {
+  await page.waitForFunction(sel => {
+    const element = document.querySelector(sel);
+    const key = `${getComputedStyle(element).color}|${getComputedStyle(document.body).backgroundColor}`;
+    window.__v1Settle = window.__v1Settle || {};
+    const previous = window.__v1Settle[sel];
+    window.__v1Settle[sel] = key;
+    return previous === key;
+  }, selector, { timeout: 5000, polling: 120 });
+}
+
+// Legibility, not layout. An element can be visible, non-zero-box and enabled while being
+// the same colour as its background — this repo's recorded defect class. Resolve the
+// element's colour against the first opaque ancestor background and compute the WCAG 2.x
+// contrast ratio, so "the attribution recedes but stays readable" is falsifiable.
+async function legibility(page, selector) {
+  return page.evaluate(sel => {
+    const parse = value => {
+      const match = /rgba?\(([^)]+)\)/.exec(value || '');
+      if (!match) return null;
+      const parts = match[1].split(',').map(part => parseFloat(part.trim()));
+      return { r: parts[0], g: parts[1], b: parts[2], a: parts.length > 3 ? parts[3] : 1 };
+    };
+    // The declared colour is usually translucent, so composite it over its backdrop first;
+    // otherwise the ratio is computed against a colour nothing actually paints.
+    const composite = (fg, bg) => ({
+      r: fg.a * fg.r + (1 - fg.a) * bg.r,
+      g: fg.a * fg.g + (1 - fg.a) * bg.g,
+      b: fg.a * fg.b + (1 - fg.a) * bg.b,
+    });
+    const channel = value => {
+      const s = value / 255;
+      return s <= 0.03928 ? s / 12.92 : Math.pow((s + 0.055) / 1.055, 2.4);
+    };
+    const luminance = c => 0.2126 * channel(c.r) + 0.7152 * channel(c.g) + 0.0722 * channel(c.b);
+    const ratio = (a, b) => {
+      const la = luminance(a);
+      const lb = luminance(b);
+      return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+    };
+
+    const element = document.querySelector(sel);
+    const textRaw = parse(getComputedStyle(element).color);
+    // Resolve the background by walking ancestors: the element itself paints none.
+    let node = element;
+    let backdrop = null;
+    while (node && !backdrop) {
+      const bg = parse(getComputedStyle(node).backgroundColor);
+      if (bg && bg.a >= 0.999) backdrop = bg;
+      node = node.parentElement;
+    }
+    if (!backdrop) backdrop = { r: 255, g: 255, b: 255, a: 1 };
+    const text = textRaw ? composite(textRaw, backdrop) : backdrop;
+    return {
+      color: getComputedStyle(element).color,
+      backdrop: `rgb(${Math.round(backdrop.r)}, ${Math.round(backdrop.g)}, ${Math.round(backdrop.b)})`,
+      theme: document.body.classList.contains('dark-mode') ? 'dark' : 'light',
+      ratio: ratio(text, backdrop),
+    };
+  }, selector);
+}
+
 const collection = JSON.parse(
   await readFile(join(ROOT, 'data/collections/hidden-words.json'), 'utf8')
 );
@@ -84,13 +156,15 @@ const longest = eligible.reduce((best, item) =>
 const indexHtml = await readFile(join(ROOT, 'index.html'), 'utf8');
 const stylesheet = await readFile(join(ROOT, 'css/style.css'), 'utf8');
 
-await test('font request includes the real Source Sans Pro 300 face', async () => {
+// These two are fast source PRE-CHECKS, not rendering proof: a byte match cannot tell a
+// real 300 face from a synthesized one. Only --live-fonts proves the face resolves.
+await test('PRE-CHECK (source grep, not rendering): font request includes the real Source Sans Pro 300 face', async () => {
   assert(
     indexHtml.includes('Source+Sans+Pro:300,400,700'),
     'index.html does not request Source Sans Pro weight 300'
   );
 });
-await test('quote and attribution disable synthetic font weights', async () => {
+await test('PRE-CHECK (source grep, not rendering): quote and attribution disable synthetic font weights', async () => {
   const matches = stylesheet.match(/font-synthesis:none/g) || [];
   assert(matches.length >= 2, `expected >=2 font-synthesis:none declarations, got ${matches.length}`);
 });
@@ -122,6 +196,7 @@ async function preparePage(spec) {
     await page.route('https://fonts.gstatic.com/**', route => route.abort());
   }
 
+  await page.clock.install({ time: TODAY });
   await page.goto(`${BASE}/`, { waitUntil: 'networkidle' });
   await page.waitForFunction(() => {
     const node = document.getElementById('quote-text');
@@ -164,6 +239,7 @@ async function measure(page) {
       arrow: rect(arrow),
       fontSize: parseFloat(quoteStyle.fontSize),
       lineHeight: parseFloat(quoteStyle.lineHeight),
+      rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize),
       quoteFamily: quoteStyle.fontFamily,
       quoteWeight: quoteStyle.fontWeight,
       authorFamily: authorStyle.fontFamily,
@@ -206,6 +282,18 @@ for (const spec of CASES) {
       assert(Math.abs(leftSpace - rightSpace) <= 1.25,
         `wrapper not centered: left=${leftSpace.toFixed(2)}, right=${rightSpace.toFixed(2)}`);
 
+      // Relational composition (VISUAL_CONTRACT.md invariant 3): the wrapper is
+      // min(88vw, clamp(43rem, 45vw, 80rem)). Pinning the RELATION rather than today's
+      // pixels is what makes a fixed-ceiling regression (the pre-V1 700px composition)
+      // fail at 1280/1440/1920 too, and not only at the 2560/4K extremes.
+      const expectedWidth = Math.min(
+        0.88 * m.viewport.width,
+        Math.min(Math.max(43 * m.rootFont, 0.45 * m.viewport.width), 80 * m.rootFont)
+      );
+      assert(Math.abs(m.wrapper.width - expectedWidth) <= 1.5,
+        `wrapper width=${m.wrapper.width.toFixed(1)}px, expected ${expectedWidth.toFixed(1)}px ` +
+        `from min(88vw, clamp(43rem,45vw,80rem)) at root ${m.rootFont}px`);
+
       assert(m.fontSize >= 20 && m.fontSize <= 38,
         `quote font-size=${m.fontSize}px outside 20..38px`);
       assert(m.lineHeight / m.fontSize >= 1.45 && m.lineHeight / m.fontSize <= 1.55,
@@ -224,6 +312,16 @@ for (const spec of CASES) {
       assert(m.scrollWidth <= m.viewport.width + 1,
         `horizontal document overflow: scrollWidth=${m.scrollWidth}, viewport=${m.viewport.width}`);
 
+      // Legibility (invariant 2), light theme. Weight and geometry cannot see colour:
+      // weight 300 at --text-color-light must still clear 4.5:1 against the page beige.
+      await settled(page, '#quote-author');
+      const lightQuote = await legibility(page, '#quote-text');
+      const lightAuthor = await legibility(page, '#quote-author');
+      assert(lightQuote.ratio >= 4.5,
+        `light-theme passage contrast=${lightQuote.ratio.toFixed(2)}:1 < 4.5:1 (${lightQuote.color} on ${lightQuote.backdrop})`);
+      assert(lightAuthor.ratio >= 4.5,
+        `light-theme attribution contrast=${lightAuthor.ratio.toFixed(2)}:1 < 4.5:1 (${lightAuthor.color} on ${lightAuthor.backdrop})`);
+
       if (EVIDENCE_DIR) {
         await mkdir(EVIDENCE_DIR, { recursive: true });
         const mode = LIVE_FONTS ? 'live-fonts' : 'structural';
@@ -233,9 +331,30 @@ for (const spec of CASES) {
         });
       }
 
+      // The palette resolves per theme, so a ratio that is correct in light can be 1:1 in
+      // dark. Toggling the class changes colour only, never geometry.
+      await page.evaluate(() => document.body.classList.add('dark-mode'));
+      await settled(page, '#quote-author');
+      const darkQuote = await legibility(page, '#quote-text');
+      const darkAuthor = await legibility(page, '#quote-author');
+      assert(darkQuote.theme === 'dark' && darkAuthor.theme === 'dark', 'dark theme did not apply');
+      assert(darkQuote.ratio >= 4.5,
+        `dark-theme passage contrast=${darkQuote.ratio.toFixed(2)}:1 < 4.5:1 (${darkQuote.color} on ${darkQuote.backdrop})`);
+      assert(darkAuthor.ratio >= 4.5,
+        `dark-theme attribution contrast=${darkAuthor.ratio.toFixed(2)}:1 < 4.5:1 (${darkAuthor.color} on ${darkAuthor.backdrop})`);
+
+      if (EVIDENCE_DIR) {
+        await page.screenshot({
+          path: join(EVIDENCE_DIR, `dark-${spec.name}.png`),
+          fullPage: false,
+        });
+      }
+
       console.log(
         `      width=${m.wrapper.width.toFixed(1)}px (${(widthRatio * 100).toFixed(1)}vw), ` +
-        `measure=${measureInEm.toFixed(1)}em, quote=${m.fontSize.toFixed(1)}px, dpr=${m.viewport.dpr}`
+        `measure=${measureInEm.toFixed(1)}em, quote=${m.fontSize.toFixed(1)}px, dpr=${m.viewport.dpr}; ` +
+        `contrast light ${lightQuote.ratio.toFixed(2)}/${lightAuthor.ratio.toFixed(2)}:1, ` +
+        `dark ${darkQuote.ratio.toFixed(2)}/${darkAuthor.ratio.toFixed(2)}:1 (passage/attribution)`
       );
     } finally {
       await context.close();
@@ -272,7 +391,11 @@ await test('fluid quote scale grows monotonically and caps', async () => {
   assert(phone.fontSize <= laptop.fontSize, `${phone.fontSize} !<= ${laptop.fontSize}`);
   assert(laptop.fontSize <= desktop.fontSize, `${laptop.fontSize} !<= ${desktop.fontSize}`);
   assert(desktop.fontSize <= large.fontSize, `${desktop.fontSize} !<= ${large.fontSize}`);
-  assert(large.fontSize <= 37.61, `4k font-size=${large.fontSize}px did not respect 2.35rem cap`);
+  // Derive the cap from the token rather than hardcoding today's pixel value: the bound is
+  // 2.35rem, so an unrelated root font-size change must not read as a scale regression.
+  const cap = 2.35 * large.rootFont;
+  assert(large.fontSize <= cap + 0.02,
+    `4k font-size=${large.fontSize}px did not respect the 2.35rem cap (${cap.toFixed(2)}px at root ${large.rootFont}px)`);
 });
 
 await browser.close();

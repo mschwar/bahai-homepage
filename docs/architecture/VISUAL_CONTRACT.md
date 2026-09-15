@@ -1,6 +1,6 @@
 # Homepage Visual Contract
 
-**Status:** V1 implementation contract, owner-authorized 2026-09-15.
+**Status:** V1 implementation contract, owner-authorized 2026-09-15 (recorded as `docs/DECISIONS.md` **D32**).
 
 This contract turns the homepage's existing visual intent into a testable rendering system. It does not add a
 feature surface. It defines how the same quiet, single-passage encounter should survive different viewport
@@ -19,14 +19,22 @@ system owns the final glyph rasterization.
 ## Invariants
 
 1. **Passage first.** Cormorant Garamond 400 remains the passage face and the dominant text.
-2. **Attribution recedes.** Source Sans Pro 300 is the author face. Its size remains substantial enough to read,
-   but its stroke weight must not compete with the passage.
+2. **Attribution recedes but stays legible.** Source Sans Pro 300 is the author face. Its size remains
+   substantial enough to read, and its computed colour must clear a WCAG 2.x contrast ratio of **4.5:1 or better
+   against its resolved background, in every theme the page supports**. "Recedes" is a hierarchy claim, not a
+   licence to fade the attribution into the background: the ratio is asserted per theme, so a palette that is
+   correct in light and 1:1 in dark cannot pass. Its stroke weight must not compete with the passage.
 3. **Relational composition.** Hero text size, maximum measure, and inline whitespace are fluid. No fixed
-   `700px` hero text ceiling defines the composition.
+   `700px` hero text ceiling defines the composition. The composition is pinned as a **relation**
+   (`width: min(88vw, clamp(43rem, 45vw, 80rem))`), not as pixel values, so a fixed-ceiling regression fails at
+   every matrix viewport instead of only at the 2560/4K extremes.
 4. **Bounded measure.** Small screens may use most of the viewport; large screens gain whitespace rather than
    stretching the passage indefinitely.
 5. **Full-view encounter.** The first hero fills the dynamic viewport (`100dvh`, with `100vh` fallback) and the
-   longest eligible passage must not collide with the scroll affordance.
+   longest eligible passage must not collide with the scroll affordance. **Limit of this claim:** headless
+   Chromium reports the same value for `innerHeight` and `100dvh`, so the suite asserts that the hero covers the
+   viewport but cannot distinguish `100dvh` from the `100vh` fallback; `dvh` is a progressive enhancement whose
+   mobile URL-bar behaviour is deliberately unasserted in-repo.
 6. **DPR is not a layout input.** CSS geometry must remain the same at a fixed CSS viewport when
    `devicePixelRatio` changes. Do not multiply font sizes or widths by DPR in JavaScript.
 7. **No synthetic weights.** Passage and attribution disable font synthesis. A missing requested font/weight is
@@ -50,7 +58,8 @@ The implementation deliberately keeps the system small:
 ```
 
 These are starting values, not sacred constants. Future changes should tune the tokens against this contract,
-not add screen-specific one-off overrides unless a demonstrated edge case requires one.
+not add screen-specific one-off overrides unless a demonstrated edge case requires one. Tuning a token means
+updating the relation assertion in the same change — that is the intended cost of pinning a relation.
 
 ## Validation surfaces
 
@@ -62,11 +71,12 @@ not add screen-specific one-off overrides unless a demonstrated edge case requir
 make visual-contract
 ```
 
-This blocks Google Fonts and the external Badíʿ vendor and proves the CSS/layout contract across the viewport
-matrix. It checks, among other things:
+This blocks Google Fonts and the external Badíʿ vendor, pins "now" via the Playwright clock, and proves the
+CSS/layout contract across the viewport matrix. It checks, among other things:
 
 - author computed weight = 300 and passage = 400;
 - expected font-family declarations remain present;
+- the wrapper matches the declared relation `min(88vw, clamp(43rem, 45vw, 80rem))` at every matrix viewport;
 - wrapper width stays inside the composition envelope;
 - measure stays bounded relative to passage size;
 - wrapper stays horizontally centered;
@@ -74,8 +84,15 @@ matrix. It checks, among other things:
 - longest eligible passage has no horizontal overflow and does not collide with the scroll arrow;
 - hero covers the viewport;
 - document does not gain horizontal overflow;
+- passage and attribution each clear a 4.5:1 WCAG contrast ratio against their resolved background, **in light
+  and in dark** — colours are read only after the theme transition has settled, and the attribution's
+  translucent colour is composited over the first opaque ancestor background before the ratio is computed;
 - 1440×900 and 1920×1080 CSS geometry is invariant between DPR 1 and DPR 2;
-- the fluid quote scale grows monotonically and caps on 4K.
+- the fluid quote scale grows monotonically and caps on 4K, the cap derived from the `2.35rem` token rather
+  than a hardcoded pixel value.
+
+Two checks are labelled `PRE-CHECK` on purpose: a source-byte match on `index.html` / `css/style.css` cannot
+tell a real 300 face from a synthesized one, so only `--live-fonts` proves the requested face resolves.
 
 ### Live font fidelity
 
@@ -89,13 +106,16 @@ may make this red even while the structural contract is sound, so it is not fold
 
 ### Screenshot evidence
 
-Set `VISUAL_EVIDENCE_DIR` to capture one first-viewport PNG per matrix case:
+Set `VISUAL_EVIDENCE_DIR` to capture one first-viewport PNG per matrix case, plus a `dark-` variant of each:
 
 ```bash
-VISUAL_EVIDENCE_DIR=docs/audit/2026-09-15/V1 make visual-contract-live
+VISUAL_EVIDENCE_DIR=/tmp/v1-evidence make visual-contract-live
 ```
 
-Screenshots are review evidence, not the oracle. Cross-OS pixel identity is explicitly not required.
+Screenshots are review evidence, not the oracle. Cross-OS pixel identity is explicitly not required. Write them
+**outside the repo** by default: `main` is the publicly served branch (`.nojekyll`, Pages source `/`), so
+anything committed becomes reachable by URL. Committing audit PNGs into `docs/audit/` needs its own explicit
+reason.
 
 ## Viewport matrix
 
@@ -121,6 +141,7 @@ resolution, not page composition.
 - No container-query or framework migration.
 - No attempt to force macOS, Windows, Linux, or mobile browsers to rasterize glyph edges identically.
 - No behavioral changes to daily selection, collections, Badíʿ date, Yesterday, copy, theme, or source selection.
+- No assertion of the `dvh`-versus-`vh` distinction (see invariant 5).
 
 If live-machine review still shows a material font-fidelity problem after this contract lands, self-hosting the
 font assets is a separate hypothesis and should get its own bounded unit.
